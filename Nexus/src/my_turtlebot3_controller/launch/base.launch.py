@@ -16,8 +16,42 @@ def generate_launch_description():
         get_package_share_directory("turtlebot3_gazebo"), "launch"
     )
     ros_gz_sim_share = get_package_share_directory("ros_gz_sim")
-    my_controller_pkg_share = get_package_share_directory("my_turtlebot3_controller")
-    nav2_params_file = os.path.join(my_controller_pkg_share, "config", "nav2_simulation_params.yaml")
+    # Locate nav2_simulation_params.yaml robustly across workspaces
+    nav2_params_file = None
+    # Method 1: Sourced package share directory
+    try:
+        my_controller_pkg_share = get_package_share_directory("my_turtlebot3_controller")
+        candidate = os.path.join(my_controller_pkg_share, "config", "nav2_simulation_params.yaml")
+        if os.path.exists(candidate):
+            nav2_params_file = candidate
+    except Exception:
+        pass
+
+    # Method 2: Relative to current launch file path
+    if not nav2_params_file:
+        try:
+            launch_dir = os.path.dirname(os.path.realpath(__file__))
+            candidate = os.path.join(launch_dir, "..", "config", "nav2_simulation_params.yaml")
+            if os.path.exists(candidate):
+                nav2_params_file = candidate
+        except Exception:
+            pass
+
+    # Method 3: Absolute local workspace path
+    if not nav2_params_file:
+        candidate = "/home/yassin/CBL/Nexus/src/my_turtlebot3_controller/config/nav2_simulation_params.yaml"
+        if os.path.exists(candidate):
+            nav2_params_file = candidate
+
+    # Method 4: System default fallback from nav2_bringup
+    if not nav2_params_file:
+        nav2_params_file = os.path.join(
+            get_package_share_directory("nav2_bringup"),
+            "params",
+            "nav2_params.yaml"
+        )
+        import sys
+        print("[WARNING] Could not find 'nav2_simulation_params.yaml'. Using default nav2_bringup params instead.", file=sys.stderr)
 
     # Set launch arguments. Set initial position of robot
     use_sim_time = LaunchConfiguration("use_sim_time", default="true")
