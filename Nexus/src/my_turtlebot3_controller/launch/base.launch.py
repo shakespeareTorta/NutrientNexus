@@ -16,15 +16,25 @@ def generate_launch_description():
         get_package_share_directory("turtlebot3_gazebo"), "launch"
     )
     ros_gz_sim_share = get_package_share_directory("ros_gz_sim")
-    my_pkg_share = get_package_share_directory("my_tb3_world")
 
     # Set launch arguments. Set initial position of robot
     use_sim_time = LaunchConfiguration("use_sim_time", default="true")
     x_pose = LaunchConfiguration("x_pose", default="0.0")
     y_pose = LaunchConfiguration("y_pose", default="0.0")
 
-    # path to the 3d model world file
-    world = os.path.join(my_pkg_share, "worlds", "new_world.world")
+    # path to the 3d model world file (with graceful fallback if package is not found/sourced)
+    from ament_index_python.packages import PackageNotFoundError
+    import sys
+    try:
+        my_pkg_share = get_package_share_directory("my_tb3_world")
+        world = os.path.join(my_pkg_share, "worlds", "new_world.world")
+    except PackageNotFoundError:
+        world = "empty.sdf"
+        print("\n" + "="*80 + "\n"
+              "[WARNING] package 'my_tb3_world' not found/sourced! "
+              "Falling back to built-in 'empty.sdf' world.\n"
+              "Please make sure your 'my_tb3_world' package is compiled and sourced in this environment.\n" +
+              "="*80 + "\n", file=sys.stderr)
 
     # Add TurtleBot3 models to Gazebo search path
     set_env_vars_resources = AppendEnvironmentVariable(
