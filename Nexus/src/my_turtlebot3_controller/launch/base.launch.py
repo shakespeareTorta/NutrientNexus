@@ -147,8 +147,9 @@ def generate_launch_description():
         executable="parameter_bridge",
         arguments=[
             "/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist",
-            # "/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry",
-            # "/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan",
+            "/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry",
+            "/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan",
+            "/clock@rosgraph_msgs/msg/Clock@gz.msgs.Clock",
         ],
         output="screen",
     )
