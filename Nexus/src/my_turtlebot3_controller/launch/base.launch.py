@@ -16,6 +16,8 @@ def generate_launch_description():
         get_package_share_directory("turtlebot3_gazebo"), "launch"
     )
     ros_gz_sim_share = get_package_share_directory("ros_gz_sim")
+    my_controller_pkg_share = get_package_share_directory("my_turtlebot3_controller")
+    nav2_params_file = os.path.join(my_controller_pkg_share, "config", "nav2_simulation_params.yaml")
 
     # Set launch arguments. Set initial position of robot
     use_sim_time = LaunchConfiguration("use_sim_time", default="true")
@@ -88,6 +90,8 @@ def generate_launch_description():
             "use_sim_time": "True",
             "slam": "True",
             "cmd_vel_topic": "/cmd_vel_nav",
+            "params_file": nav2_params_file,
+            "autostart": "True",
         }.items(),
     )
 
