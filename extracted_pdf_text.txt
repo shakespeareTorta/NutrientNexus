@@ -1,0 +1,731 @@
+                                NutrientNexus
+
+                            Team 38: shakespeareTorta
+
+
+                                  May 19, 2026
+
+
+
+
+Team 38: shakespeareTorta           NutrientNexus       May 19, 2026   1 / 26
+Introduction
+
+
+
+
+                              NutrientNexus
+  A Digital Twin Autonomous System for Agricultural and Coastal Field
+                   Monitoring and Decision Making
+
+
+
+
+  Team 38: shakespeareTorta       NutrientNexus        May 19, 2026     2 / 26
+                            Technical Insight
+
+
+
+
+Team 38: shakespeareTorta        NutrientNexus   May 19, 2026   3 / 26
+Technical: aim
+
+Problem
+Uncertainty in agriculture about effects of fertilisers and irrigation on
+  1   Crop growth
+  2   Downstream environment pollution
+
+
+
+
+   Team 38: shakespeareTorta       NutrientNexus             May 19, 2026   4 / 26
+Technical: aim
+
+Problem
+Uncertainty in agriculture about effects of fertilisers and irrigation on
+  1   Crop growth
+  2   Downstream environment pollution
+
+
+Field example
+Farmer applies 20 kg/acre of fertilisers.
+
+
+
+
+   Team 38: shakespeareTorta       NutrientNexus             May 19, 2026   4 / 26
+Technical: aim
+
+Problem
+Uncertainty in agriculture about effects of fertilisers and irrigation on
+  1   Crop growth
+  2   Downstream environment pollution
+
+
+Field example
+Farmer applies 20 kg/acre of fertilisers.
+      Is it too little? Do crops get enough nitrogen to grow?
+
+
+
+
+   Team 38: shakespeareTorta       NutrientNexus             May 19, 2026   4 / 26
+Technical: aim
+
+Problem
+Uncertainty in agriculture about effects of fertilisers and irrigation on
+  1   Crop growth
+  2   Downstream environment pollution
+
+
+Field example
+Farmer applies 20 kg/acre of fertilisers.
+      Is it too little? Do crops get enough nitrogen to grow?
+      Is it too much? Can this result in more weeds?
+
+
+
+
+   Team 38: shakespeareTorta       NutrientNexus             May 19, 2026   4 / 26
+Technical: aim
+
+Problem
+Uncertainty in agriculture about effects of fertilisers and irrigation on
+  1   Crop growth
+  2   Downstream environment pollution
+
+
+Field example
+Farmer applies 20 kg/acre of fertilisers.
+      Is it too little? Do crops get enough nitrogen to grow?
+      Is it too much? Can this result in more weeds?
+      How is it going to affect the environment? Are nutrients going to
+      runoff and contaminate the waters?
+
+
+
+   Team 38: shakespeareTorta       NutrientNexus             May 19, 2026   4 / 26
+Technical: aim
+
+Problem
+Uncertainty in agriculture about effects of fertilisers and irrigation on
+  1   Crop growth
+  2   Downstream environment pollution
+
+
+Field example
+Farmer applies 20 kg/acre of fertilisers.
+      Is it too little? Do crops get enough nitrogen to grow?
+      Is it too much? Can this result in more weeds?
+      How is it going to affect the environment? Are nutrients going to
+      runoff and contaminate the waters?
+Uncertainty.
+
+
+   Team 38: shakespeareTorta       NutrientNexus             May 19, 2026   4 / 26
+Technical: aim
+
+
+Desired solution
+Apply fertilisers and irrigation in agriculture based on
+     Actual effect on crop growth
+     Risk of nutrient runoff into waters
+
+
+
+
+  Team 38: shakespeareTorta       NutrientNexus            May 19, 2026   5 / 26
+Technical: aim
+
+
+Desired solution
+Apply fertilisers and irrigation in agriculture based on
+     Actual effect on crop growth
+     Risk of nutrient runoff into waters
+
+
+
+Kill two birds with one stone
+
+
+
+
+  Team 38: shakespeareTorta       NutrientNexus            May 19, 2026   5 / 26
+Technical: aim
+
+
+Desired solution
+Apply fertilisers and irrigation in agriculture based on
+     Actual effect on crop growth
+     Risk of nutrient runoff into waters
+
+
+
+Kill two birds with one stone
+     Holistic, feedback- and context-driven, adaptive crop management
+     system.
+     Environment impact baked into the system.
+
+
+
+
+  Team 38: shakespeareTorta       NutrientNexus            May 19, 2026   5 / 26
+Technical: unique selling point
+
+
+Integrated Digital Twin System linking cause and effect across
+agriculture and water environments.
+
+
+
+
+  Team 38: shakespeareTorta    NutrientNexus          May 19, 2026   6 / 26
+Technical: unique selling point
+
+
+Integrated Digital Twin System linking cause and effect across
+agriculture and water environments.
+
+
+Continuous feedback loop
+     Real-time weather data
+     Crop and soil data
+     Crop growth history
+     Environment contamination thresholds
+     Profit margins?
+
+
+
+
+  Team 38: shakespeareTorta    NutrientNexus          May 19, 2026   6 / 26
+Technical: unique selling point
+
+
+Integrated Digital Twin System linking cause and effect across
+agriculture and water environments.
+
+
+Continuous feedback loop
+     Real-time weather data
+     Crop and soil data
+     Crop growth history
+     Environment contamination thresholds
+     Profit margins?
+
+
+Why feedback loop?
+
+
+  Team 38: shakespeareTorta    NutrientNexus          May 19, 2026   6 / 26
+Technical: unique selling point
+
+Why feedback loop?
+
+
+
+
+  Team 38: shakespeareTorta   NutrientNexus   May 19, 2026   7 / 26
+Technical: unique selling point
+
+Why feedback loop?
+
+
+Literature highlights discrepancy and disconnection between stakeholders.
+Weak link between farmers ⇐⇒ environment protection.
+
+Recall: farmer does not know how exactly agriculture activity (fertilisers
+and irrigation) affects environment.
+
+
+
+
+  Team 38: shakespeareTorta       NutrientNexus            May 19, 2026      7 / 26
+Technical: unique selling point
+
+Why feedback loop?
+
+
+Literature highlights discrepancy and disconnection between stakeholders.
+Weak link between farmers ⇐⇒ environment protection.
+
+Recall: farmer does not know how exactly agriculture activity (fertilisers
+and irrigation) affects environment.
+
+
+Unique selling point
+We make environment effect invariable part of agriculture planning and
+decision-making.
+
+
+
+
+  Team 38: shakespeareTorta       NutrientNexus            May 19, 2026      7 / 26
+Technical: unique selling point
+
+Why feedback loop?
+
+
+Literature highlights discrepancy and disconnection between stakeholders.
+Weak link between farmers ⇐⇒ environment protection.
+
+Recall: farmer does not know how exactly agriculture activity (fertilisers
+and irrigation) affects environment.
+
+
+Unique selling point
+We make environment effect invariable part of agriculture planning and
+decision-making.
+
+
+Bridge gap between agriculture and marine protection.
+
+
+  Team 38: shakespeareTorta       NutrientNexus            May 19, 2026      7 / 26
+Technical: SDG impact
+
+
+Precision in fertiliser and irrigation application leads to
+
+ Metric                        SDG indicator              Reasoning
+ Higher crop yield             2.3.1: Volume of pro-      Decreased soil erosion &
+                               duction per labour unit    better water supply
+ More sustainable              2.4.1:   Proportion of     Decreased soil erosion
+ soil use                      sustainable agricultural
+                               area
+ Lower water eu-               14.1.1: Coastal eutroph-   Runoff-aware       fertiliser
+ trophication                  ication                    application
+
+
+
+
+   Team 38: shakespeareTorta             NutrientNexus            May 19, 2026        8 / 26
+Technical: SDG impact
+
+
+Precision in fertiliser and irrigation application leads to
+
+ Metric                        SDG indicator              Reasoning
+ Higher crop yield             2.3.1: Volume of pro-      Decreased soil erosion &
+                               duction per labour unit    better water supply
+ More sustainable              2.4.1:   Proportion of     Decreased soil erosion
+ soil use                      sustainable agricultural
+                               area
+ Lower water eu-               14.1.1: Coastal eutroph-   Runoff-aware       fertiliser
+ trophication                  ication                    application
+
+
+Who benefits?
+
+
+   Team 38: shakespeareTorta             NutrientNexus            May 19, 2026        8 / 26
+Technical: SDG impact
+
+Who benefits?
+
+
+
+ Metric                       Beneficiary           Reasoning
+ Higher crop yield            Customers & farmers   Higher supply → more
+                                                    affordable food; higher
+                                                    profit
+ Sustainable soil use         Natural habitats      Existing land reuse →
+                                                    less new land devel-
+                                                    oped
+ Lower water eutrophi-        Water ecosystems      Fewer algae blooms
+ cation                                             → more biodiversiy &
+                                                    oxygen in water
+
+
+
+  Team 38: shakespeareTorta         NutrientNexus          May 19, 2026   9 / 26
+Technical: level 0 context diagram
+
+
+
+
+  Team 38: shakespeareTorta   NutrientNexus   May 19, 2026   10 / 26
+Technical: level 1 context diagram
+
+
+
+
+  Team 38: shakespeareTorta   NutrientNexus   May 19, 2026   11 / 26
+Technical: concept map
+
+
+
+
+  Team 38: shakespeareTorta   NutrientNexus   May 19, 2026   12 / 26
+                            Proof of Concept
+
+
+
+
+Team 38: shakespeareTorta       NutrientNexus   May 19, 2026   13 / 26
+PoC: overview
+
+
+Simplified system where one TurtleBot scans crops and generates and
+(potentially) applies fertiliser and irrigation recommendations.
+
+
+
+
+  Team 38: shakespeareTorta    NutrientNexus           May 19, 2026   14 / 26
+PoC: overview
+
+
+Simplified system where one TurtleBot scans crops and generates and
+(potentially) applies fertiliser and irrigation recommendations.
+
+
+
+Target
+Come as close as possible to the proposed technical solution.
+
+
+
+
+  Team 38: shakespeareTorta      NutrientNexus           May 19, 2026   14 / 26
+PoC: overview
+
+
+Simplified system where one TurtleBot scans crops and generates and
+(potentially) applies fertiliser and irrigation recommendations.
+
+
+
+Target
+Come as close as possible to the proposed technical solution.
+
+
+
+How exactly are we going to use digitally twinned TurtleBot to
+demonstrate the key aspects of our technical solution?
+
+
+
+
+  Team 38: shakespeareTorta      NutrientNexus           May 19, 2026   14 / 26
+PoC: overview
+
+Proof of concept on the TurtleBot, concretely.
+
+
+
+Physical entity: TurtleBot                 Digital twin entity
+     Navigates mapped crop zones.                  Synchronises zone states after
+     Provides simulated soil                       scans.
+     moisture, nutrient, and                       Integrates weather, crop needs,
+     crop-growth data.                             and discharge thresholds.
+     Sends robot status: location,                 Computes recommendations
+     battery, and fertiliser stock.                balancing yield and runoff risk.
+     Simulates fertiliser application              Represents one robot now, but
+     by rotating in place.                         is designed for fleet extension.
+
+
+
+  Team 38: shakespeareTorta        NutrientNexus                  May 19, 2026   15 / 26
+PoC: DTAS characteristics
+ DTAS characteris-            How the        PoC       demon-    Why it matters
+ tic                          strates it
+ Bidirectional       com-     TurtleBot sends scan/sta-          Shows a closed feedback
+ munication                   tus/action data; the digi-         loop rather than passive
+                              tal twin returns recommen-         monitoring.
+                              dations and mission deci-
+                              sions.
+ State     synchronisa-       Zone readings, robot loca-         Proves the digital twin
+ tion                         tion, battery, fertiliser stock,   reflects the physical en-
+                              scan status, and application       tity state.
+                              events are mirrored digitally.
+ Environment         inter-   The robot moves through            Shows that the DTAS
+ action                       mapped crop zones and sim-         can connect recommen-
+                              ulates fertiliser application by   dations to observable
+                              rotating in place.                 physical action.
+ Context-aware                The            recommendation      Shows that decisions de-
+ decision-making              changes        according      to   pend on environmental
+                              weather, crop needs, and           context, not fixed rules
+                              runoff thresholds.                 only.
+
+  Team 38: shakespeareTorta                NutrientNexus                May 19, 2026    16 / 26
+PoC: scope
+
+ In scope                                Out of scope
+
+ One TurtleBot as representative         Full multi-robot coordination
+ from future fleet
+ Mapped crop-zone navigation             Real outdoor farming terrain
+ Stubbed moisture, nutrient, and         Real agricultural sensors
+ crop growth readings
+ Rotation in place to simulate           Real fertiliser dosing, spreading, or
+ fertiliser application                  irrigation
+ Simple context-based fertiliser &       Advanced agronomic/coastal
+ irrigation recommendations              ecosystem models
+ Simple stakeholder                      Production-ready farmer or
+ dashboard/report                        regulator platform
+
+
+
+  Team 38: shakespeareTorta      NutrientNexus               May 19, 2026   17 / 26
+PoC: scope
+
+ In scope                                Out of scope
+
+ One TurtleBot as representative         Full multi-robot coordination
+ from future fleet
+ Mapped crop-zone navigation             Real outdoor farming terrain
+ Stubbed moisture, nutrient, and         Real agricultural sensors
+ crop growth readings
+ Rotation in place to simulate           Real fertiliser dosing, spreading, or
+ fertiliser application                  irrigation
+ Simple context-based fertiliser &       Advanced agronomic/coastal
+ irrigation recommendations              ecosystem models
+ Simple stakeholder                      Production-ready farmer or
+ dashboard/report                        regulator platform
+
+The PoC proves the closed loop on one robot before scaling to a fleet.
+  Team 38: shakespeareTorta      NutrientNexus               May 19, 2026   17 / 26
+PoC: functional requirements
+
+ ID           Requirement                  Part             Why
+ FR1          Load mapped crop             Digital/inter-   Defines scan and ac-
+              zones and show robot         face             tion locations.
+              position
+ FR2          TurtleBot          au-       Physical         Shows autonomous
+              tonomously       visits                       field coverage.
+              crop zones
+ FR3          Return      simulated        Physical/sim     Replaces unavailable
+              moisture,    nutrient,                        real sensors.
+              and growth data
+ FR4          Synchronise zone and         Digital twin     Proves       physical–
+              robot state with digi-                        digital alignment.
+              tal twin
+
+
+  Team 38: shakespeareTorta             NutrientNexus             May 19, 2026   18 / 26
+PoC: functional requirements (contd.)
+
+
+ ID           Requirement                    Part           Why
+ FR5          Use weather, crop              Digital twin   Adds environmental
+              data,     and runoff                          context.
+              thresholds
+ FR6          Compute fertiliser/ir-         Decision       Core      agricultural
+              rigation recommenda-           module         decision-making.
+              tion
+ FR7          Rotate in place to sim-        Physical       Shows recommenda-
+              ulate fertiliser applica-                     tion becoming action.
+              tion
+
+
+
+
+  Team 38: shakespeareTorta               NutrientNexus           May 19, 2026   19 / 26
+PoC: non-functional requirements
+
+ ID            Requirement          Details               Reason
+ NFR1          Explainable advice   Show key deci-        Builds farmer trust.
+                                    sion/input factors
+ NFR2          Robust   obstacle    Handle blocked-off    Robustness under
+               handling             paths                 different     condi-
+                                                          tions.
+ NFR3          Modular software     Separate     stubs,   Easy to replace
+                                    twin, decision, UI    with real sensors.
+ NFR4          Traceable logging    Store scans, rec-     Enables report and
+                                    ommendations,         debugging.
+                                    actions
+ NFR5          Safe actuation       Movement & ac-        Avoids robot dam-
+                                    tuation only when     age & incorrect fer-
+                                    safe                  tiliser/irrigation ap-
+                                                          plication.
+
+  Team 38: shakespeareTorta         NutrientNexus             May 19, 2026    20 / 26
+PoC: demonstration
+
+ Re-           Demonstration           Expected result             Stakeholder relevance
+ quire-
+ ment
+ FR1,          Show field map visit    Robot visits zones          Shows     autonomous
+ FR2,          crop zones              without collision           crop-zone coverage.
+ NFR5
+ FR3,          Display stubbed read-   Zone states update af-      Shows physical-digital
+ FR4           ings and live DT up-    ter each scan               synchronisation.
+               dates
+ FR5,          Change                  Irrigation/fertiliser ad-   Shows context-aware
+ FR6,          weather/threshold       vice changes                decision making.
+ NFR1          input
+ FR7           Robot performs fer-     Robot rotates in place      Shows that a recom-
+               tiliser application                                 mendation can lead to
+                                                                   physical action.
+ FR5,          Generate sustainabil-   Report includes com-        Actual      effect  on
+ FR6,          ity report              menced actions, any         eutrophication/soil
+ NFR2                                  relevant amounts            sustainability.
+
+
+  Team 38: shakespeareTorta            NutrientNexus                   May 19, 2026    21 / 26
+PoC: resources
+
+
+
+
+ Resource                             Used for
+ TurtleBot                            Navigation, telemetry, rotation ac-
+                                      tion
+ ROS2 navigation/commands             Waypoints and in-place rotation
+ Gazebo/RViz                          Simulation and visual debugging
+ Weather and crop data                Context for decision-making logic
+ Team members                         Implementation of the PoC
+
+
+
+
+  Team 38: shakespeareTorta   NutrientNexus              May 19, 2026   22 / 26
+PoC: viability
+
+ Aspect                       Viability                      PoC consequence
+ Movement                     Feasible    in    controlled   Use mapped crop zones,
+                              lab/simulation.                not real terrain.
+ Fertiliser action            Real application is unavail-   Use in-place rotation as
+                              able.                          visible proxy.
+ Scanning                     Real sensors unavailable.      Use stubbed sensor val-
+                                                             ues per zone.
+ Synchronisation              Feasible for one robot and     Log robot state and
+                              few zones.                     twin state updates.
+ Decision model               Full agronomy model too        Use explainable rule-
+                              complex.                       based thresholds.
+ Stakeholder out-             Reports can be generated       Show farmer advice and
+ put                          from logs.                     runoff warning.
+
+
+  Team 38: shakespeareTorta                NutrientNexus             May 19, 2026   23 / 26
+PoC: sensor stubbing
+
+Technical limitation
+Cannot add real agricultural sensors to Turtlebot.
+
+
+
+
+  Team 38: shakespeareTorta      NutrientNexus       May 19, 2026   24 / 26
+PoC: sensor stubbing
+
+Technical limitation
+Cannot add real agricultural sensors to Turtlebot.
+
+PoC solution
+     Stub sensor getter functions to return controlled values per crop zone.
+     Simulate fertiliser application by rotating the TurtleBot in place at
+     the selected zone.
+
+
+
+
+  Team 38: shakespeareTorta       NutrientNexus             May 19, 2026     24 / 26
+PoC: sensor stubbing
+
+Technical limitation
+Cannot add real agricultural sensors to Turtlebot.
+
+PoC solution
+     Stub sensor getter functions to return controlled values per crop zone.
+     Simulate fertiliser application by rotating the TurtleBot in place at
+     the selected zone.
+
+Why this is still valid
+The PoC tests the key aspect of technical solution — environment-based
+agricultural decision-making system.
+
+                    scan → weigh in data → decide → act/report
+
+
+
+  Team 38: shakespeareTorta          NutrientNexus          May 19, 2026     24 / 26
+PoC: timeline
+                                          Apr '26                                       May '26                               Jun '26
+                                     19         26              3             10             17            24        31   7             14   21
+
+
+
+
+   Project timeline
+    Phase 1
+      Risk Assessment                         All members
+      Research SDGs                                  All members
+      End of phase 1 - Risk Ass...
+
+    Phase 2
+      Technical Insights + Res...                           All members
+      Concept map draft
+      Improve based on feedba...                               All members
+      End of phase 2 - Concept...
+
+    Phase 3 - Technical solut...
+      Context diagrams                                              Bulut, Samuel, Yassin
+      Content of the slides                                         Anna, Camila, Tiebe
+      Pitch                                                           Camila, Zurab
+      Assignment 3 Submission
+      Improve based on feedba...                                                   All members
+      End of Phase 3
+
+    Phase 4 - Proof of Conce...
+      Adjust concept map                                       Anna, Zurab
+      Overview                                                                Zurab
+      Adjust context diagrams                                                 Bulut, Samuel, Yassin
+      Requirements                                                            Tiebe
+      Resources                                                                 Bulut
+      Viability                                                                 Camila
+      Demonstration                                                             Tiebe
+      Timeline                                                                     Anna
+      Poc Draft
+      Improve based on feedba...                                                                  All members
+      End of Phase 4 - PoC + Ri...
+      Pitch Review                                                                                     All members
+
+
+
+
+  Team 38: shakespeareTorta                                               NutrientNexus                                   May 19, 2026            25 / 26
+PoC: timeline (contd.)
+                                                                             Apr '26                May '26                                                  Jun '26
+                                                                        19         26   3      10        17               24            31             7               14         21
+
+
+
+                                       PoC Project Plan Pitch Rev...
+
+                                     Phase 5
+                                      Week 5
+                                        State sync - fertilizer st...                                                 Tiebe, Yassin
+                                        Simulated sensor data                                                         Anna, Samuel
+                                        Load map, Define virtua...                                                    Bulut, Camila
+                                        Test implemented funct...                                                       Camila, Yassin, Zurab
+                                        Lab Session - Technical ...
+                                      Week 6
+                                        Camera for growth mon...                                     Samuel, Zurab
+                                        Decision making - sens...                                     Anna, Yassin
+                                        Develop core optimizati...                                     Bulut, Tiebe
+                                        Automated Irrigation a...                                     Anna, Camila
+                                        Test implemented funct...                                             Anna, Bulut, Tiebe
+                                      Week 7
+                                        Integration: Sensor -> ...                                             Anna, Bulut, Zurab
+                                        Dashboard                                                                     Camila, Tiebe
+                                        Single-zone scan failure...                                                    Bulut, Yassin
+                                        Test implemented funct...                                                        Camila, Samuel, Yassin
+                                      Week 8
+                                        System Stabilization & ...                                                                      Anna, Tiebe
+                                        Latency verification be...                                                                     Bulut, Camila
+                                        Test implemented funct...                                                                       Samuel, Yassin, Zurab
+                                        Final report draft                                                                                         All members
+                                      Week 9
+                                        Final presentation                                                                                          Anna, Yassin, Zurab
+                                        Lab - video recording                                                                                          Camila, Samuel, Tiebe
+                                        Video editing                                                                                                             Bulut, Camila
+                                        Project Documentation                                                                                     Bulut, Camila, Samuel
+                                        Final submission
+
+
+
+
+                                   Team 38: shakespeareTorta                                NutrientNexus                                               May 19, 2026                   26 / 26
+Powered by TCPDF (www.tcpdf.org)
+

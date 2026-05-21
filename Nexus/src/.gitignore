@@ -1,0 +1,52 @@
+# ROS 2 build files
+build/
+install/
+log/
+.colcon/
+colcon_ws.log
+
+# Setup scripts (these are usually generated or environment-specific)
+setup.bash
+setup.ps1
+setup.zsh
+
+# VS Code settings and related user-specific files
+.vscode/
+*.code-workspace
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Compiled object files and executables
+*.o
+*.so
+*.out
+*.exe
+
+# ROS 2 auto-generated files
+*.launch.pyc
+*.action
+*.msg
+*.srv
+
+# macOS system files
+.DS_Store
+
+# Generated metadata
+CMakeFiles/
+Makefile
+cmake_install.cmake
+CMakeCache.txt
+
+*.log
+
+# General temporary files
+*.swp
+*.bak
+*.tmp
+*.old
+*~
+
+# Ignore hidden files (customize this if needed)
+.*.swp
