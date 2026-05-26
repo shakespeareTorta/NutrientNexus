@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import os
+import sys
 
 from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import PackageNotFoundError
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -16,66 +18,70 @@ def generate_launch_description():
         get_package_share_directory("turtlebot3_gazebo"), "launch"
     )
     ros_gz_sim_share = get_package_share_directory("ros_gz_sim")
+
+    # ------------------------------------------------------------------
     # Locate nav2_simulation_params.yaml robustly across workspaces
+    # ------------------------------------------------------------------
     nav2_params_file = None
+
     # Method 1: Sourced package share directory
     try:
-        my_controller_pkg_share = get_package_share_directory("my_turtlebot3_controller")
-        candidate = os.path.join(my_controller_pkg_share, "config", "nav2_simulation_params.yaml")
+        my_controller_pkg_share = get_package_share_directory(
+            "my_turtlebot3_controller")
+        candidate = os.path.join(
+            my_controller_pkg_share, "config", "nav2_simulation_params.yaml")
         if os.path.exists(candidate):
             nav2_params_file = candidate
-    except Exception:
+    except PackageNotFoundError:
         pass
 
-    # Method 2: Relative to current launch file path
+    # Method 2: Relative to current launch file location
     if not nav2_params_file:
-        try:
-            launch_dir = os.path.dirname(os.path.realpath(__file__))
-            candidate = os.path.join(launch_dir, "..", "config", "nav2_simulation_params.yaml")
-            if os.path.exists(candidate):
-                nav2_params_file = candidate
-        except Exception:
-            pass
-
-    # Method 3: Absolute local workspace path
-    if not nav2_params_file:
-        candidate = "/home/yassin/CBL/Nexus/src/my_turtlebot3_controller/config/nav2_simulation_params.yaml"
+        launch_dir = os.path.dirname(os.path.realpath(__file__))
+        candidate = os.path.normpath(
+            os.path.join(launch_dir, "..", "config",
+                         "nav2_simulation_params.yaml"))
         if os.path.exists(candidate):
             nav2_params_file = candidate
 
-    # Method 4: System default fallback from nav2_bringup
+    # Method 3: System default fallback from nav2_bringup
     if not nav2_params_file:
-        nav2_params_file = os.path.join(
-            get_package_share_directory("nav2_bringup"),
-            "params",
-            "nav2_params.yaml"
-        )
-        import sys
-        print("[WARNING] Could not find 'nav2_simulation_params.yaml'. Using default nav2_bringup params instead.", file=sys.stderr)
+        try:
+            nav2_params_file = os.path.join(
+                get_package_share_directory("nav2_bringup"),
+                "params", "nav2_params.yaml")
+        except PackageNotFoundError:
+            pass
+        print("[WARNING] Could not find 'nav2_simulation_params.yaml'. "
+              "Using default nav2_bringup params.",
+              file=sys.stderr)
 
     # Set launch arguments. Set initial position of robot
     use_sim_time = LaunchConfiguration("use_sim_time", default="true")
     x_pose = LaunchConfiguration("x_pose", default="0.0")
     y_pose = LaunchConfiguration("y_pose", default="0.0")
 
-    # path to the 3d model world file (with graceful fallback if package is not found/sourced)
-    from ament_index_python.packages import PackageNotFoundError
-    import sys
+    # ------------------------------------------------------------------
+    # World file (graceful fallback if my_tb3_world is not built/sourced)
+    # ------------------------------------------------------------------
     try:
         my_pkg_share = get_package_share_directory("my_tb3_world")
         world = os.path.join(my_pkg_share, "worlds", "new_world.world")
     except PackageNotFoundError:
         world = "empty.sdf"
-        print("\n" + "="*80 + "\n"
-              "[WARNING] package 'my_tb3_world' not found/sourced! "
+        print("\n" + "=" * 72 + "\n"
+              "[WARNING] package 'my_tb3_world' not found/sourced!\n"
               "Falling back to built-in 'empty.sdf' world.\n"
-              "Please make sure your 'my_tb3_world' package is compiled and sourced in this environment.\n" +
-              "="*80 + "\n", file=sys.stderr)
+              "Build your 'my_tb3_world' package and source the workspace "
+              "to use the custom agricultural field.\n" +
+              "=" * 72 + "\n",
+              file=sys.stderr)
 
     # Add TurtleBot3 models to Gazebo search path
     set_env_vars_resources = AppendEnvironmentVariable(
         "GZ_SIM_RESOURCE_PATH",
-        os.path.join(get_package_share_directory("turtlebot3_gazebo"), "models"),
+        os.path.join(
+            get_package_share_directory("turtlebot3_gazebo"), "models"),
     )
 
     # Launch Gazebo server with custom world
@@ -94,7 +100,10 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(ros_gz_sim_share, "launch", "gz_sim.launch.py")
         ),
-        launch_arguments={"gz_args": "-g -v2", "on_exit_shutdown": "true"}.items(),
+        launch_arguments={
+            "gz_args": "-g -v2",
+            "on_exit_shutdown": "true",
+        }.items(),
     )
 
     robot_state_publisher_cmd = IncludeLaunchDescription(
@@ -108,10 +117,22 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(launch_file_dir, "spawn_turtlebot3.launch.py")
         ),
-        launch_arguments={"x_pose": x_pose, "y_pose": y_pose}.items(),
+        launch_arguments={
+            "x_pose": x_pose,
+            "y_pose": y_pose,
+        }.items(),
     )
 
     # Launch Nav2
+    nav2_launch_args = {
+        "use_sim_time": "True",
+        "slam": "True",
+        "cmd_vel_topic": "/cmd_vel_nav",
+        "autostart": "True",
+    }
+    if nav2_params_file:
+        nav2_launch_args["params_file"] = nav2_params_file
+
     nav2_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -120,13 +141,7 @@ def generate_launch_description():
                 "navigation_launch.py",
             )
         ),
-        launch_arguments={
-            "use_sim_time": "True",
-            "slam": "True",
-            "cmd_vel_topic": "/cmd_vel_nav",
-            "params_file": nav2_params_file,
-            "autostart": "True",
-        }.items(),
+        launch_arguments=nav2_launch_args.items(),
     )
 
     # Launch SLAM
@@ -141,15 +156,15 @@ def generate_launch_description():
         launch_arguments={"use_sim_time": "True"}.items(),
     )
 
-    # ros_gz_bridge setup
+    # ros_gz_bridge setup — bridges Gazebo Sim topics to ROS 2
     bridge_cmd = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
         arguments=[
-            "/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist",
-            "/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry",
-            "/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan",
-            "/clock@rosgraph_msgs/msg/Clock@gz.msgs.Clock",
+            "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
+            "/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
+            "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+            "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
         ],
         output="screen",
     )

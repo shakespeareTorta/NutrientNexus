@@ -49,12 +49,17 @@ class FieldSensorMockNode(Node):
         self.irrigate_sub = self.create_subscription(String, '/irrigate_zone', self.irrigate_callback, 10)
         self.fertilise_sub = self.create_subscription(String, '/fertilise_zone', self.fertilise_callback, 10)
 
-        # Timers
-        self.update_timer = self.create_timer(2.0, self.deplete_and_grow_tick)
-        self.publish_timer = self.create_timer(2.0, self.publish_telemetry_tick)
+        # Single timer for environment simulation + telemetry publishing
+        # (merged to avoid race conditions between depletion and publishing)
+        self.sim_timer = self.create_timer(2.0, self.simulation_tick)
 
         self.get_logger().info("Field Sensor Mock Node Initialized for Nutrient Nexus.")
         self.log_zone_states("Initial")
+
+    def simulation_tick(self):
+        """Combined tick: deplete/grow environment, then publish updated telemetry."""
+        self.deplete_and_grow_tick()
+        self.publish_telemetry_tick()
 
     def deplete_and_grow_tick(self):
         """Simulates natural environment processes: moisture evaporation, nutrient absorption, and crop growth."""
