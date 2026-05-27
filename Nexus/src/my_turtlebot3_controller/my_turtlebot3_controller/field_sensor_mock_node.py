@@ -3,43 +3,35 @@ import rclpy
 import random
 from rclpy.node import Node
 from std_msgs.msg import String, Float32MultiArray, MultiArrayDimension, MultiArrayLayout
-from typing import Dict, List
+from typing import Dict, List, Any
+import os
+import yaml
+from ament_index_python.packages import get_package_share_directory
 
 class FieldSensorMockNode(Node):
     def __init__(self) -> None:
         super().__init__('field_sensor_mock_node')
 
-        # Configuration Parameters
-        self.declare_parameter('num_zones', 3)
-        self.declare_parameter('zone_prefix', 'zone_')
+        pkg_dir = get_package_share_directory('my_turtlebot3_controller')
+        zones_file = os.path.join(pkg_dir, 'config', 'zones.yaml')
         
-        self.num_zones = self.get_parameter('num_zones').get_parameter_value().integer_value
-        self.zone_prefix = self.get_parameter('zone_prefix').get_parameter_value().string_value
+        try:
+            with open(zones_file, 'r', encoding='utf-8') as f:
+                raw_zones = yaml.safe_load(f) or {}
+        except FileNotFoundError:
+            self.get_logger().error(f"Could not find zones.yaml at {zones_file}")
+            raw_zones = {}
 
-        # Initialize mock zones with agricultural metrics
-        # Zone 0: Safe agricultural zone (dry initially, low runoff risk)
-        # Zone 1: Medium zone (reasonable growth, moderate runoff risk)
-        # Zone 2: Close to water/stream (high nutrients, high runoff risk)
-        self.zones = [
-            {
-                'id': f'{self.zone_prefix}0',
-                'moisture': 35.0,     # Needs irrigation (< 40%)
-                'nutrients': 60.0,    # Adequate
-                'growth': 20.0        # Young crop
-            },
-            {
-                'id': f'{self.zone_prefix}1',
-                'moisture': 55.0,     # Adequate
-                'nutrients': 40.0,    # Needs fertilisation (< 50%)
-                'growth': 45.0        # Mid-growth crop
-            },
-            {
-                'id': f'{self.zone_prefix}2',
-                'moisture': 42.0,     # Borderline
-                'nutrients': 30.0,    # Needs fertilisation, but high runoff risk
-                'growth': 70.0        # Mature crop
-            }
-        ]
+        self.zones: List[Dict[str, Any]] = []
+        for zone_id in sorted(raw_zones.keys()):
+            self.zones.append({
+                'id': zone_id,
+                'moisture': random.uniform(30.0, 60.0),
+                'nutrients': random.uniform(30.0, 70.0),
+                'growth': random.uniform(10.0, 40.0)
+            })
+            
+        self.num_zones = len(self.zones)
 
         # Publishers
         self.moisture_pub = self.create_publisher(Float32MultiArray, '/field_moisture', 10)

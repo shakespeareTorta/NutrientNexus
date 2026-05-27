@@ -79,7 +79,16 @@ def generate_launch_description():
         emulate_tty=True,
     )
 
-    # 5. Crop Decision Node (Agricultural State Machine & SDG-14 controller)
+    # 5. Zone Detector Node (Physical Spatial Verification)
+    zone_detector = Node(
+        package="my_turtlebot3_controller",
+        executable="zone_detector_node",
+        name="zone_detector_node",
+        output="screen",
+        emulate_tty=True,
+    )
+
+    # 6. Crop Decision Node (Agricultural State Machine & SDG-14 controller)
     crop_decision = Node(
         package="my_turtlebot3_controller",
         executable="crop_decision_node",
@@ -96,6 +105,7 @@ def generate_launch_description():
             safety_stop,
             field_sensor_mock,
             navigation_executor,
+            zone_detector,
             crop_decision,
         ]
     )

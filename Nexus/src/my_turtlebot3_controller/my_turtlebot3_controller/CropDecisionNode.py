@@ -5,7 +5,10 @@ from rclpy.timer import Timer
 from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped, Twist
 import math
-from typing import Dict, List, Optional
+import os
+import yaml
+from ament_index_python.packages import get_package_share_directory
+from typing import Dict, List, Optional, Any
 
 
 class CropDecisionNode(Node):
@@ -41,22 +44,31 @@ class CropDecisionNode(Node):
         self.weather_sub = self.create_subscription(
             String, '/weather_forecast', self.weather_callback, 10)
 
-        # Crop Zones Configuration
-        # Coordinates mapped to the physical simulation layout:
-        # Zone 0: High land (Low runoff risk)
-        # Zone 1: Sloped field (Medium runoff risk)
-        # Zone 2: Near downstream water/wetland (High runoff risk!)
-        self.zones_data = {
-            0: {'id': 'zone_0', 'location': (0.05, 1.5, 90.0),
-                'runoff_risk': 'Low', 'moisture': 100.0, 'nutrients': 100.0, 'growth': 0.0},
-            1: {'id': 'zone_1', 'location': (1.5, 1.5, 0.0),
-                'runoff_risk': 'Medium', 'moisture': 100.0, 'nutrients': 100.0, 'growth': 0.0},
-            2: {'id': 'zone_2', 'location': (1.5, 0.0, -90.0),
-                'runoff_risk': 'High', 'moisture': 100.0, 'nutrients': 100.0, 'growth': 0.0},
-        }
+        # Crop Zones Configuration - Loaded from zones.yaml
+        pkg_dir = get_package_share_directory('my_turtlebot3_controller')
+        zones_file = os.path.join(pkg_dir, 'config', 'zones.yaml')
+        with open(zones_file, 'r', encoding='utf-8') as f:
+            raw_zones = yaml.safe_load(f) or {}
+            
+        self.zones_data: List[Dict[str, Any]] = []
+        for zone_id in sorted(raw_zones.keys()):
+            z = raw_zones[zone_id]
+            self.zones_data.append({
+                'id': zone_id,
+                'location': (z['target_x'], z['target_y'], z['target_theta']),
+                'runoff_risk': z['runoff_risk'],
+                'moisture': 100.0,
+                'nutrients': 100.0,
+                'growth': 0.0
+            })
+            
+        # Spatial Verification Subscriber
+        self.physical_current_zone: str = "no_zone"
+        self.current_zone_sub = self.create_subscription(
+            String, '/current_zone', self.current_zone_callback, 10)
 
         # System state machine
-        # Phases: IDLE, NAVIGATING, SCANNING, DECIDING, ACTUATING, COOLDOWN
+        # Phases: IDLE, NAVIGATING, VERIFYING_ZONE, SCANNING, DECIDING, ACTUATING, COOLDOWN
         self.current_phase: str = "IDLE"
         self.current_zone_index: int = 0
 
@@ -101,20 +113,23 @@ class CropDecisionNode(Node):
             self.get_logger().info(
                 f"Weather Forecast updated: {self.weather.upper()}")
 
+    def current_zone_callback(self, msg: String) -> None:
+        self.physical_current_zone = msg.data
+
     def moisture_callback(self, msg: Float32MultiArray) -> None:
         for i, val in enumerate(msg.data):
-            if i in self.zones_data:
+            if i < len(self.zones_data):
                 self.zones_data[i]['moisture'] = val
         self.telemetry_received = True
 
     def nutrients_callback(self, msg: Float32MultiArray) -> None:
         for i, val in enumerate(msg.data):
-            if i in self.zones_data:
+            if i < len(self.zones_data):
                 self.zones_data[i]['nutrients'] = val
 
     def growth_callback(self, msg: Float32MultiArray) -> None:
         for i, val in enumerate(msg.data):
-            if i in self.zones_data:
+            if i < len(self.zones_data):
                 self.zones_data[i]['growth'] = val
 
     def nav_status_callback(self, msg: String) -> None:
@@ -124,14 +139,11 @@ class CropDecisionNode(Node):
 
         if self.current_phase == "NAVIGATING":
             if status == "SUCCEEDED_AT_POSE":
+                expected_zone = self.zones_data[self.current_zone_index]['id']
                 self.get_logger().info(
-                    f"Arrived at Zone {self.current_zone_index}. "
-                    f"Commencing sensor scanning...")
-                self.current_phase = "SCANNING"
-                # 4-second one-shot timer to simulate scanning
-                self._cancel_and_destroy('_scan_timer')
-                self._scan_timer = self.create_timer(
-                    4.0, self._on_scan_complete)
+                    f"Nav2 reports arrival at {expected_zone}. "
+                    f"Verifying physical zone bounding box via /current_zone...")
+                self.current_phase = "VERIFYING_ZONE"
 
             elif status in ["FAILED_NAVIGATION", "ABORTED_NAVIGATION",
                             "CANCELED_NAVIGATION", "REJECTED"]:
@@ -282,6 +294,22 @@ class CropDecisionNode(Node):
     #  Main state machine tick                                             #
     # ------------------------------------------------------------------ #
     def state_machine_tick(self) -> None:
+        if self.current_phase == "VERIFYING_ZONE":
+            expected_zone = self.zones_data[self.current_zone_index]['id']
+            if self.physical_current_zone == expected_zone:
+                self.get_logger().info(
+                    f"Verified physically inside {expected_zone}. "
+                    f"Commencing sensor scanning...")
+                self.current_phase = "SCANNING"
+                self._cancel_and_destroy('_scan_timer')
+                self._scan_timer = self.create_timer(4.0, self._on_scan_complete)
+            else:
+                self.get_logger().warn(
+                    f"Nav2 arrived, but robot is NOT inside bounding box for {expected_zone}! "
+                    f"Current physical zone: '{self.physical_current_zone}'. Aborting treatment for safety.")
+                self._start_cooldown()
+            return
+            
         if self.current_phase != "IDLE":
             return
 
