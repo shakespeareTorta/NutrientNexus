@@ -3,9 +3,10 @@ import rclpy
 import random
 from rclpy.node import Node
 from std_msgs.msg import String, Float32MultiArray, MultiArrayDimension, MultiArrayLayout
+from typing import Dict, List
 
 class FieldSensorMockNode(Node):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('field_sensor_mock_node')
 
         # Configuration Parameters
@@ -56,12 +57,12 @@ class FieldSensorMockNode(Node):
         self.get_logger().info("Field Sensor Mock Node Initialized for Nutrient Nexus.")
         self.log_zone_states("Initial")
 
-    def simulation_tick(self):
+    def simulation_tick(self) -> None:
         """Combined tick: deplete/grow environment, then publish updated telemetry."""
         self.deplete_and_grow_tick()
         self.publish_telemetry_tick()
 
-    def deplete_and_grow_tick(self):
+    def deplete_and_grow_tick(self) -> None:
         """Simulates natural environment processes: moisture evaporation, nutrient absorption, and crop growth."""
         for zone in self.zones:
             # Moisture depletes naturally (evaporation/drainage)
@@ -83,7 +84,7 @@ class FieldSensorMockNode(Node):
                     if zone['growth'] > 100.0:
                         zone['growth'] = 100.0
 
-    def publish_telemetry_tick(self):
+    def publish_telemetry_tick(self) -> None:
         """Constructs and publishes array metrics for soil moisture, nutrients, and growth."""
         moisture_msg = self.make_float_array([z['moisture'] for z in self.zones])
         nutrients_msg = self.make_float_array([z['nutrients'] for z in self.zones])
@@ -95,7 +96,7 @@ class FieldSensorMockNode(Node):
 
         self.get_logger().debug("Published environment telemetry updates.")
 
-    def make_float_array(self, data_list):
+    def make_float_array(self, data_list: List[float]) -> Float32MultiArray:
         msg = Float32MultiArray()
         msg.layout = MultiArrayLayout()
         msg.layout.dim = [MultiArrayDimension()]
@@ -106,7 +107,7 @@ class FieldSensorMockNode(Node):
         msg.data = [float(val) for val in data_list]
         return msg
 
-    def irrigate_callback(self, msg: String):
+    def irrigate_callback(self, msg: String) -> None:
         zone_id = msg.data
         for zone in self.zones:
             if zone['id'] == zone_id:
@@ -115,7 +116,7 @@ class FieldSensorMockNode(Node):
                 break
         self.publish_telemetry_tick()
 
-    def fertilise_callback(self, msg: String):
+    def fertilise_callback(self, msg: String) -> None:
         zone_id = msg.data
         for zone in self.zones:
             if zone['id'] == zone_id:
@@ -124,13 +125,13 @@ class FieldSensorMockNode(Node):
                 break
         self.publish_telemetry_tick()
 
-    def log_zone_states(self, prefix="Current"):
+    def log_zone_states(self, prefix: str = "Current") -> None:
         states = []
         for z in self.zones:
             states.append(f"{z['id']}: Moisture={z['moisture']:.1f}%, Nutrients={z['nutrients']:.1f}%, Growth={z['growth']:.1f}%")
         self.get_logger().info(f"{prefix} Zone States: [ " + " | ".join(states) + " ]")
 
-def main(args=None):
+def main(args=None) -> None:
     rclpy.init(args=args)
     node = FieldSensorMockNode()
     try:

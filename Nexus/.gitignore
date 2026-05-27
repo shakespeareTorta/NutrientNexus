@@ -55,3 +55,4 @@ CMakeCache.txt
 # Ignore hidden files (customize this if needed)
 .*.swp
 
+__pycache__/

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
+from rclpy.timer import Timer
 from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped, Twist
 import math
+from typing import Dict, List, Optional
 
 
 class CropDecisionNode(Node):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('crop_decision_node')
 
         # Publishers
@@ -55,22 +57,22 @@ class CropDecisionNode(Node):
 
         # System state machine
         # Phases: IDLE, NAVIGATING, SCANNING, DECIDING, ACTUATING, COOLDOWN
-        self.current_phase = "IDLE"
-        self.current_zone_index = 0
+        self.current_phase: str = "IDLE"
+        self.current_zone_index: int = 0
 
         # Treatment and telemetry thresholds
-        self.moisture_threshold = 40.0   # % — below this, needs water
-        self.nutrient_threshold = 50.0   # % — below this, needs fertilizer
+        self.moisture_threshold: float = 40.0   # % — below this, needs water
+        self.nutrient_threshold: float = 50.0   # % — below this, needs fertilizer
 
         # Telemetry storage flag
-        self.telemetry_received = False
+        self.telemetry_received: bool = False
 
         # Reusable one-shot timers (initialised as None, created on demand,
         # properly destroyed before re-creation to prevent memory leaks)
-        self._scan_timer = None
-        self._cooldown_timer = None
-        self._actuation_timer = None
-        self._actuation_start_time = 0.0
+        self._scan_timer: Optional[Timer] = None
+        self._cooldown_timer: Optional[Timer] = None
+        self._actuation_timer: Optional[Timer] = None
+        self._actuation_start_time: float = 0.0
 
         # Main cycle timer
         self.cycle_timer = self.create_timer(3.0, self.state_machine_tick)
@@ -81,7 +83,7 @@ class CropDecisionNode(Node):
     # ------------------------------------------------------------------ #
     #  Timer lifecycle helpers — prevent accumulation / memory leaks       #
     # ------------------------------------------------------------------ #
-    def _cancel_and_destroy(self, timer_attr: str):
+    def _cancel_and_destroy(self, timer_attr: str) -> None:
         """Cancel and destroy a timer stored on `self.<timer_attr>`, then set it to None."""
         timer = getattr(self, timer_attr, None)
         if timer is not None:
@@ -92,30 +94,30 @@ class CropDecisionNode(Node):
     # ------------------------------------------------------------------ #
     #  Callbacks                                                           #
     # ------------------------------------------------------------------ #
-    def weather_callback(self, msg: String):
+    def weather_callback(self, msg: String) -> None:
         old_weather = self.weather
         self.weather = msg.data.lower()
         if old_weather != self.weather:
             self.get_logger().info(
                 f"Weather Forecast updated: {self.weather.upper()}")
 
-    def moisture_callback(self, msg: Float32MultiArray):
+    def moisture_callback(self, msg: Float32MultiArray) -> None:
         for i, val in enumerate(msg.data):
             if i in self.zones_data:
                 self.zones_data[i]['moisture'] = val
         self.telemetry_received = True
 
-    def nutrients_callback(self, msg: Float32MultiArray):
+    def nutrients_callback(self, msg: Float32MultiArray) -> None:
         for i, val in enumerate(msg.data):
             if i in self.zones_data:
                 self.zones_data[i]['nutrients'] = val
 
-    def growth_callback(self, msg: Float32MultiArray):
+    def growth_callback(self, msg: Float32MultiArray) -> None:
         for i, val in enumerate(msg.data):
             if i in self.zones_data:
                 self.zones_data[i]['growth'] = val
 
-    def nav_status_callback(self, msg: String):
+    def nav_status_callback(self, msg: String) -> None:
         status = msg.data
         self.get_logger().info(
             f"Nav Status: {status} (Nexus Phase: {self.current_phase})")
@@ -141,7 +143,7 @@ class CropDecisionNode(Node):
     # ------------------------------------------------------------------ #
     #  Phase transitions                                                   #
     # ------------------------------------------------------------------ #
-    def _on_scan_complete(self):
+    def _on_scan_complete(self) -> None:
         self._cancel_and_destroy('_scan_timer')
         self.get_logger().info(
             f"Scanning complete for Zone {self.current_zone_index}. "
@@ -149,13 +151,13 @@ class CropDecisionNode(Node):
         self.current_phase = "DECIDING"
         self._make_contextual_decision()
 
-    def _start_cooldown(self):
+    def _start_cooldown(self) -> None:
         self.current_phase = "COOLDOWN"
         self._cancel_and_destroy('_cooldown_timer')
         self._cooldown_timer = self.create_timer(
             3.0, self._on_cooldown_complete)
 
-    def _on_cooldown_complete(self):
+    def _on_cooldown_complete(self) -> None:
         self._cancel_and_destroy('_cooldown_timer')
         self.current_phase = "IDLE"
         # Advance to next zone to prevent locking on one bad spot
@@ -165,7 +167,7 @@ class CropDecisionNode(Node):
     # ------------------------------------------------------------------ #
     #  Context-Aware Decision Engine                                       #
     # ------------------------------------------------------------------ #
-    def _make_contextual_decision(self):
+    def _make_contextual_decision(self) -> None:
         zone = self.zones_data[self.current_zone_index]
         moisture = zone['moisture']
         nutrients = zone['nutrients']
@@ -183,9 +185,9 @@ class CropDecisionNode(Node):
         self.get_logger().info(
             f" - Downstream Runoff Vulnerability: {runoff_risk}")
 
-        irrigation_recommended = False
-        fertilisation_recommended = False
-        sustainability_log = []
+        irrigation_recommended: bool = False
+        fertilisation_recommended: bool = False
+        sustainability_log: List[str] = []
 
         # 1. Irrigation Rule
         if moisture < self.moisture_threshold:
@@ -257,7 +259,7 @@ class CropDecisionNode(Node):
     # ------------------------------------------------------------------ #
     #  Actuation — in-place rotation proxy                                 #
     # ------------------------------------------------------------------ #
-    def _actuation_tick(self):
+    def _actuation_tick(self) -> None:
         now = self.get_clock().now().nanoseconds / 1e9
         elapsed = now - self._actuation_start_time
 
@@ -279,7 +281,7 @@ class CropDecisionNode(Node):
     # ------------------------------------------------------------------ #
     #  Main state machine tick                                             #
     # ------------------------------------------------------------------ #
-    def state_machine_tick(self):
+    def state_machine_tick(self) -> None:
         if self.current_phase != "IDLE":
             return
 
@@ -310,7 +312,7 @@ class CropDecisionNode(Node):
         self.current_phase = "NAVIGATING"
 
 
-def main(args=None):
+def main(args=None) -> None:
     rclpy.init(args=args)
     node = CropDecisionNode()
     try:

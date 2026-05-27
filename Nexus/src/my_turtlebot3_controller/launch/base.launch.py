@@ -5,10 +5,11 @@ import sys
 from ament_index_python.packages import get_package_share_directory
 from ament_index_python.packages import PackageNotFoundError
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.actions import AppendEnvironmentVariable
+from launch.conditions import IfCondition
 from launch_ros.actions import Node
 
 
@@ -56,10 +57,18 @@ def generate_launch_description():
               "Using default nav2_bringup params.",
               file=sys.stderr)
 
+    # Declare gui argument for headless mode
+    declare_gui_cmd = DeclareLaunchArgument(
+        'gui',
+        default_value='true',
+        description='Set to "false" to run headless (no Gazebo GUI).'
+    )
+
     # Set launch arguments. Set initial position of robot
     use_sim_time = LaunchConfiguration("use_sim_time", default="true")
     x_pose = LaunchConfiguration("x_pose", default="0.0")
     y_pose = LaunchConfiguration("y_pose", default="0.0")
+    gui = LaunchConfiguration("gui")
 
     # ------------------------------------------------------------------
     # World file (graceful fallback if my_tb3_world is not built/sourced)
@@ -95,7 +104,7 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Launch Gazebo client
+    # Launch Gazebo client (conditionally — set gui:=false for headless)
     gzclient_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(ros_gz_sim_share, "launch", "gz_sim.launch.py")
@@ -104,6 +113,7 @@ def generate_launch_description():
             "gz_args": "-g -v2",
             "on_exit_shutdown": "true",
         }.items(),
+        condition=IfCondition(gui),
     )
 
     robot_state_publisher_cmd = IncludeLaunchDescription(
@@ -172,6 +182,7 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     # Add the commands to the launch description
+    ld.add_action(declare_gui_cmd)
     ld.add_action(gzserver_cmd)
     ld.add_action(gzclient_cmd)
     ld.add_action(spawn_turtlebot_cmd)

@@ -2,20 +2,22 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
+from rclpy.action.client import ClientGoalHandle
 from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import PoseStamped 
 from std_msgs.msg import String 
 from action_msgs.msg import GoalStatus as ActionGoalStatus
 import math
+from typing import Optional
 
 class NavigationExecutorNode(Node): 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('navigation_executor_node') 
         self._action_client = ActionClient(self, NavigateToPose, '/navigate_to_pose') 
         
-        self.goal_handle = None
-        self.current_nav_status = "IDLE" # IDLE, NAVIGATING, SUCCEEDED, FAILED, ABORTED
-        self.active_goal_pose_for_logging = None 
+        self.goal_handle: Optional[ClientGoalHandle] = None
+        self.current_nav_status: str = "IDLE" # IDLE, NAVIGATING, SUCCEEDED, FAILED, ABORTED
+        self.active_goal_pose_for_logging: Optional[PoseStamped] = None 
 
         # Subscriber - incoming navigation goals
         self.goal_subscriber = self.create_subscription(
@@ -30,7 +32,7 @@ class NavigationExecutorNode(Node):
         self.get_logger().info("Navigation Executor Node Initialized. Waiting for goals on /dispatch_nav_goal.")
         self._publish_status("IDLE")
 
-    def _publish_status(self, status_str):
+    def _publish_status(self, status_str: str) -> None:
         msg = String()
         msg.data = status_str
 
@@ -39,7 +41,7 @@ class NavigationExecutorNode(Node):
         self.get_logger().info(f"Publishing Status: {status_str}")
         self.current_nav_status = status_str
 
-    def dispatch_goal_callback(self, msg: PoseStamped):
+    def dispatch_goal_callback(self, msg: PoseStamped) -> None:
         if self.current_nav_status == "NAVIGATING":
             self.get_logger().warn("Navigation already in progress. New goal ignored.")
             return
@@ -54,7 +56,7 @@ class NavigationExecutorNode(Node):
             pass
 
 
-    def wait_for_action_server(self, timeout_sec=5.0):
+    def wait_for_action_server(self, timeout_sec: float = 5.0) -> bool:
         self.get_logger().info('Waiting for /navigate_to_pose action server...')
 
         if not self._action_client.wait_for_server(timeout_sec=timeout_sec):
@@ -65,7 +67,7 @@ class NavigationExecutorNode(Node):
         self.get_logger().info('/navigate_to_pose action server is available.')
         return True
 
-    def send_nav2_goal(self, target_pose_stamped: PoseStamped): 
+    def send_nav2_goal(self, target_pose_stamped: PoseStamped) -> bool: 
         if not self.wait_for_action_server():
             return False
 
@@ -82,7 +84,7 @@ class NavigationExecutorNode(Node):
         return True
 
 
-    def goal_response_callback(self, future):
+    def goal_response_callback(self, future) -> None:
         self.goal_handle = future.result()
 
         if not self.goal_handle.accepted:
@@ -97,7 +99,7 @@ class NavigationExecutorNode(Node):
         result_future = self.goal_handle.get_result_async()
         result_future.add_done_callback(self.get_result_callback)
 
-    def get_result_callback(self, future):
+    def get_result_callback(self, future) -> None:
         status_code = future.result().status 
         final_status_str = "UNKNOWN_FAILURE"
 
@@ -117,11 +119,11 @@ class NavigationExecutorNode(Node):
         self._publish_status("IDLE") 
         self.active_goal_pose_for_logging = None
 
-    def feedback_callback(self, feedback_msg):
+    def feedback_callback(self, feedback_msg) -> None:
         feedback = feedback_msg.feedback
         self.get_logger().debug(f"Navigating to goal, Dist_rem: {feedback.distance_remaining:.2f} m")
 
-def main(args=None):
+def main(args=None) -> None:
     rclpy.init(args=args)
     executor_node = NavigationExecutorNode() 
 

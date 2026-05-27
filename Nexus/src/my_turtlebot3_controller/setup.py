@@ -31,7 +31,9 @@ setup(
             'odom_node = my_turtlebot3_controller.OdomToGazeboPoseNode:main',
             'navigation_node = my_turtlebot3_controller.navigation:main',
             'field_sensor_mock_node = my_turtlebot3_controller.field_sensor_mock_node:main',
-            'crop_decision_node = my_turtlebot3_controller.CropDecisionNode:main'
+            'crop_decision_node = my_turtlebot3_controller.CropDecisionNode:main',
+            'safety_stop_node = my_turtlebot3_controller.safety_stop_node:main',
+            'twin_safety_node = my_turtlebot3_controller.twin_safety_node:main'
         ],
     },
 )
