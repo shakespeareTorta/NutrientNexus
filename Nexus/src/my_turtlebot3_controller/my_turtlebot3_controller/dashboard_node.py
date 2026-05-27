@@ -18,6 +18,7 @@ class DashboardNode(Node):
 
         # Publishers
         self.weather_pub = self.create_publisher(String, '/weather_forecast', 10)
+        self.report_pub = self.create_publisher(String, '/generate_report', 10)
 
         # Subscribers
         self.create_subscription(String, '/robot_resources', self.resource_cb, 10)
@@ -102,11 +103,23 @@ class DashboardNode(Node):
         tk.Button(btn_frame, text="🌧️ Rainy", bg="#3498DB", fg="#FFF", font=("Helvetica", 10, "bold"), command=lambda: self.set_weather("rainy")).grid(row=0, column=1, padx=10)
         tk.Button(btn_frame, text="☁️ Overcast", bg="#95A5A6", fg="#FFF", font=("Helvetica", 10, "bold"), command=lambda: self.set_weather("overcast")).grid(row=0, column=2, padx=10)
 
+        # --- Audit Frame ---
+        audit_frame = tk.LabelFrame(main_frame, text="Sustainability Audit", bg="#1E1E1E", fg="#FFFFFF", font=("Helvetica", 12, "bold"))
+        audit_frame.pack(fill=tk.X, pady=10, ipadx=10, ipady=10)
+        
+        tk.Button(audit_frame, text="📄 Generate Sustainability Report", bg="#2ECC71", fg="#FFF", font=("Helvetica", 11, "bold"), command=self.generate_report).pack(pady=5)
+
     def set_weather(self, weather: str):
         msg = String()
         msg.data = weather
         self.weather_pub.publish(msg)
         self.get_logger().info(f"Injected weather: {weather}")
+
+    def generate_report(self):
+        msg = String()
+        msg.data = "generate"
+        self.report_pub.publish(msg)
+        self.get_logger().info("Requested Sustainability Audit Report")
 
     def resource_cb(self, msg: String):
         try:

@@ -26,6 +26,7 @@ class CropDecisionNode(Node):
         # A cmd_vel_mux or relay can merge them downstream if needed.
         self.treatment_vel_pub = self.create_publisher(Twist, '/cmd_vel_treatment', 10)
         self.refill_pub = self.create_publisher(String, '/refill_resources', 10)
+        self.intervention_pub = self.create_publisher(String, '/sdg14_intervention', 10)
 
         # Subscribers
         self.moisture_sub = self.create_subscription(
@@ -220,7 +221,30 @@ class CropDecisionNode(Node):
         zone = self.zones_data[self.current_zone_index]
         moisture = zone['moisture']
         nutrients = zone['nutrients']
-        runoff_risk = zone['runoff_risk']
+        runoff_risk_base = zone['runoff_risk']
+
+        # 1. Calculate Dynamic Runoff Vulnerability Score (0-100)
+        vulnerability_score = 0.0
+        
+        # Base Risk Contribution (0-40)
+        if runoff_risk_base == 'High':
+            vulnerability_score += 40.0
+        elif runoff_risk_base == 'Medium':
+            vulnerability_score += 20.0
+            
+        # Soil Saturation Contribution (0-30)
+        if moisture > 85.0:
+            vulnerability_score += 30.0
+        elif moisture > 60.0:
+            vulnerability_score += 15.0
+            
+        # Weather Contribution (0-30)
+        if self.weather == 'rainy':
+            vulnerability_score += 30.0
+        elif self.weather == 'overcast':
+            vulnerability_score += 10.0
+
+        vulnerability_score = min(100.0, vulnerability_score)
 
         self.get_logger().info(f"=== Scan Telemetry for {zone['id']} ===")
         self.get_logger().info(
@@ -232,7 +256,7 @@ class CropDecisionNode(Node):
         self.get_logger().info(
             f" - Weather Condition: {self.weather.upper()}")
         self.get_logger().info(
-            f" - Downstream Runoff Vulnerability: {runoff_risk}")
+            f" - Dynamic Runoff Vulnerability Score: {vulnerability_score:.1f}/100")
 
         irrigation_recommended: bool = False
         fertilisation_recommended: bool = False
@@ -254,16 +278,22 @@ class CropDecisionNode(Node):
 
         # 2. Fertiliser / Nitrogen Rule
         #    (Context-Aware / Coastal Eutrophication Risk — SDG 14)
+        is_safe_to_fertilize = vulnerability_score <= 60.0
+
         if nutrients < self.nutrient_threshold:
-            if self.weather == 'rainy':
-                sustainability_log.append(
-                    "Nutrients LOW, but Fertilisation BLOCKED "
-                    "(CRITICAL: Heavy rain will wash nutrients downstream!).")
-            elif runoff_risk == 'High' and self.weather != 'sunny':
-                sustainability_log.append(
-                    "Nutrients LOW, but Fertilisation BLOCKED "
-                    "(CRITICAL: High risk zone near water during "
-                    "non-sunny conditions).")
+            if not is_safe_to_fertilize:
+                reason = f"Fertilisation BLOCKED. Vulnerability Score {vulnerability_score:.1f} > 60.0 indicates high runoff risk."
+                sustainability_log.append(f"CRITICAL: {reason}")
+                
+                # Publish intervention to the audit ledger
+                intervention_data = {
+                    "zone": zone['id'],
+                    "reason": reason,
+                    "vulnerability_score": round(vulnerability_score, 1)
+                }
+                msg = String()
+                msg.data = json.dumps(intervention_data)
+                self.intervention_pub.publish(msg)
             else:
                 fertilisation_recommended = True
                 sustainability_log.append(

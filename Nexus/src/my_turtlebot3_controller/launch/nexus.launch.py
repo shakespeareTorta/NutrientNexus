@@ -115,6 +115,15 @@ def generate_launch_description():
         emulate_tty=True,
     )
 
+    # 9. Sustainability Audit Node
+    sustainability_audit = Node(
+        package="my_turtlebot3_controller",
+        executable="sustainability_audit_node",
+        name="sustainability_audit_node",
+        output="screen",
+        emulate_tty=True,
+    )
+
     # Return Launch Description containing all elements
     return LaunchDescription(
         [
@@ -127,5 +136,6 @@ def generate_launch_description():
             robot_resource,
             crop_decision,
             dashboard,
+            sustainability_audit,
         ]
     )
