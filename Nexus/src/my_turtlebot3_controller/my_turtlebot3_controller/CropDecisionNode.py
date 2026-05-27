@@ -27,6 +27,7 @@ class CropDecisionNode(Node):
         self.treatment_vel_pub = self.create_publisher(Twist, '/cmd_vel_treatment', 10)
         self.refill_pub = self.create_publisher(String, '/refill_resources', 10)
         self.intervention_pub = self.create_publisher(String, '/sdg14_intervention', 10)
+        self.override_req_pub = self.create_publisher(String, '/operator_override_request', 10)
 
         # Subscribers
         self.moisture_sub = self.create_subscription(
@@ -49,6 +50,9 @@ class CropDecisionNode(Node):
             
         self.resource_sub = self.create_subscription(
             String, '/robot_resources', self.resource_callback, 10)
+        
+        self.override_resp_sub = self.create_subscription(
+            String, '/operator_override_response', self.override_resp_callback, 10)
 
         # Crop Zones Configuration - Loaded from zones.yaml
         pkg_dir = get_package_share_directory('my_turtlebot3_controller')
@@ -86,7 +90,6 @@ class CropDecisionNode(Node):
         # Resource tracking
         self.battery_level: float = 100.0
         self.fertilizer_level: float = 100.0
-        self.water_level: float = 100.0
 
         # Treatment and telemetry thresholds
         self.moisture_threshold: float = 40.0   # % — below this, needs water
@@ -134,9 +137,43 @@ class CropDecisionNode(Node):
             data = json.loads(msg.data)
             self.battery_level = data.get("battery", 100.0)
             self.fertilizer_level = data.get("fertilizer", 100.0)
-            self.water_level = data.get("water", 100.0)
         except json.JSONDecodeError:
             pass
+
+    def override_resp_callback(self, msg: String) -> None:
+        if self.current_phase != "WAITING_FOR_OPERATOR":
+            return
+            
+        action = msg.data.lower()
+        zone = self.zones_data[self.current_zone_index]
+        
+        if action == "override":
+            self.get_logger().warn("HUMAN OVERRIDE RECEIVED: Forcing fertilization despite SDG-14 risks.")
+            
+            # Log this dangerous override
+            intervention_data = {
+                "zone": zone['id'],
+                "reason": "HUMAN OVERRIDE of Critical SDG-14 Risk",
+                "vulnerability_score": "N/A"
+            }
+            msg_int = String()
+            msg_int.data = json.dumps(intervention_data)
+            self.intervention_pub.publish(msg_int)
+            
+            # Force actuate
+            self.current_phase = "ACTUATING"
+            msg_fert = String()
+            msg_fert.data = zone['id']
+            self.fertilise_pub.publish(msg_fert)
+            
+            self.get_logger().info("Simulating physical actuation: Rotating in place to apply treatment...")
+            self._actuation_start_time = self.get_clock().now().nanoseconds / 1e9
+            self._cancel_and_destroy('_actuation_timer')
+            self._actuation_timer = self.create_timer(0.1, self._actuation_tick)
+            
+        elif action == "comply":
+            self.get_logger().info("Operator COMPLIED with SDG-14 abort. Skipping zone.")
+            self._start_cooldown()
 
     def current_zone_callback(self, msg: String) -> None:
         self.physical_current_zone = msg.data
@@ -291,9 +328,17 @@ class CropDecisionNode(Node):
                     "reason": reason,
                     "vulnerability_score": round(vulnerability_score, 1)
                 }
-                msg = String()
-                msg.data = json.dumps(intervention_data)
-                self.intervention_pub.publish(msg)
+                msg_int = String()
+                msg_int.data = json.dumps(intervention_data)
+                self.intervention_pub.publish(msg_int)
+                
+                # HALT for Operator Override
+                self.get_logger().warn("Halting and waiting for human operator override decision...")
+                self.current_phase = "WAITING_FOR_OPERATOR"
+                msg_req = String()
+                msg_req.data = json.dumps({"zone": zone['id'], "reason": reason})
+                self.override_req_pub.publish(msg_req)
+                return  # Skip actuation logic for now
             else:
                 fertilisation_recommended = True
                 sustainability_log.append(
@@ -381,10 +426,10 @@ class CropDecisionNode(Node):
             return
 
         # 1. Resource Pre-flight Check
-        if self.battery_level < 30.0 or self.fertilizer_level < 20.0 or self.water_level < 20.0:
+        if self.battery_level < 30.0 or self.fertilizer_level < 20.0:
             self.get_logger().warn(
                 f"Resources LOW! Battery: {self.battery_level}%, "
-                f"Fertilizer: {self.fertilizer_level}%, Water: {self.water_level}%. "
+                f"Fertilizer: {self.fertilizer_level}%. "
                 f"Aborting mission, returning to base station.")
             
             if self.base_station:

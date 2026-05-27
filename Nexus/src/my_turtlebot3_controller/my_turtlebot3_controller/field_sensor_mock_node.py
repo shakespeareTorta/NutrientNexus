@@ -24,14 +24,21 @@ class FieldSensorMockNode(Node):
 
         self.zones: List[Dict[str, Any]] = []
         for zone_id in sorted(raw_zones.keys()):
+            if zone_id == 'base_station':
+                continue
+                
+            baseline_m = raw_zones[zone_id].get('baseline_moisture', 50.0)
+            baseline_n = raw_zones[zone_id].get('baseline_nutrients', 50.0)
+            
             self.zones.append({
                 'id': zone_id,
-                'moisture': random.uniform(30.0, 60.0),
-                'nutrients': random.uniform(30.0, 70.0),
+                'moisture': float(baseline_m),
+                'nutrients': float(baseline_n),
                 'growth': random.uniform(10.0, 40.0)
             })
             
         self.num_zones = len(self.zones)
+        self.weather = "sunny"
 
         # Publishers
         self.moisture_pub = self.create_publisher(Float32MultiArray, '/field_moisture', 10)
@@ -41,6 +48,7 @@ class FieldSensorMockNode(Node):
         # Subscribers to apply treatment and replenish zone metrics
         self.irrigate_sub = self.create_subscription(String, '/irrigate_zone', self.irrigate_callback, 10)
         self.fertilise_sub = self.create_subscription(String, '/fertilise_zone', self.fertilise_callback, 10)
+        self.weather_sub = self.create_subscription(String, '/weather_forecast', self.weather_cb, 10)
 
         # Single timer for environment simulation + telemetry publishing
         # (merged to avoid race conditions between depletion and publishing)
@@ -54,14 +62,22 @@ class FieldSensorMockNode(Node):
         self.deplete_and_grow_tick()
         self.publish_telemetry_tick()
 
+    def weather_cb(self, msg: String) -> None:
+        self.weather = msg.data.lower()
+
     def deplete_and_grow_tick(self) -> None:
-        """Simulates natural environment processes: moisture evaporation, nutrient absorption, and crop growth."""
+        """Simulates natural environment processes adapting to live weather."""
         for zone in self.zones:
-            # Moisture depletes naturally (evaporation/drainage)
-            if zone['moisture'] > 10.0:
-                zone['moisture'] -= random.uniform(0.2, 0.8)
-            else:
-                zone['moisture'] = 10.0
+            # Weather-driven moisture adaptation
+            if self.weather == "rainy":
+                zone['moisture'] += random.uniform(1.0, 3.0)
+            elif self.weather == "sunny":
+                zone['moisture'] -= random.uniform(0.5, 1.5)
+            elif self.weather == "overcast":
+                zone['moisture'] -= random.uniform(0.1, 0.4)
+                
+            # Clamp moisture
+            zone['moisture'] = max(5.0, min(99.0, zone['moisture']))
 
             # Nutrients deplete slowly as plants absorb them
             if zone['nutrients'] > 5.0:

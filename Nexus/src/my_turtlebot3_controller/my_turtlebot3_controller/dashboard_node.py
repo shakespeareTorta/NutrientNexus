@@ -24,11 +24,13 @@ class DashboardNode(Node):
         self.create_subscription(String, '/robot_resources', self.resource_cb, 10)
         self.create_subscription(String, '/current_zone', self.zone_cb, 10)
         self.create_subscription(String, '/navigation_executor_status', self.nav_cb, 10)
+        self.create_subscription(String, '/operator_override_request', self.override_req_cb, 10)
+        
+        self.override_pub = self.create_publisher(String, '/operator_override_response', 10)
 
         # State Variables
         self.battery = 100.0
         self.fertilizer = 100.0
-        self.water = 100.0
         self.current_zone = "Unknown"
         self.nav_status = "IDLE"
 
@@ -75,13 +77,6 @@ class DashboardNode(Node):
         self.fert_lbl = tk.Label(res_frame, text="100%", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10))
         self.fert_lbl.grid(row=1, column=2)
 
-        # Water
-        tk.Label(res_frame, text="Water:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=2, column=0, sticky="w", pady=5)
-        self.wat_bar = ttk.Progressbar(res_frame, length=300, mode="determinate", style="blue.Horizontal.TProgressbar")
-        self.wat_bar.grid(row=2, column=1, padx=10)
-        self.wat_lbl = tk.Label(res_frame, text="100%", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10))
-        self.wat_lbl.grid(row=2, column=2)
-
         # --- Telemetry Frame ---
         tele_frame = tk.LabelFrame(main_frame, text="Digital Twin Telemetry", bg="#1E1E1E", fg="#FFFFFF", font=("Helvetica", 12, "bold"))
         tele_frame.pack(fill=tk.X, pady=10, ipadx=10, ipady=10)
@@ -121,12 +116,52 @@ class DashboardNode(Node):
         self.report_pub.publish(msg)
         self.get_logger().info("Requested Sustainability Audit Report")
 
+    def override_req_cb(self, msg: String):
+        # We need to run UI updates in the main thread.
+        self.root.after(0, self.show_override_popup, msg.data)
+
+    def show_override_popup(self, data_str: str):
+        try:
+            data = json.loads(data_str)
+            zone = data.get("zone", "Unknown")
+            reason = data.get("reason", "Unknown Risk")
+
+            popup = tk.Toplevel(self.root)
+            popup.title("⚠️ SDG-14 Safety Override Required")
+            popup.geometry("500x300")
+            popup.configure(bg="#E74C3C")
+
+            tk.Label(popup, text="CRITICAL SDG-14 RUNOFF RISK", bg="#E74C3C", fg="#FFF", font=("Helvetica", 16, "bold")).pack(pady=10)
+            tk.Label(popup, text=f"Zone: {zone}", bg="#E74C3C", fg="#FFF", font=("Helvetica", 14)).pack(pady=5)
+            
+            msg_text = tk.Text(popup, height=4, width=50, bg="#E74C3C", fg="#FFF", font=("Helvetica", 11), wrap=tk.WORD, bd=0)
+            msg_text.insert(tk.END, reason)
+            msg_text.config(state=tk.DISABLED)
+            msg_text.pack(pady=10)
+
+            btn_frame = tk.Frame(popup, bg="#E74C3C")
+            btn_frame.pack(pady=20)
+
+            def comply():
+                self.override_pub.publish(String(data="comply"))
+                popup.destroy()
+
+            def override():
+                self.override_pub.publish(String(data="override"))
+                popup.destroy()
+
+            tk.Button(btn_frame, text="🛡️ COMPLY (Abort Spray)", bg="#2ECC71", fg="#FFF", font=("Helvetica", 12, "bold"), command=comply).pack(side=tk.LEFT, padx=10)
+            tk.Button(btn_frame, text="⚠️ OVERRIDE (Force Spray)", bg="#1E1E1E", fg="#E74C3C", font=("Helvetica", 12, "bold"), command=override).pack(side=tk.RIGHT, padx=10)
+
+            popup.grab_set()
+        except Exception as e:
+            self.get_logger().error(f"Error showing popup: {e}")
+
     def resource_cb(self, msg: String):
         try:
             data = json.loads(msg.data)
             self.battery = data.get("battery", 100.0)
             self.fertilizer = data.get("fertilizer", 100.0)
-            self.water = data.get("water", 100.0)
         except Exception:
             pass
 
@@ -145,10 +180,6 @@ class DashboardNode(Node):
         self.fert_bar['value'] = self.fertilizer
         self.fert_lbl.config(text=f"{self.fertilizer:.1f}%")
         self.fert_bar.configure(style="red.Horizontal.TProgressbar" if self.fertilizer < 20 else "green.Horizontal.TProgressbar")
-
-        self.wat_bar['value'] = self.water
-        self.wat_lbl.config(text=f"{self.water:.1f}%")
-        self.wat_bar.configure(style="red.Horizontal.TProgressbar" if self.water < 20 else "blue.Horizontal.TProgressbar")
 
         # Update text
         self.zone_var.set(f"Physical Zone: {self.current_zone}")

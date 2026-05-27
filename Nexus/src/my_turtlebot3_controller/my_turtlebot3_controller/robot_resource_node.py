@@ -4,7 +4,7 @@ Robot Resource Node
 
 Simulates physical resource depletion on the robot:
 - Battery drains based on physical distance travelled (calculated from /odom)
-- Fertilizer and Water tanks drain when spray commands are issued
+- Fertilizer tank drains when spray commands are issued
 - Refills when a message is sent to /refill_resources
 Publishes state as a JSON string to /robot_resources.
 """
@@ -23,14 +23,12 @@ class RobotResourceNode(Node):
         # Resource levels (0.0 to 100.0)
         self.battery: float = 100.0
         self.fertilizer: float = 100.0
-        self.water: float = 100.0
 
         # Depletion rates
         # E.g., 2% battery per meter driven
         self.battery_drain_per_meter: float = 2.0 
         # 15% tank used per actuation
         self.fertilizer_drain_per_spray: float = 15.0 
-        self.water_drain_per_spray: float = 15.0
 
         self.last_x: Optional[float] = None
         self.last_y: Optional[float] = None
@@ -38,7 +36,6 @@ class RobotResourceNode(Node):
         # Subscribers
         self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
         self.create_subscription(String, '/fertilise_zone', self.fertilize_callback, 10)
-        self.create_subscription(String, '/irrigate_zone', self.irrigate_callback, 10)
         self.create_subscription(String, '/refill_resources', self.refill_callback, 10)
 
         # Publisher
@@ -65,23 +62,16 @@ class RobotResourceNode(Node):
         self.fertilizer = max(0.0, self.fertilizer - self.fertilizer_drain_per_spray)
         self.publish_resources()
 
-    def irrigate_callback(self, msg: String) -> None:
-        self.get_logger().info("Water sprayed. Draining tank.")
-        self.water = max(0.0, self.water - self.water_drain_per_spray)
-        self.publish_resources()
-
     def refill_callback(self, msg: String) -> None:
-        self.get_logger().info("Base Station connected. Refilling all resources to 100%.")
+        self.get_logger().info("Base Station connected. Refilling battery and fertilizer to 100%.")
         self.battery = 100.0
         self.fertilizer = 100.0
-        self.water = 100.0
         self.publish_resources()
 
     def publish_resources(self) -> None:
         state = {
             "battery": round(self.battery, 1),
-            "fertilizer": round(self.fertilizer, 1),
-            "water": round(self.water, 1)
+            "fertilizer": round(self.fertilizer, 1)
         }
         msg = String()
         msg.data = json.dumps(state)

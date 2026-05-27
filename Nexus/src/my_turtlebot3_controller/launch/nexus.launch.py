@@ -41,7 +41,11 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(my_controller_share, "launch", "base.launch.py")
         ),
-        launch_arguments={'gui': gui}.items(),
+        launch_arguments={
+            'gui': gui,
+            'x_pose': '0.5',
+            'y_pose': '-0.5'
+        }.items(),
     )
 
     # 2. Safety Stop Node — LiDAR-based collision guard (defence-in-depth)
