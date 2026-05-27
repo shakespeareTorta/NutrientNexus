@@ -88,11 +88,29 @@ def generate_launch_description():
         emulate_tty=True,
     )
 
-    # 6. Crop Decision Node (Agricultural State Machine & SDG-14 controller)
+    # 6. Robot Resource Node (Battery & Tank tracking)
+    robot_resource = Node(
+        package="my_turtlebot3_controller",
+        executable="robot_resource_node",
+        name="robot_resource_node",
+        output="screen",
+        emulate_tty=True,
+    )
+
+    # 7. Crop Decision Node (Agricultural State Machine & SDG-14 controller)
     crop_decision = Node(
         package="my_turtlebot3_controller",
         executable="crop_decision_node",
         name="crop_decision_node",
+        output="screen",
+        emulate_tty=True,
+    )
+
+    # 8. Real-Time Dashboard Node (Tkinter GUI)
+    dashboard = Node(
+        package="my_turtlebot3_controller",
+        executable="dashboard_node",
+        name="dashboard_node",
         output="screen",
         emulate_tty=True,
     )
@@ -106,6 +124,8 @@ def generate_launch_description():
             field_sensor_mock,
             navigation_executor,
             zone_detector,
+            robot_resource,
             crop_decision,
+            dashboard,
         ]
     )

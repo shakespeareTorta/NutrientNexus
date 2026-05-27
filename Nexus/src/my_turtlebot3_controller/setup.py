@@ -34,7 +34,9 @@ setup(
             'crop_decision_node = my_turtlebot3_controller.CropDecisionNode:main',
             'safety_stop_node = my_turtlebot3_controller.safety_stop_node:main',
             'twin_safety_node = my_turtlebot3_controller.twin_safety_node:main',
-            'zone_detector_node = my_turtlebot3_controller.zone_detector_node:main'
+            'zone_detector_node = my_turtlebot3_controller.zone_detector_node:main',
+            'robot_resource_node = my_turtlebot3_controller.robot_resource_node:main',
+            'dashboard_node = my_turtlebot3_controller.dashboard_node:main'
         ],
     },
 )

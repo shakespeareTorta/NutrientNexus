@@ -7,6 +7,7 @@ from geometry_msgs.msg import PoseStamped, Twist
 import math
 import os
 import yaml
+import json
 from ament_index_python.packages import get_package_share_directory
 from typing import Dict, List, Optional, Any
 
@@ -24,6 +25,7 @@ class CropDecisionNode(Node):
         # conflicting with Nav2's velocity output on /cmd_vel.
         # A cmd_vel_mux or relay can merge them downstream if needed.
         self.treatment_vel_pub = self.create_publisher(Twist, '/cmd_vel_treatment', 10)
+        self.refill_pub = self.create_publisher(String, '/refill_resources', 10)
 
         # Subscribers
         self.moisture_sub = self.create_subscription(
@@ -43,6 +45,9 @@ class CropDecisionNode(Node):
 
         self.weather_sub = self.create_subscription(
             String, '/weather_forecast', self.weather_callback, 10)
+            
+        self.resource_sub = self.create_subscription(
+            String, '/robot_resources', self.resource_callback, 10)
 
         # Crop Zones Configuration - Loaded from zones.yaml
         pkg_dir = get_package_share_directory('my_turtlebot3_controller')
@@ -50,17 +55,22 @@ class CropDecisionNode(Node):
         with open(zones_file, 'r', encoding='utf-8') as f:
             raw_zones = yaml.safe_load(f) or {}
             
+        self.base_station: Optional[Dict[str, Any]] = None
         self.zones_data: List[Dict[str, Any]] = []
         for zone_id in sorted(raw_zones.keys()):
             z = raw_zones[zone_id]
-            self.zones_data.append({
+            zone_info = {
                 'id': zone_id,
                 'location': (z['target_x'], z['target_y'], z['target_theta']),
                 'runoff_risk': z['runoff_risk'],
                 'moisture': 100.0,
                 'nutrients': 100.0,
                 'growth': 0.0
-            })
+            }
+            if zone_id == 'base_station':
+                self.base_station = zone_info
+            else:
+                self.zones_data.append(zone_info)
             
         # Spatial Verification Subscriber
         self.physical_current_zone: str = "no_zone"
@@ -68,9 +78,14 @@ class CropDecisionNode(Node):
             String, '/current_zone', self.current_zone_callback, 10)
 
         # System state machine
-        # Phases: IDLE, NAVIGATING, VERIFYING_ZONE, SCANNING, DECIDING, ACTUATING, COOLDOWN
+        # Phases: IDLE, NAVIGATING, VERIFYING_ZONE, SCANNING, DECIDING, ACTUATING, COOLDOWN, RETURNING_TO_BASE
         self.current_phase: str = "IDLE"
         self.current_zone_index: int = 0
+        
+        # Resource tracking
+        self.battery_level: float = 100.0
+        self.fertilizer_level: float = 100.0
+        self.water_level: float = 100.0
 
         # Treatment and telemetry thresholds
         self.moisture_threshold: float = 40.0   # % — below this, needs water
@@ -113,6 +128,15 @@ class CropDecisionNode(Node):
             self.get_logger().info(
                 f"Weather Forecast updated: {self.weather.upper()}")
 
+    def resource_callback(self, msg: String) -> None:
+        try:
+            data = json.loads(msg.data)
+            self.battery_level = data.get("battery", 100.0)
+            self.fertilizer_level = data.get("fertilizer", 100.0)
+            self.water_level = data.get("water", 100.0)
+        except json.JSONDecodeError:
+            pass
+
     def current_zone_callback(self, msg: String) -> None:
         self.physical_current_zone = msg.data
 
@@ -150,6 +174,19 @@ class CropDecisionNode(Node):
                 self.get_logger().warn(
                     f"Navigation failed to Zone {self.current_zone_index}. "
                     f"Retrying after cooldown.")
+                self._start_cooldown()
+
+        elif self.current_phase == "RETURNING_TO_BASE":
+            if status == "SUCCEEDED_AT_POSE":
+                self.get_logger().info(
+                    "Arrived at Base Station. Initiating refill and charge...")
+                msg = String()
+                msg.data = "refill"
+                self.refill_pub.publish(msg)
+                self._start_cooldown()
+            elif status in ["FAILED_NAVIGATION", "ABORTED_NAVIGATION",
+                            "CANCELED_NAVIGATION", "REJECTED"]:
+                self.get_logger().warn("Navigation failed to Base Station. Retrying...")
                 self._start_cooldown()
 
     # ------------------------------------------------------------------ #
@@ -311,6 +348,28 @@ class CropDecisionNode(Node):
             return
             
         if self.current_phase != "IDLE":
+            return
+
+        # 1. Resource Pre-flight Check
+        if self.battery_level < 30.0 or self.fertilizer_level < 20.0 or self.water_level < 20.0:
+            self.get_logger().warn(
+                f"Resources LOW! Battery: {self.battery_level}%, "
+                f"Fertilizer: {self.fertilizer_level}%, Water: {self.water_level}%. "
+                f"Aborting mission, returning to base station.")
+            
+            if self.base_station:
+                x, y, yaw_deg = self.base_station['location']
+                goal = PoseStamped()
+                goal.header.stamp = self.get_clock().now().to_msg()
+                goal.header.frame_id = 'map'
+                goal.pose.position.x = float(x)
+                goal.pose.position.y = float(y)
+                yaw_rad = math.radians(float(yaw_deg))
+                goal.pose.orientation.z = math.sin(yaw_rad / 2.0)
+                goal.pose.orientation.w = math.cos(yaw_rad / 2.0)
+
+                self.goal_pub.publish(goal)
+                self.current_phase = "RETURNING_TO_BASE"
             return
 
         if not self.telemetry_received:
