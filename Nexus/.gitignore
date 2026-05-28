@@ -43,7 +43,7 @@ CMakeCache.txt
 
 # ROS 2 log and config files (optional)
 *.log
-*.yaml
+
 
 # General temporary files
 *.swp
