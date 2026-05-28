@@ -39,12 +39,12 @@ def generate_launch_description():
 
     declare_slam = DeclareLaunchArgument(
         'slam',
-        default_value='false',
+        default_value='False',
         description='Run SLAM to build a new map. Set false to localise with AMCL on the saved map.')
 
     declare_gui = DeclareLaunchArgument(
         'gui',
-        default_value='true',
+        default_value='True',
         description='Launch Gazebo GUI for digital twin visualisation.')
 
     slam = LaunchConfiguration('slam')
