@@ -53,6 +53,14 @@ def generate_launch_description():
     nav2_params = os.path.join(my_pkg, 'config', 'nav2_real_params.yaml')
     map_file = os.path.join(my_pkg, 'maps', 'big_map.yaml')
 
+    bt_navigator_share = get_package_share_directory('nav2_bt_navigator')
+    bt_xml_nav_to_pose = os.path.join(
+        bt_navigator_share, 'behavior_trees',
+        'navigate_to_pose_w_replanning_and_recovery.xml')
+    bt_xml_nav_through_poses = os.path.join(
+        bt_navigator_share, 'behavior_trees',
+        'navigate_through_poses_w_replanning_and_recovery.xml')
+
     ros_gz_sim_share = get_package_share_directory('ros_gz_sim')
     my_tb3_world_share = get_package_share_directory('my_tb3_world')
     world = os.path.join(my_tb3_world_share, 'worlds', 'new_world.world')
@@ -96,6 +104,8 @@ def generate_launch_description():
             'map': map_file,
             'params_file': nav2_params,
             'cmd_vel_topic': '/cmd_vel_nav',
+            'default_nav_to_pose_bt_xml': bt_xml_nav_to_pose,
+            'default_nav_through_poses_bt_xml': bt_xml_nav_through_poses,
         }.items(),
         condition=UnlessCondition(slam),
     )
@@ -111,6 +121,8 @@ def generate_launch_description():
             'autostart': 'True',
             'params_file': nav2_params,
             'cmd_vel_topic': '/cmd_vel_nav',
+            'default_nav_to_pose_bt_xml': bt_xml_nav_to_pose,
+            'default_nav_through_poses_bt_xml': bt_xml_nav_through_poses,
         }.items(),
         condition=IfCondition(slam),
     )

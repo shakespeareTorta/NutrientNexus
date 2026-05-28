@@ -20,6 +20,14 @@ def generate_launch_description():
     )
     ros_gz_sim_share = get_package_share_directory("ros_gz_sim")
 
+    bt_navigator_share = get_package_share_directory("nav2_bt_navigator")
+    bt_xml_nav_to_pose = os.path.join(
+        bt_navigator_share, "behavior_trees",
+        "navigate_to_pose_w_replanning_and_recovery.xml")
+    bt_xml_nav_through_poses = os.path.join(
+        bt_navigator_share, "behavior_trees",
+        "navigate_through_poses_w_replanning_and_recovery.xml")
+
     # ------------------------------------------------------------------
     # Locate nav2_simulation_params.yaml robustly across workspaces
     # ------------------------------------------------------------------
@@ -141,6 +149,8 @@ def generate_launch_description():
         "slam": "True",
         "cmd_vel_topic": "/cmd_vel_nav",
         "autostart": "True",
+        "default_nav_to_pose_bt_xml": bt_xml_nav_to_pose,
+        "default_nav_through_poses_bt_xml": bt_xml_nav_through_poses,
     }
     if nav2_params_file:
         nav2_launch_args["params_file"] = nav2_params_file
