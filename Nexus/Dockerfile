@@ -1,55 +1,40 @@
-FROM osrf/ros:jazzy-desktop-full
+# Use ROS 2 Jazzy Desktop as the base image
+FROM osrf/ros:jazzy-desktop
 
+# Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
+ENV ROS_DISTRO=jazzy
 
-# Install ROS 2 Jazzy dependencies for Nutrient Nexus
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git build-essential python3-colcon-common-extensions \
-    ros-jazzy-ros-gz \
-    ros-jazzy-ros-gz-sim \
-    ros-jazzy-ros-gz-bridge \
+# Install necessary system dependencies and ROS 2 packages
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-colcon-common-extensions \
+    ros-jazzy-navigation2 \
     ros-jazzy-nav2-bringup \
-    ros-jazzy-nav2-map-server \
     ros-jazzy-slam-toolbox \
-    ros-jazzy-cartographer \
-    ros-jazzy-cartographer-ros \
-    ros-jazzy-xacro \
-    ros-jazzy-rmw-fastrtps-cpp \
+    ros-jazzy-gazebo-ros-pkgs \
+    ros-jazzy-ros-gz \
+    ros-jazzy-turtlebot3* \
     && rm -rf /var/lib/apt/lists/*
 
-# Build TurtleBot3 packages into the container's own underlay workspace
-WORKDIR /opt/turtlebot3_ws
-RUN mkdir -p src && cd src && \
-    git clone --depth 1 https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git && \
-    git clone --depth 1 https://github.com/ROBOTIS-GIT/turtlebot3.git && \
-    git clone --depth 1 https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
+# Install Python dependencies for the custom nodes (e.g., Flask for dashboard)
+RUN pip3 install --no-cache-dir flask --break-system-packages
 
-SHELL ["/bin/bash", "-lc"]
+# Create workspace directory
+WORKDIR /ros2_ws
 
-RUN source /opt/ros/jazzy/setup.bash && \
-    rosdep update && \
-    rosdep install --rosdistro jazzy --from-paths src --ignore-src -r -y || true && \
-    colcon build --event-handlers console_direct+ \
-      --packages-select \
-        turtlebot3_msgs \
-        turtlebot3_description \
-        turtlebot3_gazebo \
-        turtlebot3_teleop \
-        turtlebot3_cartographer \
-        turtlebot3_navigation2
+# Copy the source code into the workspace
+# Note: In a real scenario, you would copy the src directory. 
+# We copy the entire project here assuming the context is the root of the project.
+COPY src/ /ros2_ws/src/
 
-# Set up the Nutrient Nexus overlay workspace
-WORKDIR /ws
-COPY src/ src/
+# Build the workspace
+RUN /bin/bash -c "source /opt/ros/jazzy/setup.bash && colcon build --symlink-install"
 
-RUN source /opt/ros/jazzy/setup.bash && \
-    source /opt/turtlebot3_ws/install/setup.bash && \
-    colcon build --symlink-install
+# Add sourcing to bashrc
+RUN echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+RUN echo "source /ros2_ws/install/setup.bash" >> ~/.bashrc
+RUN echo "export TURTLEBOT3_MODEL=burger" >> ~/.bashrc
 
-# Environment — auto-source on every shell
-RUN echo "source /opt/ros/jazzy/setup.bash" >> /root/.bashrc && \
-    echo "source /opt/turtlebot3_ws/install/setup.bash" >> /root/.bashrc && \
-    echo "source /ws/install/setup.bash" >> /root/.bashrc && \
-    echo "export TURTLEBOT3_MODEL=burger" >> /root/.bashrc
-
-CMD ["/bin/bash"]
+# Set the default command to launch bash
+CMD ["bash"]
