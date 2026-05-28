@@ -31,6 +31,12 @@ class NavigationExecutorNode(Node):
 
         self.get_logger().info("Navigation Executor Node Initialized. Waiting for goals on /dispatch_nav_goal.")
         self._publish_status("IDLE")
+        self.create_timer(1.0, self._republish_status)
+
+    def _republish_status(self) -> None:
+        msg = String()
+        msg.data = self.current_nav_status
+        self.status_publisher.publish(msg)
 
     def _publish_status(self, status_str: str) -> None:
         msg = String()

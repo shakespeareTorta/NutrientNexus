@@ -6,16 +6,15 @@ from typing import Dict, Any
 import rclpy
 from rclpy.node import Node
 from ament_index_python.packages import get_package_share_directory
-from nav_msgs.msg import Odometry
 from std_msgs.msg import String
 from visualization_msgs.msg import Marker, MarkerArray
+from tf2_ros import Buffer, TransformListener, LookupException, ConnectivityException, ExtrapolationException
 
 
 def _package_share_or_source_dir() -> str:
     try:
         return get_package_share_directory('my_turtlebot3_controller')
     except Exception:
-        # Support direct workspace execution before the package is installed in the environment.
         return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -38,22 +37,30 @@ class ZoneDetectorNode(Node):
         self.current_y: float = 0.0
         self.current_zone: str = 'no_zone'
 
-        self.subscription = self.create_subscription(
-            Odometry,
-            '/odom',
-            self.odom_callback,
-            10,
-        )
+        # Use TF2 to get robot position in map frame (zones are defined in map frame)
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+
         self.publisher = self.create_publisher(String, '/current_zone', 10)
         self.marker_pub = self.create_publisher(MarkerArray, '/zone_markers', 10)
         
-        self.timer = self.create_timer(0.5, self.publish_current_zone)
+        self.timer = self.create_timer(0.5, self.update_and_publish_zone)
         self.marker_timer = self.create_timer(1.0, self.publish_markers)
 
-    def odom_callback(self, msg: Odometry) -> None:
-        self.current_x = msg.pose.pose.position.x
-        self.current_y = msg.pose.pose.position.y
-        self.current_zone = self.get_zone(self.current_x, self.current_y)
+    def update_and_publish_zone(self) -> None:
+        try:
+            transform = self.tf_buffer.lookup_transform(
+                'map', 'base_footprint', rclpy.time.Time())
+            self.current_x = transform.transform.translation.x
+            self.current_y = transform.transform.translation.y
+            self.current_zone = self.get_zone(self.current_x, self.current_y)
+        except (LookupException, ConnectivityException, ExtrapolationException):
+            # TF not yet available — keep last known zone
+            pass
+
+        msg = String()
+        msg.data = self.current_zone
+        self.publisher.publish(msg)
 
     def get_zone(self, x: float, y: float) -> str:
         for zone_name in sorted(self.zones.keys()):
@@ -65,20 +72,15 @@ class ZoneDetectorNode(Node):
                 return zone_name
         return 'no_zone'
 
-    def publish_current_zone(self) -> None:
-        msg = String()
-        msg.data = self.current_zone
-        self.publisher.publish(msg)
-
     def publish_markers(self) -> None:
         marker_array = MarkerArray()
         
         colors = {
-            'base_station': (0.5, 0.5, 0.5, 0.5), # Gray
-            'zone_0': (0.0, 1.0, 0.0, 0.4), # Green
-            'zone_1': (0.0, 0.0, 1.0, 0.4), # Blue
-            'zone_2': (1.0, 1.0, 0.0, 0.4), # Yellow
-            'zone_3': (1.0, 0.0, 0.0, 0.4)  # Red
+            'base_station': (0.5, 0.5, 0.5, 0.5),
+            'zone_0': (0.0, 1.0, 0.0, 0.4),
+            'zone_1': (0.0, 0.0, 1.0, 0.4),
+            'zone_2': (1.0, 1.0, 0.0, 0.4),
+            'zone_3': (1.0, 0.0, 0.0, 0.4),
         }
 
         for idx, (zone_name, zone) in enumerate(self.zones.items()):
@@ -89,7 +91,6 @@ class ZoneDetectorNode(Node):
             target_x = zone.get('target_x', 0.0)
             target_y = zone.get('target_y', 0.0)
             
-            # Cube for bounding box
             cube = Marker()
             cube.header.frame_id = "map"
             cube.header.stamp = self.get_clock().now().to_msg()
@@ -108,7 +109,7 @@ class ZoneDetectorNode(Node):
             
             r, g, b, a = colors.get(zone_name, (1.0, 1.0, 1.0, 0.3))
             if zone_name == self.current_zone:
-                a = 0.8 # Highlight current zone
+                a = 0.8
                 
             cube.color.r = r
             cube.color.g = g
@@ -116,8 +117,7 @@ class ZoneDetectorNode(Node):
             cube.color.a = a
             
             marker_array.markers.append(cube)
-            
-            # Sphere for target
+
             target = Marker()
             target.header.frame_id = "map"
             target.header.stamp = self.get_clock().now().to_msg()

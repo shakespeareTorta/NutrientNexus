@@ -94,8 +94,8 @@ class CropDecisionNode(Node):
         self.moisture_threshold: float = 40.0   # % — below this, needs water
         self.nutrient_threshold: float = 50.0   # % — below this, needs fertilizer
 
-        # Telemetry storage flag
         self.telemetry_received: bool = False
+        self.nav2_ready: bool = False
 
         # Reusable one-shot timers (initialised as None, created on demand,
         # properly destroyed before re-creation to prevent memory leaks)
@@ -199,6 +199,10 @@ class CropDecisionNode(Node):
         status = msg.data
         self.get_logger().info(
             f"Nav Status: {status} (Nexus Phase: {self.current_phase})")
+
+        if status == "IDLE" and not self.nav2_ready:
+            self.nav2_ready = True
+            self.get_logger().info("Nav2 executor ready. Starting crop patrol.")
 
         if self.current_phase == "NAVIGATING":
             if status == "SUCCEEDED_AT_POSE":
@@ -439,6 +443,12 @@ class CropDecisionNode(Node):
             return
             
         if self.current_phase != "IDLE":
+            return
+
+        if not self.nav2_ready:
+            self.get_logger().info(
+                "Waiting for Nav2 executor to become ready...",
+                throttle_duration_sec=10.0)
             return
 
         # 1. Resource Pre-flight Check
