@@ -18,11 +18,10 @@ amcl:
     update_min_d: 0.25
     scan_topic: scan
     set_initial_pose: true
-    initial_pose:
-      x: 0.8
-      y: -1.4
-      z: 0.0
-      yaw: 0.0
+    initial_pose.x: 0.8
+    initial_pose.y: -1.4
+    initial_pose.z: 0.0
+    initial_pose.yaw: 0.0
 
 bt_navigator:
   ros__parameters:
