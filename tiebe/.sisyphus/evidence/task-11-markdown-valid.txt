@@ -1,7 +1,0 @@
-Markdown structure check
-h2_count=10
-h2_headers=['Project Overview', 'Prerequisites', 'Installation', 'Configuration', 'Usage - Simulation', 'Usage - Real Robot', 'Testing', 'Topics', 'Troubleshooting', 'Architecture']
-code_fence_pairs=12
-code_fence_balanced=True
-bullet_count=45
-numbered_item_count=10

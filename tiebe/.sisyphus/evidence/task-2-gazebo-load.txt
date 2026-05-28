@@ -1,2 +1,0 @@
-World file: nutrient_nexus_navigation/worlds/farm_box.world
-XML valid

@@ -1,8 +1,0 @@
-4
-    turtlebot3_share = get_package_share_directory('turtlebot3_bringup')
-    slam_toolbox_share = get_package_share_directory('slam_toolbox')
-    nav2_bringup_share = get_package_share_directory('nav2_bringup')
-                PathJoinSubstitution([slam_toolbox_share, 'launch', 'online_async_launch.py'])
-                PathJoinSubstitution([nav2_bringup_share, 'launch', 'navigation_launch.py'])
-            executable='zone_detector',
-            name='zone_detector',

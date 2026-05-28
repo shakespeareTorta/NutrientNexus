@@ -1,3 +1,0 @@
-syntax OK
-            launch_arguments={'use_sim_time': 'False'}.items(),
-                'use_sim_time': 'False',

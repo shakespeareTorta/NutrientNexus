@@ -1,5 +1,0 @@
-has_slam_toolbox=True
-has_nav2_bringup=True
-has_zone_detector=True
-has_scan_topic_expectation=True
-has_current_zone_expectation=True

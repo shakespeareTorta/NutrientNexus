@@ -1,1 +1,0 @@
-All zone logic tests passed

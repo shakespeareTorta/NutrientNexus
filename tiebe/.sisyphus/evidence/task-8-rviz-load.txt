@@ -1,5 +1,0 @@
-fixed_frame_map=True
-robot_model=True
-laser_scan=True
-map_display=True
-path_displays=True
