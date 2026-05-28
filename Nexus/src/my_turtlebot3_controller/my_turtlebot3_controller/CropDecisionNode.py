@@ -21,10 +21,9 @@ class CropDecisionNode(Node):
         self.irrigate_pub = self.create_publisher(String, '/irrigate_zone', 10)
         self.fertilise_pub = self.create_publisher(String, '/fertilise_zone', 10)
 
-        # Treatment actuation publishes to a SEPARATE topic to avoid
-        # conflicting with Nav2's velocity output on /cmd_vel.
-        # A cmd_vel_mux or relay can merge them downstream if needed.
-        self.treatment_vel_pub = self.create_publisher(Twist, '/cmd_vel_treatment', 10)
+        # Treatment actuation publishes directly to /cmd_vel so the physical robot spins.
+        # (Nav2 stops publishing to /cmd_vel when it finishes navigating, so this is safe).
+        self.treatment_vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.refill_pub = self.create_publisher(String, '/refill_resources', 10)
         self.intervention_pub = self.create_publisher(String, '/sdg14_intervention', 10)
         self.override_req_pub = self.create_publisher(String, '/operator_override_request', 10)
@@ -85,7 +84,7 @@ class CropDecisionNode(Node):
         # System state machine
         # Phases: IDLE, NAVIGATING, VERIFYING_ZONE, SCANNING, DECIDING, ACTUATING, COOLDOWN, RETURNING_TO_BASE
         self.current_phase: str = "IDLE"
-        self.current_zone_index: int = 0
+        self.current_zone_index: int = 2
         
         # Resource tracking
         self.battery_level: float = 100.0
@@ -104,6 +103,8 @@ class CropDecisionNode(Node):
         self._cooldown_timer: Optional[Timer] = None
         self._actuation_timer: Optional[Timer] = None
         self._actuation_start_time: float = 0.0
+        self.actuation_duration: float = 4.0
+        self.actuation_speed: float = 0.6
 
         # Main cycle timer
         self.cycle_timer = self.create_timer(3.0, self.state_machine_tick)
@@ -355,9 +356,24 @@ class CropDecisionNode(Node):
         # Actuate if either treatment is recommended
         if irrigation_recommended or fertilisation_recommended:
             self.current_phase = "ACTUATING"
+            
+            # Dynamic Actuation calculation based on Zone Risk and Nutrient Deficit
+            deficit = max(0.0, self.nutrient_threshold - nutrients)
+            # Duration scales with deficit (e.g. 20 deficit = 4 seconds, 40 deficit = 6 seconds)
+            self.actuation_duration = 2.0 + (deficit / 10.0)
+            
+            # Speed scales with runoff risk (slower for high risk to avoid splash)
+            if runoff_risk_base == 'High':
+                self.actuation_speed = 0.3  # Slow, careful spin
+            elif runoff_risk_base == 'Medium':
+                self.actuation_speed = 0.6  # Standard spin
+            else:
+                self.actuation_speed = 1.0  # Fast spin for Low risk
+
             self.get_logger().info(
-                "Simulating physical actuation: "
-                "Rotating in place to apply treatment...")
+                f"Simulating dynamic actuation for {zone['id']} "
+                f"(Risk: {runoff_risk_base}, Deficit: {deficit:.1f}%). "
+                f"Spinning at {self.actuation_speed} rad/s for {self.actuation_duration:.1f}s.")
 
             # Publish treatment commands so the sensor mock can replenish
             if irrigation_recommended:
@@ -387,9 +403,9 @@ class CropDecisionNode(Node):
         now = self.get_clock().now().nanoseconds / 1e9
         elapsed = now - self._actuation_start_time
 
-        if elapsed < 4.0:  # Spin for 4 seconds
+        if elapsed < self.actuation_duration:  # Dynamic spin duration
             cmd = Twist()
-            cmd.angular.z = 0.6  # 0.6 rad/s rotation
+            cmd.angular.z = self.actuation_speed  # Dynamic spin speed
             self.treatment_vel_pub.publish(cmd)
         else:
             # Stop rotation

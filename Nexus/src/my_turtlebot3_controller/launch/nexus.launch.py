@@ -43,8 +43,8 @@ def generate_launch_description():
         ),
         launch_arguments={
             'gui': gui,
-            'x_pose': '0.5',
-            'y_pose': '-0.5'
+            'x_pose': '0.8',
+            'y_pose': '-1.4'
         }.items(),
     )
 
@@ -128,6 +128,15 @@ def generate_launch_description():
         emulate_tty=True,
     )
 
+    # 10. RViz2 (with Nav2 Default View)
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', os.path.join(get_package_share_directory('nav2_bringup'), 'rviz', 'nav2_default_view.rviz')],
+        output='screen',
+    )
+
     # Return Launch Description containing all elements
     return LaunchDescription(
         [
@@ -141,5 +150,6 @@ def generate_launch_description():
             crop_decision,
             dashboard,
             sustainability_audit,
+            rviz_node,
         ]
     )
