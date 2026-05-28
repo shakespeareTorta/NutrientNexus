@@ -1,10 +1,10 @@
-# NutrientNexus 🌾🤖
+# NutrientNexus
 
 **NutrientNexus** is an autonomous, sustainable agricultural robotics system powered by ROS 2 and Gazebo. Designed as a proof-of-concept Digital Twin, it demonstrates how precision agriculture can be automated to optimize crop yields while strictly adhering to sustainability goals—specifically mitigating agricultural runoff to protect marine ecosystems (SDG 14: Life Below Water).
 
 ---
 
-## 🎯 System Overview
+## System Overview
 
 The system simulates a TurtleBot3 navigating a custom L-shaped agricultural arena containing four distinct crop zones and a base station. The robot autonomously patrols these zones, acts as a mobile sensor platform, and makes context-aware decisions to apply water (irrigate) or nutrients (fertilize). 
 
@@ -15,7 +15,7 @@ Crucially, NutrientNexus is a **Sustainability-First** system:
 
 ---
 
-## 🏗️ Architecture & Nodes
+## Architecture & Nodes
 
 NutrientNexus is built on a modular ROS 2 architecture, utilizing the Nav2 (Navigation 2) stack for autonomous movement and SLAM Toolbox for mapping. 
 
@@ -53,7 +53,7 @@ A lightweight Flask web server running in a background thread that serves a live
 
 ---
 
-## 🗺️ The Arena & Zones
+## The Arena & Zones
 
 The system uses a custom Gazebo world (`new_world.world`) featuring an L-shaped room. The base station is located in the center of the room `(X: 0.8, Y: -1.4)`, and the field is divided into four perfectly tiled quadrants:
 
@@ -64,7 +64,7 @@ The system uses a custom Gazebo world (`new_world.world`) featuring an L-shaped 
 
 ---
 
-## 🚀 How to Build and Run
+## How to Build and Run
 
 ### Prerequisites
 *   Ubuntu 24.04
@@ -92,7 +92,7 @@ ros2 launch my_turtlebot3_controller nexus.launch.py
 
 ---
 
-## 🐳 Docker Support
+## Docker Support
 
 To run the simulation in an isolated environment, a `Dockerfile` is provided.
 
