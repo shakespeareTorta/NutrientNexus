@@ -1,0 +1,4 @@
+map_server_present=True
+global_frame_map_present=True
+scan_topic_present=True
+slam_launch_included_by_sim=True

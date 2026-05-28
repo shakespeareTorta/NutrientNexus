@@ -1,0 +1,4 @@
+zone_a: OK
+zone_b: OK
+zone_c: OK
+All zones valid

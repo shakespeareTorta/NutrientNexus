@@ -1,0 +1,7 @@
+Coverage attempt:
+- Command: python3 -m pytest nutrient_nexus_navigation/test/test_zone_detection.py --cov=nutrient_nexus_navigation.zone_detector --cov-report=term-missing
+- Result: failed because the active Python environment does not have the `coverage` module installed.
+
+Fallback verification:
+- Command: pytest nutrient_nexus_navigation/test/test_zone_detection.py
+- Result: 5 passed.

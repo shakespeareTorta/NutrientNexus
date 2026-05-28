@@ -1,0 +1,469 @@
+File 1: level1.png
+Legend
+Green = Components
+Red = Data sources
+Yellow = Stakeholder
+White = Integrated Database
+Components and Connections
+Decision Intelligence
+
+Connections:
+
+Receives from:
+Historical Field & Twin Database:
+“Historical Data”
+“Training Set”
+Digital Twin Models:
+“Logged Actions”
+“Outcomes”
+Sends to:
+Digital Twin Models:
+“Decisions”
+“Simulations”
+Physical Sensing & Actuation:
+“Actuator Commands”
+Stakeholder Interfaces:
+“Recommendations”
+Ocean Life:
+“Fewer algae blooms”
+“Reduced toxic release”
+“Restored light + oxygen”
+Digital Twin Models
+
+Connections:
+
+Receives from:
+Decision Intelligence:
+“Decisions”
+“Simulations”
+Historical Field & Twin Database:
+“Twin States”
+“Historical Data”
+Physical Sensing & Actuation:
+“Sensor Readings”
+Crop Database:
+“Crop details”
+“Nutrient requirements”
+“Irrigation schedule”
+Crop Database metadata:
+“Crop growth profile”
+“Climate zone”
+“Crop type”
+Sends to:
+Decision Intelligence:
+“Twin States”
+“Predictions”
+Historical Field & Twin Database:
+“Twin States”
+Physical Sensing & Actuation:
+“Sensing Requests”
+Physical Sensing & Actuation
+
+Connections:
+
+Receives from:
+Decision Intelligence:
+“Actuator Commands”
+Digital Twin Models:
+“Sensing Requests”
+External Data Integration:
+“Weather Forecast”
+“Crop Reference Data”
+Sends to:
+Digital Twin Models:
+“Sensor Readings”
+Historical Field & Twin Database:
+User/field data flow (unlabeled in diagram)
+Historical Field & Twin Database
+
+Connections:
+
+Receives from:
+Decision Intelligence:
+“Historical Data”
+“Training Set”
+Digital Twin Models:
+“Twin States”
+“Historical Data”
+Stakeholder Interfaces:
+“User inputs”
+“Queries”
+Sends to:
+Decision Intelligence:
+“Historical Data”
+“Training Set”
+Digital Twin Models:
+“Twin States”
+“Historical Data”
+Stakeholder Interfaces
+
+Connections:
+
+Receives from:
+Decision Intelligence:
+“Recommendations”
+Maintenance and Operations:
+“Parameters calibration”
+“Software updates”
+Historical Field & Twin Database:
+“User inputs”
+“Queries”
+Sends to:
+Historical Field & Twin Database:
+“User inputs”
+“Queries”
+Maintenance and Operations:
+“System status”
+“Maintenance alerts”
+External Data Integration
+
+Connections:
+
+Receives from:
+Farmer:
+“Yield targets”
+“Field boundaries”
+Weather Forecast API:
+“Rainfall”
+“Temperature”
+“Wind”
+Sends to:
+Physical Sensing & Actuation:
+“Weather Forecast”
+“Crop Reference Data”
+Farmer:
+“Nitrogen application recommendation”
+“Runoff risk warning”
+“Sustainability report”
+“Yield-impact estimate”
+Databases / Data Sources
+Crop Database
+
+Connections:
+
+Sends to Digital Twin Models:
+“Crop details”
+“Nutrient requirements”
+“Irrigation schedule”
+Receives from Digital Twin Models:
+“Crop growth profile”
+“Climate zone”
+“Crop type”
+Weather Forecast API
+
+Connections:
+
+Receives from External Data Integration:
+“Field location”
+“Forecast request”
+Sends to External Data Integration:
+“Rainfall”
+“Temperature”
+“Wind”
+Stakeholders
+Farmer
+
+Connections:
+
+Sends to External Data Integration:
+“Yield targets”
+“Field boundaries”
+Receives from External Data Integration:
+“Nitrogen application recommendation”
+“Runoff risk warning”
+“Sustainability report”
+“Yield-impact estimate”
+Environmental Regulator
+
+Connections:
+
+Sends to Stakeholder Interfaces:
+“Nitrogen application limits”
+“Water-quality thresholds”
+“Protected area boundaries”
+“SDG reporting requirements”
+Receives from Stakeholder Interfaces:
+“Estimated nitrogen reduction”
+“Sustainable agricultural area report”
+“Runoff compliance report”
+“Coastal pollution risk report”
+Maintenance and Operations
+
+Connections:
+
+Sends to Stakeholder Interfaces:
+“Parameters calibration”
+“Software updates”
+Receives from Stakeholder Interfaces:
+“System status”
+“Maintenance alerts”
+Ocean Life
+
+Receives outcomes from Decision Intelligence:
+
+“Fewer algae blooms”
+“Reduced toxic release”
+“Restored light + oxygen”
+File 2: level0(1).png
+Legend
+Teal = DTAS
+Yellow = Stakeholder
+Red = Data sources
+Central System
+Digital Twin for Predicting and Reducing Farm-to-Coast Nutrient Pollution
+
+Connections:
+
+Inputs Received
+
+From Farmer:
+
+“Yield targets”
+“Field boundaries”
+
+From Weather Forecast API:
+
+“Rainfall”
+“Temperature”
+“Wind”
+
+From Crop Database:
+
+“Crop growth profile”
+“Climate zone”
+“Crop type”
+“Crop details”
+“Nutrient requirements”
+“Irrigation schedule”
+
+From Maintenance and Operations:
+
+“Parameters calibration”
+“Software updates”
+
+From Environmental Regulators:
+
+“Nitrogen application limits”
+“Water-quality thresholds”
+“Protected area boundaries”
+“SDG reporting requirements”
+Outputs Sent
+
+To Farmer:
+
+“Nitrogen application recommendation”
+“Runoff risk warning”
+“Sustainability report”
+“Yield-impact estimate”
+
+To Ocean Life:
+
+“Fewer algae blooms”
+“Reduced toxic release”
+“Restored light + oxygen”
+
+To Environmental Regulators:
+
+“Estimated nitrogen reduction”
+“Sustainable agricultural area report”
+“Runoff compliance report”
+“Coastal pollution risk report”
+
+To Maintenance and Operations:
+
+“System status”
+“Maintenance alerts”
+Stakeholders and Data Sources
+Farmer
+
+Connections:
+
+Sends to DTAS:
+“Yield targets”
+“Field boundaries”
+Receives from DTAS:
+“Nitrogen application recommendation”
+“Runoff risk warning”
+“Sustainability report”
+“Yield-impact estimate”
+Weather Forecast API
+
+Connections:
+
+Receives from DTAS:
+“Field location”
+“Forecast request”
+Sends to DTAS:
+“Rainfall”
+“Temperature”
+“Wind”
+Crop Database
+
+Connections:
+
+Receives from DTAS:
+“Crop growth profile”
+“Climate zone”
+“Crop type”
+Sends to DTAS:
+“Crop details”
+“Nutrient requirements”
+“Irrigation schedule”
+Ocean Life
+
+Receives from DTAS:
+
+“Fewer algae blooms”
+“Reduced toxic release”
+“Restored light + oxygen”
+Environmental Regulators
+
+Connections:
+
+Sends to DTAS:
+“Nitrogen application limits”
+“Water-quality thresholds”
+“Protected area boundaries”
+“SDG reporting requirements”
+Receives from DTAS:
+“Estimated nitrogen reduction”
+“Sustainable agricultural area report”
+“Runoff compliance report”
+“Coastal pollution risk report”
+Maintenance and Operations
+
+Connections:
+
+Sends to DTAS:
+“Parameters calibration”
+“Software updates”
+Receives from DTAS:
+“System status”
+“Maintenance alerts”
+
+
+# Concept Map Transcription
+
+## Central Question (top, gray box)
+**"What challenges within either, or both SDGs 2 and 14, can be addressed by autonomous systems, and what role can digital twins play to meet these challenges?"**
+
+---
+
+## Top-Level Concepts
+
+**Global Sustainability Challenges** *(italic label)*
+- include →
+  - **Zero Hunger (SDG 2)** *(yellow)*
+  - **Life Below Water (SDG 14)** *(teal)*
+
+---
+
+## SDG 2 Branch (Left Side)
+
+**Zero Hunger (SDG 2)**
+- mandates → **Double Smallholder Production (Target 2.3)**
+  - measured by → **Production Volume Per Labour Unit (Indicator 2.3.1)** *(pink)*
+    - leads to → **Higher yield and profit** *(bold)*
+      - increases → Tax income → benefits → **Government** *(yellow)*
+      - leads to → **Lower food prices** → benefits → **Consumers** *(yellow)*
+
+**Life Below Water (SDG 14)**
+- mandates → **Sustainable Food Production (Target 2.4)** *(orange)*
+  - measured by → **Proportion of Sustainable Agricultural Area (Indicator 2.4.1)** *(pink)*
+  - allows for → **Longer land usage** *(bold)*
+    - leads to → Reduced demand for new land
+      - results in → **Reduced habitat loss** *(bold gray)*
+        - benefits → **Forests and natural habitats** *(yellow)*
+    - results in → Reduced spending for developing new land
+
+**Life Below Water (SDG 14)**
+- mandates → **Reduce Marine Pollution (Target 14.1)** *(orange)*
+  - measured by → **Coastal Eutrophication Index (Indicator 14.1.1a)** *(pink)*
+    - decreased by → Overuse of irrigation and fertilisers
+
+---
+
+## Central Problem Chain
+
+**Farmers** *(yellow)*
+- use → **Fertilisers**
+  - cause → **Agricultural nutrient runoff** *(bold)*
+    - causes → **Algae blooms** *(bold)*
+      - cause → Less light/oxygen in water
+        - causes → Less plant growth → harms → **Ocean life** *(yellow)*
+      - cause → Toxins release
+        - causes → **Harm to humans** *(bold)*
+          - leads to → Water poisoning
+          - increases → **Long-term healthcare costs** *(bold)*
+            - is an economic burden on → **Consumers** *(yellow)*
+            - harms → **Harm to humans**
+
+**Agricultural nutrient runoff**
+- caused by → (connects to Digital Twins / precision strategies — see right side)
+- prevents → (dashed line, connects to precision strategies)
+
+---
+
+## Digital Twins Branch (Right Side)
+
+**Cyber Agricultural/Coastal Systems** *(teal, bold)*
+- utilise → **Digital Twins** *(teal)*
+- validated by ← Texas A&M AgriLife Digital Twin Research
+  - ← validated by ← Wageningen University Smart Droplets Case Study
+
+**Digital Twins**
+- run →
+  - Environment contam'n thresholds *(teal)*
+  - History of crop growth *(teal)*
+  - Per-crop nutrient/water needs *(teal)*
+  - (Soil) water cycle model *(teal)*
+  - (Soil) nutrient availability model *(teal)*
+  - Water nutrients *(purple)*
+- obtain / collect →
+  - (data inputs from sensors)
+- provide data to → **Cost/benefit agriculture-environment decision making** *(bold gray)*
+  - consisting of →
+    - **Precise fertiliser treatment** *(bold gray)*
+      - leads to → **Decreased erosion** *(bold gray)*
+        - increases → **Crop yield** *(bold gray)*
+          - direct indicator of → Production Volume Per Labour Unit (Indicator 2.3.1) (Ref) *(pink)*
+      - decreases → **Agricultural nutrient runoff**
+    - **Precise irrigation strategies** *(bold gray)*
+      - lead to → Better crop water supply
+        - increases → **Crop yield**
+
+**Crop yield**
+- increases → **Proportion of Sustainable Agricultural Area (Indicator 2.4.1) (Ref)** *(pink)*
+
+---
+
+## Physical Twin Branch (Right Side)
+
+**Agri/coastal UGV Swarms (Physical Twin)** *(purple)*
+- equipped with → **Sensors** *(bold)*
+  - including →
+    - Thermal *(purple subsystem)*
+    - Soil moisture *(purple subsystem)*
+    - Plant transpiration *(purple subsystem)*
+    - Soil nutrients *(purple subsystem)*
+  - monitors → Soil moisture, Plant transpiration, Thermal
+- including → **Precision robotic fert./sprinklers** *(purple subsystem)*
+  - guides → **Plant identification camera** *(purple subsystem)*
+- gather data for & execute → **Cost/benefit agriculture-environment decision making**
+
+**Sensors**
+- simulate & steer → (Soil) water cycle model, (Soil) nutrient availability model, Water nutrients, Per-crop nutrient/water needs
+
+---
+
+## Legend *(bottom left box)*
+
+| Color | Category |
+|---|---|
+| Yellow | Stakeholder |
+| Pink | Indicator |
+| Orange | SDG Target |
+| Purple | Physical Twin |
+| Light purple | Physical Twin Subsystem |
+| Teal | Virtual Twin |
+| Cyan/light teal | Virtual Twin Subsystem |

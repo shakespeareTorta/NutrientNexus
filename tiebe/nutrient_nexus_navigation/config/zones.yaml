@@ -1,0 +1,20 @@
+# Crop zones for NutrientNexus navigation
+# Coordinate system: origin at world center, X-forward, Y-left
+# World bounds are -2.0 to 2.0 on both axes; keep zones clear of the center obstacle.
+zone_a:
+  min_x: -1.8
+  max_x: -0.5
+  min_y: -1.8
+  max_y: -0.5
+
+zone_b:
+  min_x: 0.5
+  max_x: 1.8
+  min_y: 0.5
+  max_y: 1.8
+
+zone_c:
+  min_x: -1.8
+  max_x: -0.5
+  min_y: 0.5
+  max_y: 1.8

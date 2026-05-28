@@ -1,0 +1,16 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Colcon build artifacts
+build/
+install/
+log/
+
+# Nix
+.nix-gz-real
+result
+
+# ROS2 generated
+*.egg-info/
