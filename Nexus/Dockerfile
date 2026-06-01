@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-navigation2 \
     ros-jazzy-nav2-bringup \
     ros-jazzy-slam-toolbox \
-    ros-jazzy-gazebo-ros-pkgs \
     ros-jazzy-ros-gz \
     ros-jazzy-turtlebot3* \
     && rm -rf /var/lib/apt/lists/*
