@@ -141,7 +141,7 @@ behavior_server:
     global_frame: map
     robot_base_frame: base_link
     transform_timeout: 0.1
-    simulate_ahead_time: 2.0
+    simulate_ahead_time: 0.5
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
@@ -232,7 +232,7 @@ collision_monitor:
     polygons: ["PolygonStop"]
     PolygonStop:
       type: "polygon"
-      points: "[[0.15, 0.15], [0.15, -0.15], [-0.15, -0.15], [-0.15, 0.15]]"
+      points: "[[0.10, 0.10], [0.10, -0.10], [-0.10, -0.10], [-0.10, 0.10]]"
       action_type: "stop"
       min_points: 4
       visualize: True
