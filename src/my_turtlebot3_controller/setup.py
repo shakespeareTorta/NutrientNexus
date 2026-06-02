@@ -23,13 +23,9 @@ setup(
     license='TODO: License declaration',
     entry_points={
         'console_scripts': [
-            'move_turtlebot = my_turtlebot3_controller.navigation.MoveTurtleBot:main',
             'cmd_vel_relay_node = my_turtlebot3_controller.CmdVelRelayNode:main',
-            'DecisionNode = my_turtlebot3_controller.algorithm.DecisionNode:main',
-            'BinSensorMockNode = my_turtlebot3_controller.sensor.BinSensorMockNode:main',
             'navigation_executor_node = my_turtlebot3_controller.navigation.NavigationExecutorNode:main',
             'odom_node = my_turtlebot3_controller.navigation.odometry.OdomToGazeboPoseNode:main',
-            'navigation_node = my_turtlebot3_controller.navigation.NavigationNode:main',
             'field_sensor_mock_node = my_turtlebot3_controller.sensor.FieldSensorMockNode:main',
             'crop_decision_node = my_turtlebot3_controller.algorithm.CropDecisionNode:main',
             'safety_stop_node = my_turtlebot3_controller.navigation.SafetyStopNode:main',
