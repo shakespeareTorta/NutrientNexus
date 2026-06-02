@@ -1,17 +1,21 @@
 # Building
-To build, cd into the project root and issue (adjust `.bash` to your shell):
+To build, cd into the project root and issue:
 ```sh
-source /opt/ros/jazzy/source.bash
-colcon build --symlink-install
+./scripts/setup.sh
 ```
 
 # Running
+Make sure you have done steps outlined in [Building](#building). This is
+required since the script sources necessary files for running the project.
+
 To start NutrientNexus, make sure the current directory is the project root and
 issue (adjust to your shell):
 ```sh
-source install/setup.bash
 ros2 launch my_turtlebot3_controller nexus.launch.py
 ```
+
+If you get errors regarding not found packages, make sure that
+`scripts/setup.sh` has been run.
 
 # Technical details
 
