@@ -76,9 +76,9 @@ controller_server:
       min_vel_y: 0.0
       max_vel_x: 0.22
       max_vel_y: 0.0
-      max_vel_theta: 1.0
+      max_vel_theta: 2.0
       min_speed_xy: 0.0
-      max_speed_xy: 0.22
+      max_speed_xy: 0.5
       min_speed_theta: 0.0
       acc_lim_x: 2.5
       acc_lim_y: 0.0
@@ -180,8 +180,8 @@ global_costmap:
           obstacle_min_range: 0.0
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.35
+        cost_scaling_factor: 2.0
+        inflation_radius: 0.55
       always_send_full_costmap: true
 
 local_costmap:
@@ -214,8 +214,8 @@ local_costmap:
           obstacle_min_range: 0.0
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.35
+        cost_scaling_factor: 2.0
+        inflation_radius: 0.55
       always_send_full_costmap: true
 collision_monitor:
   ros__parameters:
@@ -223,7 +223,7 @@ collision_monitor:
     base_frame_id: "base_link"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
-    cmd_vel_out_topic: "cmd_vel"
+    cmd_vel_out_topic: "cmd_vel_nav"
     state_topic: "collision_monitor_state"
     transform_tolerance: 0.5
     source_timeout: 5.0
@@ -232,7 +232,7 @@ collision_monitor:
     polygons: ["PolygonStop"]
     PolygonStop:
       type: "polygon"
-      points: "[[0.2, 0.2], [0.2, -0.2], [-0.2, -0.2], [-0.2, 0.2]]"
+      points: "[[0.15, 0.15], [0.15, -0.15], [-0.15, -0.15], [-0.15, 0.15]]"
       action_type: "stop"
       min_points: 4
       visualize: True
@@ -250,8 +250,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.22, 0.0, 1.0]
-    min_velocity: [-0.22, 0.0, -1.0]
+    max_velocity: [0.22, 0.0, 2.0]
+    min_velocity: [-0.22, 0.0, -2.0]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     max_accel: [2.5, 0.0, 3.2]

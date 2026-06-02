@@ -18,7 +18,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, ExecuteProcess
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -44,7 +44,8 @@ def generate_launch_description():
         launch_arguments={
             'gui': gui,
             'x_pose': '0.8',
-            'y_pose': '-1.4'
+            'y_pose': '-1.4',
+            'yaw': '1.5708',
         }.items(),
     )
 
@@ -128,12 +129,36 @@ def generate_launch_description():
         emulate_tty=True,
     )
 
-    # 10. RViz2 (with Nav2 Default View)
+    # 10. Twin Supervisor Node (Lecture Week 6)
+    twin_supervisor = Node(
+        package="my_turtlebot3_controller",
+        executable="twin_supervisor_node",
+        name="twin_supervisor_node",
+        output="screen",
+        emulate_tty=True,
+        parameters=[{'system_mode': 'SIM_ONLY'}],
+    )
+
+    # 11. RViz2 (with Nav2 Default View)
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
         name='rviz2',
         arguments=['-d', os.path.join(get_package_share_directory('nav2_bringup'), 'rviz', 'nav2_default_view.rviz')],
+        output='screen',
+    )
+
+    # 12. rosbag2 auto-recording (Lecture Week 6: evidence collection)
+    rosbag_record = ExecuteProcess(
+        cmd=[
+            'ros2', 'bag', 'record',
+            '--output', '/tmp/nexus_recording',
+            '--max-bag-duration', '300',
+            '/scan', '/odom', '/tf', '/cmd_vel',
+            '/field_moisture', '/field_nutrients', '/field_growth',
+            '/robot_resources', '/sdg14_intervention', '/weather_forecast',
+            '/sync_status', '/system_alerts',
+        ],
         output='screen',
     )
 
@@ -150,6 +175,8 @@ def generate_launch_description():
             crop_decision,
             dashboard,
             sustainability_audit,
+            twin_supervisor,
+            rosbag_record,
             rviz_node,
         ]
     )

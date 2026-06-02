@@ -16,6 +16,14 @@ import math
 import json
 from typing import Optional
 
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+
+STATE_QOS = QoSProfile(
+    depth=1,
+    reliability=ReliabilityPolicy.RELIABLE,
+    durability=DurabilityPolicy.TRANSIENT_LOCAL
+)
+
 class RobotResourceNode(Node):
     def __init__(self) -> None:
         super().__init__('robot_resource_node')
@@ -33,13 +41,13 @@ class RobotResourceNode(Node):
         self.last_x: Optional[float] = None
         self.last_y: Optional[float] = None
 
-        # Subscribers
-        self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
-        self.create_subscription(String, '/fertilise_zone', self.fertilize_callback, 10)
-        self.create_subscription(String, '/refill_resources', self.refill_callback, 10)
+        # Subscribers (use relative topics so namespace /tb2 applies automatically)
+        self.create_subscription(Odometry, 'odom', self.odom_callback, 10)
+        self.create_subscription(String, 'fertilise_zone', self.fertilize_callback, 10)
+        self.create_subscription(String, 'refill_resources', self.refill_callback, 10)
 
         # Publisher
-        self.resource_pub = self.create_publisher(String, '/robot_resources', 10)
+        self.resource_pub = self.create_publisher(String, 'robot_resources', STATE_QOS)
         self.timer = self.create_timer(1.0, self.publish_resources)
 
         self.get_logger().info("Robot Resource Node started.")
@@ -58,6 +66,16 @@ class RobotResourceNode(Node):
         self.last_y = y
 
     def fertilize_callback(self, msg: String) -> None:
+        try:
+            data = json.loads(msg.data)
+            robot_id = data.get("robot")
+            # If the payload specifies a robot, only drain if it matches our namespace
+            my_id = 'B' if self.get_namespace() == '/tb2' else 'A'
+            if robot_id and robot_id != my_id:
+                return
+        except json.JSONDecodeError:
+            pass # Fallback to old behavior if just a string is sent
+
         self.get_logger().info("Fertilizer sprayed. Draining tank.")
         self.fertilizer = max(0.0, self.fertilizer - self.fertilizer_drain_per_spray)
         self.publish_resources()

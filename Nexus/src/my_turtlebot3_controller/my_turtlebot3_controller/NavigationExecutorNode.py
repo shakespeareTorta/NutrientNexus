@@ -7,13 +7,21 @@ from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import PoseStamped 
 from std_msgs.msg import String 
 from action_msgs.msg import GoalStatus as ActionGoalStatus
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 import math
 from typing import Optional
+
+STATE_QOS = QoSProfile(
+    depth=1,
+    reliability=ReliabilityPolicy.RELIABLE,
+    durability=DurabilityPolicy.TRANSIENT_LOCAL
+)
 
 class NavigationExecutorNode(Node): 
     def __init__(self) -> None:
         super().__init__('navigation_executor_node') 
-        self._action_client = ActionClient(self, NavigateToPose, '/navigate_to_pose') 
+        # Use relative topics so this works inside namespaces (/tb2)
+        self._action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose') 
         
         self.goal_handle: Optional[ClientGoalHandle] = None
         self.current_nav_status: str = "IDLE" # IDLE, NAVIGATING, SUCCEEDED, FAILED, ABORTED
@@ -22,16 +30,16 @@ class NavigationExecutorNode(Node):
         # Subscriber - incoming navigation goals
         self.goal_subscriber = self.create_subscription(
             PoseStamped,
-            '/dispatch_nav_goal', 
+            'dispatch_nav_goal', 
             self.dispatch_goal_callback,
             10)
         
         # Publisher - navigation status
-        self.status_publisher = self.create_publisher(String, '/navigation_executor_status', 10)
+        self.status_publisher = self.create_publisher(String, 'navigation_executor_status', STATE_QOS)
 
-        self.get_logger().info("Navigation Executor Node Initialized. Waiting for goals on /dispatch_nav_goal.")
+        self.get_logger().info("Navigation Executor Node Initialized. Waiting for goals on dispatch_nav_goal.")
         self._publish_status("IDLE")
-        self.create_timer(1.0, self._republish_status)
+        self.create_timer(0.5, self._republish_status)
 
     def _republish_status(self) -> None:
         msg = String()
@@ -62,7 +70,7 @@ class NavigationExecutorNode(Node):
             pass
 
 
-    def wait_for_action_server(self, timeout_sec: float = 5.0) -> bool:
+    def wait_for_action_server(self, timeout_sec: float = 2.0) -> bool:
         self.get_logger().info('Waiting for /navigate_to_pose action server...')
 
         if not self._action_client.wait_for_server(timeout_sec=timeout_sec):

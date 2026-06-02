@@ -7,6 +7,14 @@ from typing import Dict, List, Any
 import os
 import yaml
 from ament_index_python.packages import get_package_share_directory
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+
+# ── QoS profiles (Lecture Week 6) ────────────────────────────────────
+STATE_QOS = QoSProfile(
+    depth=10,
+    reliability=ReliabilityPolicy.RELIABLE,
+    durability=DurabilityPolicy.TRANSIENT_LOCAL,
+)
 
 class FieldSensorMockNode(Node):
     def __init__(self) -> None:
@@ -41,14 +49,14 @@ class FieldSensorMockNode(Node):
         self.weather = "sunny"
 
         # Publishers
-        self.moisture_pub = self.create_publisher(Float32MultiArray, '/field_moisture', 10)
-        self.nutrients_pub = self.create_publisher(Float32MultiArray, '/field_nutrients', 10)
-        self.growth_pub = self.create_publisher(Float32MultiArray, '/field_growth', 10)
+        self.moisture_pub = self.create_publisher(Float32MultiArray, '/field_moisture', STATE_QOS)
+        self.nutrients_pub = self.create_publisher(Float32MultiArray, '/field_nutrients', STATE_QOS)
+        self.growth_pub = self.create_publisher(Float32MultiArray, '/field_growth', STATE_QOS)
 
         # Subscribers to apply treatment and replenish zone metrics
-        self.irrigate_sub = self.create_subscription(String, '/irrigate_zone', self.irrigate_callback, 10)
-        self.fertilise_sub = self.create_subscription(String, '/fertilise_zone', self.fertilise_callback, 10)
-        self.weather_sub = self.create_subscription(String, '/weather_forecast', self.weather_cb, 10)
+        self.irrigate_sub = self.create_subscription(String, '/irrigate_zone', self.irrigate_callback, STATE_QOS)
+        self.fertilise_sub = self.create_subscription(String, '/fertilise_zone', self.fertilise_callback, STATE_QOS)
+        self.weather_sub = self.create_subscription(String, '/weather_forecast', self.weather_cb, STATE_QOS)
 
         # Single timer for environment simulation + telemetry publishing
         # (merged to avoid race conditions between depletion and publishing)

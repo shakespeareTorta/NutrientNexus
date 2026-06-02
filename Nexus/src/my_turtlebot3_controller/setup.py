@@ -37,7 +37,9 @@ setup(
             'zone_detector_node = my_turtlebot3_controller.zone_detector_node:main',
             'robot_resource_node = my_turtlebot3_controller.robot_resource_node:main',
             'dashboard_node = my_turtlebot3_controller.dashboard_node:main',
-            'sustainability_audit_node = my_turtlebot3_controller.sustainability_audit_node:main'
+            'sustainability_audit_node = my_turtlebot3_controller.sustainability_audit_node:main',
+            'twin_supervisor_node = my_turtlebot3_controller.twin_supervisor_node:main',
+            'odom_to_tf_node = my_turtlebot3_controller.odom_to_tf_node:main',
         ],
     },
 )

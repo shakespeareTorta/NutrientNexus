@@ -11,33 +11,50 @@ import json
 import threading
 import tkinter as tk
 from tkinter import ttk
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+
+# ── QoS profiles (Lecture Week 6) ────────────────────────────────────
+STATE_QOS = QoSProfile(
+    depth=10,
+    reliability=ReliabilityPolicy.RELIABLE,
+    durability=DurabilityPolicy.TRANSIENT_LOCAL,
+)
 
 class DashboardNode(Node):
     def __init__(self) -> None:
         super().__init__('nexus_dashboard_node')
 
         # Publishers
-        self.weather_pub = self.create_publisher(String, '/weather_forecast', 10)
+        self.weather_pub = self.create_publisher(String, '/weather_forecast', STATE_QOS)
         self.report_pub = self.create_publisher(String, '/generate_report', 10)
 
-        # Subscribers
-        self.create_subscription(String, '/robot_resources', self.resource_cb, 10)
-        self.create_subscription(String, '/current_zone', self.zone_cb, 10)
-        self.create_subscription(String, '/navigation_executor_status', self.nav_cb, 10)
-        self.create_subscription(String, '/operator_override_request', self.override_req_cb, 10)
+        # Subscribers (Robot A - default namespace)
+        self.create_subscription(String, '/robot_resources', lambda m: self.resource_cb(m, 'A'), STATE_QOS)
+        self.create_subscription(String, '/current_zone', lambda m: self.zone_cb(m, 'A'), STATE_QOS)
+        self.create_subscription(String, '/navigation_executor_status', lambda m: self.nav_cb(m, 'A'), STATE_QOS)
+        self.create_subscription(String, '/operator_override_request', lambda m: self.override_req_cb(m, 'A'), STATE_QOS)
         
-        self.override_pub = self.create_publisher(String, '/operator_override_response', 10)
+        # Subscribers (Robot B - /tb2 namespace)
+        self.create_subscription(String, '/tb2/robot_resources', lambda m: self.resource_cb(m, 'B'), STATE_QOS)
+        self.create_subscription(String, '/tb2/current_zone', lambda m: self.zone_cb(m, 'B'), STATE_QOS)
+        self.create_subscription(String, '/tb2/navigation_executor_status', lambda m: self.nav_cb(m, 'B'), STATE_QOS)
+        self.create_subscription(String, '/tb2/operator_override_request', lambda m: self.override_req_cb(m, 'B'), STATE_QOS)
 
-        # State Variables
-        self.battery = 100.0
-        self.fertilizer = 100.0
-        self.current_zone = "Unknown"
-        self.nav_status = "IDLE"
+        # We need publishers to both namespaces for override responses
+        self.override_pub_a = self.create_publisher(String, '/operator_override_response', STATE_QOS)
+        self.override_pub_b = self.create_publisher(String, '/tb2/operator_override_response', STATE_QOS)
+
+        # State Variables & Thread Safety Lock (Lecture Week 6 fix)
+        self.state_lock = threading.Lock()
+        self.robots = {
+            'A': {'battery': 100.0, 'fertilizer': 100.0, 'zone': "Unknown", 'nav': "IDLE"},
+            'B': {'battery': 100.0, 'fertilizer': 100.0, 'zone': "Unknown", 'nav': "IDLE"}
+        }
 
         # Setup GUI
         self.root = tk.Tk()
         self.root.title("Nutrient Nexus - Digital Twin Dashboard")
-        self.root.geometry("600x450")
+        self.root.geometry("900x500")
         self.root.configure(bg="#1E1E1E")
         
         self.style = ttk.Style()
@@ -59,33 +76,59 @@ class DashboardNode(Node):
         # Title
         ttk.Label(main_frame, text="Nutrient Nexus Command Center", style="Header.TLabel").pack(pady=(0, 20))
 
-        # --- Resources Frame ---
-        res_frame = tk.LabelFrame(main_frame, text="Real-Time Resources", bg="#1E1E1E", fg="#FFFFFF", font=("Helvetica", 12, "bold"))
+        # --- Resources Frame (Side-by-side) ---
+        res_frame = tk.LabelFrame(main_frame, text="Fleet Resources", bg="#1E1E1E", fg="#FFFFFF", font=("Helvetica", 12, "bold"))
         res_frame.pack(fill=tk.X, pady=10, ipadx=10, ipady=10)
 
-        # Battery
-        tk.Label(res_frame, text="Battery:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=0, column=0, sticky="w", pady=5)
-        self.bat_bar = ttk.Progressbar(res_frame, length=300, mode="determinate", style="green.Horizontal.TProgressbar")
-        self.bat_bar.grid(row=0, column=1, padx=10)
-        self.bat_lbl = tk.Label(res_frame, text="100%", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10))
-        self.bat_lbl.grid(row=0, column=2)
+        # Robot A Resources
+        tk.Label(res_frame, text="Robot A (Twin) - Zones 0,1", bg="#1E1E1E", fg="#4A90E2", font=("Helvetica", 11, "bold")).grid(row=0, column=0, columnspan=3, sticky="w", pady=5)
+        tk.Label(res_frame, text="Battery:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=1, column=0, sticky="w", pady=2)
+        self.bat_bar_a = ttk.Progressbar(res_frame, length=200, mode="determinate", style="green.Horizontal.TProgressbar")
+        self.bat_bar_a.grid(row=1, column=1, padx=10)
+        self.bat_lbl_a = tk.Label(res_frame, text="100%", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10))
+        self.bat_lbl_a.grid(row=1, column=2)
 
-        # Fertilizer
-        tk.Label(res_frame, text="Fertilizer:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=1, column=0, sticky="w", pady=5)
-        self.fert_bar = ttk.Progressbar(res_frame, length=300, mode="determinate", style="green.Horizontal.TProgressbar")
-        self.fert_bar.grid(row=1, column=1, padx=10)
-        self.fert_lbl = tk.Label(res_frame, text="100%", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10))
-        self.fert_lbl.grid(row=1, column=2)
+        tk.Label(res_frame, text="Fertilizer:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=2, column=0, sticky="w", pady=2)
+        self.fert_bar_a = ttk.Progressbar(res_frame, length=200, mode="determinate", style="green.Horizontal.TProgressbar")
+        self.fert_bar_a.grid(row=2, column=1, padx=10)
+        self.fert_lbl_a = tk.Label(res_frame, text="100%", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10))
+        self.fert_lbl_a.grid(row=2, column=2)
+
+        # Separator column
+        tk.Label(res_frame, text="   |   ", bg="#1E1E1E", fg="#444", font=("Helvetica", 14)).grid(row=0, column=3, rowspan=3)
+
+        # Robot B Resources
+        tk.Label(res_frame, text="Robot B (Sim) - Zones 2,3", bg="#1E1E1E", fg="#E67E22", font=("Helvetica", 11, "bold")).grid(row=0, column=4, columnspan=3, sticky="w", pady=5)
+        tk.Label(res_frame, text="Battery:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=1, column=4, sticky="w", pady=2)
+        self.bat_bar_b = ttk.Progressbar(res_frame, length=200, mode="determinate", style="green.Horizontal.TProgressbar")
+        self.bat_bar_b.grid(row=1, column=5, padx=10)
+        self.bat_lbl_b = tk.Label(res_frame, text="100%", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10))
+        self.bat_lbl_b.grid(row=1, column=6)
+
+        tk.Label(res_frame, text="Fertilizer:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=2, column=4, sticky="w", pady=2)
+        self.fert_bar_b = ttk.Progressbar(res_frame, length=200, mode="determinate", style="green.Horizontal.TProgressbar")
+        self.fert_bar_b.grid(row=2, column=5, padx=10)
+        self.fert_lbl_b = tk.Label(res_frame, text="100%", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10))
+        self.fert_lbl_b.grid(row=2, column=6)
 
         # --- Telemetry Frame ---
-        tele_frame = tk.LabelFrame(main_frame, text="Digital Twin Telemetry", bg="#1E1E1E", fg="#FFFFFF", font=("Helvetica", 12, "bold"))
+        tele_frame = tk.LabelFrame(main_frame, text="Fleet Telemetry", bg="#1E1E1E", fg="#FFFFFF", font=("Helvetica", 12, "bold"))
         tele_frame.pack(fill=tk.X, pady=10, ipadx=10, ipady=10)
 
-        self.zone_var = tk.StringVar(value="Physical Zone: Unknown")
-        tk.Label(tele_frame, textvariable=self.zone_var, bg="#1E1E1E", fg="#F1C40F", font=("Helvetica", 11, "bold")).pack(anchor="w", pady=2)
-        
-        self.nav_var = tk.StringVar(value="Nav Status: IDLE")
-        tk.Label(tele_frame, textvariable=self.nav_var, bg="#1E1E1E", fg="#E67E22", font=("Helvetica", 11, "bold")).pack(anchor="w", pady=2)
+        # Robot A Telemetry
+        self.zone_var_a = tk.StringVar(value="Robot A Zone: Unknown")
+        tk.Label(tele_frame, textvariable=self.zone_var_a, bg="#1E1E1E", fg="#4A90E2", font=("Helvetica", 11, "bold")).grid(row=0, column=0, sticky="w", padx=10, pady=2)
+        self.nav_var_a = tk.StringVar(value="Robot A Nav: IDLE")
+        tk.Label(tele_frame, textvariable=self.nav_var_a, bg="#1E1E1E", fg="#CCC", font=("Helvetica", 10)).grid(row=1, column=0, sticky="w", padx=10, pady=2)
+
+        # Separator
+        tk.Label(tele_frame, text="      |      ", bg="#1E1E1E", fg="#444", font=("Helvetica", 14)).grid(row=0, column=1, rowspan=2)
+
+        # Robot B Telemetry
+        self.zone_var_b = tk.StringVar(value="Robot B Zone: Unknown")
+        tk.Label(tele_frame, textvariable=self.zone_var_b, bg="#1E1E1E", fg="#E67E22", font=("Helvetica", 11, "bold")).grid(row=0, column=2, sticky="w", padx=10, pady=2)
+        self.nav_var_b = tk.StringVar(value="Robot B Nav: IDLE")
+        tk.Label(tele_frame, textvariable=self.nav_var_b, bg="#1E1E1E", fg="#CCC", font=("Helvetica", 10)).grid(row=1, column=2, sticky="w", padx=10, pady=2)
 
         # --- Weather Injection Frame ---
         weather_frame = tk.LabelFrame(main_frame, text="Real-Time Weather Injection (SDG-14)", bg="#1E1E1E", fg="#FFFFFF", font=("Helvetica", 12, "bold"))
@@ -116,22 +159,22 @@ class DashboardNode(Node):
         self.report_pub.publish(msg)
         self.get_logger().info("Requested Sustainability Audit Report")
 
-    def override_req_cb(self, msg: String):
+    def override_req_cb(self, msg: String, robot: str):
         # We need to run UI updates in the main thread.
-        self.root.after(0, self.show_override_popup, msg.data)
+        self.root.after(0, self.show_override_popup, msg.data, robot)
 
-    def show_override_popup(self, data_str: str):
+    def show_override_popup(self, data_str: str, robot: str):
         try:
             data = json.loads(data_str)
             zone = data.get("zone", "Unknown")
             reason = data.get("reason", "Unknown Risk")
 
             popup = tk.Toplevel(self.root)
-            popup.title("⚠️ SDG-14 Safety Override Required")
+            popup.title(f"⚠️ Robot {robot}: SDG-14 Safety Override Required")
             popup.geometry("500x300")
             popup.configure(bg="#E74C3C")
 
-            tk.Label(popup, text="CRITICAL SDG-14 RUNOFF RISK", bg="#E74C3C", fg="#FFF", font=("Helvetica", 16, "bold")).pack(pady=10)
+            tk.Label(popup, text=f"ROBOT {robot}: CRITICAL RUNOFF RISK", bg="#E74C3C", fg="#FFF", font=("Helvetica", 16, "bold")).pack(pady=10)
             tk.Label(popup, text=f"Zone: {zone}", bg="#E74C3C", fg="#FFF", font=("Helvetica", 14)).pack(pady=5)
             
             msg_text = tk.Text(popup, height=4, width=50, bg="#E74C3C", fg="#FFF", font=("Helvetica", 11), wrap=tk.WORD, bd=0)
@@ -143,11 +186,13 @@ class DashboardNode(Node):
             btn_frame.pack(pady=20)
 
             def comply():
-                self.override_pub.publish(String(data="comply"))
+                pub = self.override_pub_a if robot == 'A' else self.override_pub_b
+                pub.publish(String(data="comply"))
                 popup.destroy()
 
             def override():
-                self.override_pub.publish(String(data="override"))
+                pub = self.override_pub_a if robot == 'A' else self.override_pub_b
+                pub.publish(String(data="override"))
                 popup.destroy()
 
             tk.Button(btn_frame, text="🛡️ COMPLY (Abort Spray)", bg="#2ECC71", fg="#FFF", font=("Helvetica", 12, "bold"), command=comply).pack(side=tk.LEFT, padx=10)
@@ -157,33 +202,54 @@ class DashboardNode(Node):
         except Exception as e:
             self.get_logger().error(f"Error showing popup: {e}")
 
-    def resource_cb(self, msg: String):
+    def resource_cb(self, msg: String, robot: str):
         try:
             data = json.loads(msg.data)
-            self.battery = data.get("battery", 100.0)
-            self.fertilizer = data.get("fertilizer", 100.0)
+            with self.state_lock:
+                self.robots[robot]['battery'] = data.get("battery", 100.0)
+                self.robots[robot]['fertilizer'] = data.get("fertilizer", 100.0)
         except Exception:
             pass
 
-    def zone_cb(self, msg: String):
-        self.current_zone = msg.data
+    def zone_cb(self, msg: String, robot: str):
+        with self.state_lock:
+            self.robots[robot]['zone'] = msg.data
 
-    def nav_cb(self, msg: String):
-        self.nav_status = msg.data
+    def nav_cb(self, msg: String, robot: str):
+        with self.state_lock:
+            self.robots[robot]['nav'] = msg.data
 
     def update_gui_loop(self):
-        # Update progress bars
-        self.bat_bar['value'] = self.battery
-        self.bat_lbl.config(text=f"{self.battery:.1f}%")
-        self.bat_bar.configure(style="red.Horizontal.TProgressbar" if self.battery < 30 else "green.Horizontal.TProgressbar")
+        with self.state_lock:
+            bat_a = self.robots['A']['battery']
+            fert_a = self.robots['A']['fertilizer']
+            zone_a = self.robots['A']['zone']
+            nav_a = self.robots['A']['nav']
+            
+            bat_b = self.robots['B']['battery']
+            fert_b = self.robots['B']['fertilizer']
+            zone_b = self.robots['B']['zone']
+            nav_b = self.robots['B']['nav']
 
-        self.fert_bar['value'] = self.fertilizer
-        self.fert_lbl.config(text=f"{self.fertilizer:.1f}%")
-        self.fert_bar.configure(style="red.Horizontal.TProgressbar" if self.fertilizer < 20 else "green.Horizontal.TProgressbar")
+        # Update Robot A
+        self.bat_bar_a['value'] = bat_a
+        self.bat_lbl_a.config(text=f"{bat_a:.1f}%")
+        self.bat_bar_a.configure(style="red.Horizontal.TProgressbar" if bat_a < 30 else "green.Horizontal.TProgressbar")
+        self.fert_bar_a['value'] = fert_a
+        self.fert_lbl_a.config(text=f"{fert_a:.1f}%")
+        self.fert_bar_a.configure(style="red.Horizontal.TProgressbar" if fert_a < 20 else "green.Horizontal.TProgressbar")
+        self.zone_var_a.set(f"Robot A Zone: {zone_a}")
+        self.nav_var_a.set(f"Robot A Nav: {nav_a}")
 
-        # Update text
-        self.zone_var.set(f"Physical Zone: {self.current_zone}")
-        self.nav_var.set(f"Nav Status: {self.nav_status}")
+        # Update Robot B
+        self.bat_bar_b['value'] = bat_b
+        self.bat_lbl_b.config(text=f"{bat_b:.1f}%")
+        self.bat_bar_b.configure(style="red.Horizontal.TProgressbar" if bat_b < 30 else "green.Horizontal.TProgressbar")
+        self.fert_bar_b['value'] = fert_b
+        self.fert_lbl_b.config(text=f"{fert_b:.1f}%")
+        self.fert_bar_b.configure(style="red.Horizontal.TProgressbar" if fert_b < 20 else "green.Horizontal.TProgressbar")
+        self.zone_var_b.set(f"Robot B Zone: {zone_b}")
+        self.nav_var_b.set(f"Robot B Nav: {nav_b}")
 
         # Schedule next update
         self.root.after(100, self.update_gui_loop)

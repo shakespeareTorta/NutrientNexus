@@ -132,15 +132,44 @@ def generate_launch_description():
         launch_arguments={"use_sim_time": use_sim_time}.items(),
     )
 
-    spawn_turtlebot_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(launch_file_dir, "spawn_turtlebot3.launch.py")
-        ),
-        launch_arguments={
-            "x_pose": x_pose,
-            "y_pose": y_pose,
-            "yaw": yaw,
-        }.items(),
+    # Spawn the TurtleBot3 directly (the system spawn_turtlebot3.launch.py
+    # does not support a yaw argument, so we call ros_gz_sim create ourselves).
+    turtlebot3_model = os.environ.get('TURTLEBOT3_MODEL', 'burger')
+    model_folder = 'turtlebot3_' + turtlebot3_model
+    urdf_path = os.path.join(
+        get_package_share_directory('turtlebot3_gazebo'),
+        'models', model_folder, 'model.sdf')
+
+    spawn_turtlebot_cmd = Node(
+        package='ros_gz_sim',
+        executable='create',
+        arguments=[
+            '-name', turtlebot3_model,
+            '-file', urdf_path,
+            '-x', x_pose,
+            '-y', y_pose,
+            '-z', '0.01',
+            '-Y', yaw,
+        ],
+        output='screen',
+    )
+
+    # Gazebo -> ROS 2 Bridge
+    # We must do this manually because the turtlebot3_gazebo bridge.yaml 
+    # maps /cmd_vel to TwistStamped, which breaks Nav2/teleop that expect Twist.
+    bridge_cmd = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
+            '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+            '/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
+            '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+        ],
+        output='screen',
     )
 
     # Launch Nav2
@@ -178,19 +207,6 @@ def generate_launch_description():
         launch_arguments={"use_sim_time": "True"}.items(),
     )
 
-    # ros_gz_bridge setup — bridges Gazebo Sim topics to ROS 2
-    bridge_cmd = Node(
-        package="ros_gz_bridge",
-        executable="parameter_bridge",
-        arguments=[
-            "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
-            "/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
-            "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
-            "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
-        ],
-        output="screen",
-    )
-
     ld = LaunchDescription()
 
     # Add the commands to the launch description
@@ -198,9 +214,9 @@ def generate_launch_description():
     ld.add_action(gzserver_cmd)
     ld.add_action(gzclient_cmd)
     ld.add_action(spawn_turtlebot_cmd)
+    ld.add_action(bridge_cmd)
     ld.add_action(robot_state_publisher_cmd)
     ld.add_action(set_env_vars_resources)
-    ld.add_action(bridge_cmd)
     ld.add_action(slam_cmd)
     ld.add_action(nav2_cmd)
 

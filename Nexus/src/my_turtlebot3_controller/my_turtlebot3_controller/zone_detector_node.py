@@ -9,6 +9,13 @@ from ament_index_python.packages import get_package_share_directory
 from std_msgs.msg import String
 from visualization_msgs.msg import Marker, MarkerArray
 from tf2_ros import Buffer, TransformListener, LookupException, ConnectivityException, ExtrapolationException
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+
+STATE_QOS = QoSProfile(
+    depth=1,
+    reliability=ReliabilityPolicy.RELIABLE,
+    durability=DurabilityPolicy.TRANSIENT_LOCAL
+)
 
 
 def _package_share_or_source_dir() -> str:
@@ -41,7 +48,7 @@ class ZoneDetectorNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        self.publisher = self.create_publisher(String, '/current_zone', 10)
+        self.publisher = self.create_publisher(String, '/current_zone', STATE_QOS)
         self.marker_pub = self.create_publisher(MarkerArray, '/zone_markers', 10)
         
         self.timer = self.create_timer(0.5, self.update_and_publish_zone)
