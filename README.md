@@ -5,8 +5,9 @@ To build, cd into the project root and issue:
 ```
 
 # Running
-Make sure you have done steps outlined in [Building](#building). This is
-required since the script sources necessary files for running the project.
+Make sure you have done steps outlined in [Building](#building) *in the current
+shell*. This is required since the script sources necessary files for running
+the project.
 
 To start NutrientNexus, make sure the current directory is the project root and
 issue (adjust to your shell):
