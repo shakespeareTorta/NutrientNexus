@@ -24,7 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             'move_turtlebot = my_turtlebot3_controller.navigation.MoveTurtleBot:main',
-            'cmd_vel_relay_node = my_turtlebot3_controller.CmdVelRelay:main',
+            'cmd_vel_relay_node = my_turtlebot3_controller.CmdVelRelayNode:main',
             'DecisionNode = my_turtlebot3_controller.algorithm.DecisionNode:main',
             'BinSensorMockNode = my_turtlebot3_controller.sensor.BinSensorMockNode:main',
             'navigation_executor_node = my_turtlebot3_controller.navigation.NavigationExecutorNode:main',

@@ -15,6 +15,7 @@ Usage:
   ros2 launch my_turtlebot3_controller nexus.launch.py gui:=false  # headless
 """
 import os
+import datetime
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -149,10 +150,11 @@ def generate_launch_description():
     )
 
     # 12. rosbag2 auto-recording (Lecture Week 6: evidence collection)
+    bag_output = '/tmp/nexus_recording_' + datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     rosbag_record = ExecuteProcess(
         cmd=[
             'ros2', 'bag', 'record',
-            '--output', '/tmp/nexus_recording',
+            '--output', bag_output,
             '--max-bag-duration', '300',
             '/scan', '/odom', '/tf', '/cmd_vel',
             '/field_moisture', '/field_nutrients', '/field_growth',
