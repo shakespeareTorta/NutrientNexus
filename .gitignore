@@ -59,3 +59,7 @@ __pycache__/
 
 
 .idea/
+
+# Some local dirs?
+.devcontainer/
+.omo/
