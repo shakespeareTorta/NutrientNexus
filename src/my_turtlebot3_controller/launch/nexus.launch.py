@@ -62,7 +62,7 @@ def generate_launch_description():
             {'scan_topic': '/scan'},
             {'input_cmd_topic': '/cmd_vel_nav'},
             {'output_cmd_topic': '/cmd_vel'},
-            {'stop_distance': 0.30},
+            {'stop_distance': 0.14},
             {'front_angle_deg': 30.0},
         ],
     )

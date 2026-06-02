@@ -9,17 +9,14 @@ Responsibilities:
     events (e.g. storms) to halt operations.
   - Fault Management: If a robot is low on battery or crashes, tasks are reassigned.
 """
-import math
 import json
-from typing import Dict, Optional, List
+from typing import List
 
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
-from nav_msgs.msg import Odometry
-from std_msgs.msg import String, Float32MultiArray
-from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import String
 
 STATE_QOS = QoSProfile(
     depth=10,
@@ -88,18 +85,14 @@ class TwinSupervisorNode(Node):
             pass
 
     def _nav_status_cb(self, msg: String, robot_id: str) -> None:
-        try:
-            data = json.loads(msg.data)
-            state = data.get('state', 'UNKNOWN')
-            
-            # If the robot's physical safety stop was triggered, it might fail navigation
-            if state == 'FAILED' or 'fault' in state.lower():
-                self.get_logger().error(f"[STATE SYNC] Robot {robot_id} reported fault/failure! Pausing Digital Twin.")
-                self._handle_robot_fault(robot_id)
-                
-            self.robot_states[robot_id]['status'] = state
-        except json.JSONDecodeError:
-            pass
+        state = msg.data
+
+        # If the robot's physical safety stop was triggered, it might fail navigation
+        if state in ('FAILED_NAVIGATION', 'ABORTED_NAVIGATION') or 'fault' in state.lower():
+            self.get_logger().error(f"[STATE SYNC] Robot {robot_id} reported fault/failure! Pausing Digital Twin.")
+            self._handle_robot_fault(robot_id)
+
+        self.robot_states[robot_id]['status'] = state
 
     def _zone_request_cb(self, msg: String, robot_id: str) -> None:
         """Handles requests from robots for their next task."""
