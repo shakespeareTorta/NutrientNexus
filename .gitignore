@@ -58,7 +58,4 @@ CMakeCache.txt
 __pycache__/
 
 
-
-flake.nix
-flake.lock
 .idea/
