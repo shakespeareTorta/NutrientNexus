@@ -1,0 +1,26 @@
+{
+    "name": "Nutrient Nexus Dev",
+    "build": {
+        "dockerfile": "../Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-iot.vscode-ros",
+                "ms-vscode.cmake-tools",
+                "redhat.vscode-yaml"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/bin/python3",
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    },
+    "workspaceMount": "source=${localWorkspaceFolder},target=/ws,type=bind",
+    "workspaceFolder": "/ws",
+    "postCreateCommand": "source /opt/ros/jazzy/setup.bash && source /opt/turtlebot3_ws/install/setup.bash && colcon build --symlink-install",
+    "remoteEnv": {
+        "TURTLEBOT3_MODEL": "burger"
+    }
+}
