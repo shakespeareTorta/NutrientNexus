@@ -1,7 +1,7 @@
 # Building
 To build, cd into the project root and issue:
 ```sh
-./scripts/setup.sh
+. scripts/setup.sh
 ```
 
 # Running
