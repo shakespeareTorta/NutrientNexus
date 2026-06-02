@@ -56,3 +56,9 @@ CMakeCache.txt
 .*.swp
 
 __pycache__/
+
+
+
+flake.nix
+flake.lock
+.idea/
