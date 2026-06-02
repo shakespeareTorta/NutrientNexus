@@ -20,7 +20,7 @@ If you get errors regarding not found packages, make sure that
 
 # Technical details
 
-This launch the launch file `nexus.launch.py, located in
+This launch the launch file `nexus.launch.py`, located in
 `src/my_turtlebot3_controller/launch/`.
 
 It, in order, runs another launch file -- `base.launch.py` -- and also a number
