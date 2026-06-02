@@ -5,7 +5,7 @@ from nav_msgs.msg import Odometry
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import TransformStamped
 
-class OdomToTF(Node):
+class OdomToTFNode(Node):
     def __init__(self):
         super().__init__('odom_to_tf')
         self.br = TransformBroadcaster(self)
@@ -28,7 +28,7 @@ class OdomToTF(Node):
 
 def main():
     rclpy.init()
-    node = OdomToTF()
+    node = OdomToTFNode()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

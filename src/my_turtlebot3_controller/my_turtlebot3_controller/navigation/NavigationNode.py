@@ -6,7 +6,7 @@ from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import PoseStamped
 
 
-class Navigation(Node):
+class NavigationNode(Node):
     def __init__(self):
         # create 'navigation' ROS node
         super().__init__("navigation")
@@ -65,7 +65,7 @@ def main(args=None):
     # init ROS comm. system (e.g. topics, actions, etc.)
     rclpy.init(args=args)
 
-    node = Navigation()
+    node = NavigationNode()
     # keep node active, process callbacks
     rclpy.spin(node)
 

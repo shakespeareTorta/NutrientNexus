@@ -1,4 +1,4 @@
-# my_turtlebot3_controller/move_turtlebot.py
+# my_turtlebot3_controller/MoveTurtleBot.py
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
