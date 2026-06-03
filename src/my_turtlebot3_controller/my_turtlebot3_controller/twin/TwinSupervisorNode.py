@@ -18,6 +18,11 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 from std_msgs.msg import String
 
+# Quality of Service profile: it Defines rules for data delivery. 
+# Depth = 10 : keeps the last 10 messages in the queue.
+# RELIABLE: ensures messages are delivered without loss.
+# TRANSIENT_LOCAL: Replay the last message to new subscribers, ensuring they get the latest state immediately upon subscribing.
+#
 STATE_QOS = QoSProfile(
     depth=10,
     reliability=ReliabilityPolicy.RELIABLE,
@@ -32,10 +37,11 @@ class TwinSupervisorNode(Node):
         self.system_mode = self.get_parameter('system_mode').get_parameter_value().string_value
 
         # Global Zone Queue (1 and 2 are East, 0 and 3 are West)
-        # We start with these queues for A and B to minimize travel distance.
+        # We start with these queues for A and B to minimize travel distance. Robot A manages zones 1 and 2, Robot B manages zones 3 and 0. 
         self.pending_zones_a: List[str] = ['zone_2', 'zone_1']
         self.pending_zones_b: List[str] = ['zone_3', 'zone_0']
         
+        # Robot States: Track status, battery and current zone for both robots
         self.robot_states = {
             'A': {'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown'},
             'B': {'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown'}
@@ -44,6 +50,9 @@ class TwinSupervisorNode(Node):
         self.current_weather = "sunny"
 
         # ── Publishers ──
+        # 1. /supervisor/zone_assignment - sends zone assignments to robots
+        # 2. /sync_status - publishes the state of both robots and environment for synchronization
+        # 3. /system_alerts - publishes allerts to robots
         self.assignment_pub = self.create_publisher(String, '/supervisor/zone_assignment', STATE_QOS)
         self.sync_pub = self.create_publisher(String, '/sync_status', STATE_QOS)
         self.alert_pub = self.create_publisher(String, '/system_alerts', STATE_QOS)
@@ -63,9 +72,14 @@ class TwinSupervisorNode(Node):
 
         self.get_logger().info("Twin Supervisor Central Orchestrator Initialized.")
         
+        # Timer to periodically publish synchronization status (every second)
         self.create_timer(1.0, self._supervisor_tick)
 
     def _weather_cb(self, msg: String) -> None:
+        """
+        Callback function for the /weather_forecast topic. Updates the current weather state, and if a storm is forecasted, it broadcasts an immediate ABORT to both robots.
+        :param msg: String message containing the updated weather status.
+        """
         new_weather = msg.data.lower()
         if new_weather != self.current_weather:
             self.current_weather = new_weather
@@ -75,6 +89,11 @@ class TwinSupervisorNode(Node):
                 self._broadcast_abort("STORM_EMERGENCY")
 
     def _resource_cb(self, msg: String, robot_id: str) -> None:
+        """
+        Callback function for the /robot_resources topic. Updates the battery level of the specified robot, and if the battery is critically low, it triggers a fault handling routine.
+        :param msg: String message containing the robot's resource status.
+        :param robot_id: Identifier for the robot ('A' or 'B')
+        """
         try:
             data = json.loads(msg.data)
             self.robot_states[robot_id]['battery'] = data.get('battery', 100.0)
@@ -85,6 +104,11 @@ class TwinSupervisorNode(Node):
             pass
 
     def _nav_status_cb(self, msg: String, robot_id: str) -> None:
+        """
+        Callback function for the /navigation_executor_status topic. Updates the navigation status of the specified robot, and if a fault is reported, it triggers a fault handling routine.
+        :param msg: String message containing the robot's navigation status.
+        :param robot_id: Identifier for the robot ('A' or 'B')
+        """
         state = msg.data
 
         # If the robot's physical safety stop was triggered, it might fail navigation
@@ -95,7 +119,12 @@ class TwinSupervisorNode(Node):
         self.robot_states[robot_id]['status'] = state
 
     def _zone_request_cb(self, msg: String, robot_id: str) -> None:
-        """Handles requests from robots for their next task."""
+        """
+        Callback function for handling zone requests from robots. 
+        Implements the task dispatch based on weather conditions, battery levels, and pending tasks. 
+        If the robot is in a storm or has low battery, it is sent back to base. 
+        Otherwise, it receives its own pending tasks first, and if those are empty, it can get tasksfrom other robot's queue.
+        """
         self.get_logger().info(f"Received zone request from Robot {robot_id}")
         
         if self.current_weather == "storm":
@@ -125,13 +154,21 @@ class TwinSupervisorNode(Node):
         self._dispatch_zone(robot_id, "BASE")
 
     def _dispatch_zone(self, robot_id: str, zone: str) -> None:
+        """
+        Sends a zone assignment message to the specific robot. 
+        :param robot_id: Identifier for the robot ('A' or 'B')
+        :param zone: The zone to assign
+        """
         assign_msg = String()
         assign_msg.data = json.dumps({"robot": robot_id, "zone": zone})
         self.assignment_pub.publish(assign_msg)
         self.get_logger().info(f"Dispatched {zone} to Robot {robot_id}")
 
     def _handle_robot_fault(self, faulted_robot: str) -> None:
-        """If a robot fails, give its tasks to the other robot, and broadcast a global pause/abort."""
+        """
+        If a robot fails, give its tasks to the other robot, and broadcast a global pause/abort.
+        :param faulted_robot: Identifier for the faulted robot ('A' or 'B')
+        """
         self.get_logger().warn(f"Handling fault for Robot {faulted_robot}...")
         if faulted_robot == 'A':
             self.pending_zones_b.extend(self.pending_zones_a)
@@ -142,12 +179,18 @@ class TwinSupervisorNode(Node):
             self.pending_zones_b.clear()
 
     def _broadcast_abort(self, reason: str) -> None:
-        """Broadcasts an immediate abort to both robots (e.g. for storm or physical fault)."""
+        """
+        Broadcasts an immediate abort to both robots (e.g. for storm or physical fault).
+        :param reason: The reason for the abort
+        """
         msg = String()
         msg.data = json.dumps({"action": "ABORT", "reason": reason})
         self.alert_pub.publish(msg)
 
     def _supervisor_tick(self) -> None:
+        """
+        Periodic function that publishes the current state of both robots and the environment for synchronization. 
+        """
         sync_data = {
             "robot_a": self.robot_states['A'],
             "robot_b": self.robot_states['B'],

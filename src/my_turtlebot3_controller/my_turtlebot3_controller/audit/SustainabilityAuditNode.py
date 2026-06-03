@@ -14,9 +14,13 @@ from datetime import datetime
 
 class SustainabilityAuditNode(Node):
     def __init__(self) -> None:
+        """
+        Initialize the Sustainability Audit Node. Initializes internal data ledgers, sets default system states, and sets 
+        up subscribers to monitor farm activities.
+        """
         super().__init__('sustainability_audit_node')
 
-        # Ledgers
+        # Ledgers to log historical farm events
         self.interventions = []
         self.fertilizations = []
         self.irrigations = []
@@ -25,7 +29,12 @@ class SustainabilityAuditNode(Node):
         self.current_weather = "sunny"
         self.zone_states = {} # Track latest moisture/nutrients per zone
 
-        # Subscribers
+        # Subscribers 
+        # 1. /weather_forecast - listens for weather strings
+        # 2 . /fertilise_zone - listens for zone IDs that were fertilized
+        # 3. /irrigate_zone - listens for zone IDs that were irrigated
+        # 4. /sdg14_intervention - listens for strings about aborted actions due to runoff risks
+        # 5. /generate_report - listens for a trigger to compile the report
         self.create_subscription(String, '/weather_forecast', self.weather_cb, 10)
         self.create_subscription(String, '/fertilise_zone', self.fert_cb, 10)
         self.create_subscription(String, '/irrigate_zone', self.irrig_cb, 10)
@@ -38,9 +47,19 @@ class SustainabilityAuditNode(Node):
         self.get_logger().info("Sustainability Audit Node started. Ledger initialized.")
 
     def weather_cb(self, msg: String):
+        """
+        Callback function for the /weather_forecast topic. 
+        Updates the current weather state, when a new weather forecast is published.
+        :param msg: String message containing the updated weather status.
+        """
         self.current_weather = msg.data
 
     def fert_cb(self, msg: String):
+        """
+        Callback function for the /fertilise_zone topic.
+        Logs an active fertilization event into the history ledger, 
+        including execution time, zone ID and weather conditions.
+        """
         zone_id = msg.data
         self.fertilizations.append({
             "time": datetime.now().strftime("%H:%M:%S"),
@@ -50,6 +69,11 @@ class SustainabilityAuditNode(Node):
         self.get_logger().info(f"[AUDIT] Logged fertilisation in {zone_id}.")
 
     def irrig_cb(self, msg: String):
+        """
+        Callback function for the /irrigate_zone topic.
+        Logs an active irrigation event into the history ledger, 
+        including execution time, zone ID and weather conditions.
+        """
         zone_id = msg.data
         self.irrigations.append({
             "time": datetime.now().strftime("%H:%M:%S"),
@@ -59,16 +83,28 @@ class SustainabilityAuditNode(Node):
         self.get_logger().info(f"[AUDIT] Logged irrigation in {zone_id}.")
 
     def intervention_cb(self, msg: String):
-        """Receives a JSON string detailing an aborted action due to SDG-14 rules."""
+        """
+        Callback function for the /sdg14_intervention topic.
+        Receives a JSON string detailing an aborted action due to SDG-14 rules.
+        :param msg: String message containing a JSON object with runoff risk details
+        """
         try:
+            #deserializes the JSON string into a Python dictionary.
             data = json.loads(msg.data)
+            #time when audit node receives the message 
             data["time"] = datetime.now().strftime("%H:%M:%S")
+            #commit the intervention data to the ledger
             self.interventions.append(data)
             self.get_logger().info(f"[AUDIT] Logged SDG-14 Intervention in {data.get('zone', 'Unknown')}.")
         except Exception as e:
             self.get_logger().error(f"Failed to parse intervention: {e}")
 
     def generate_report_cb(self, msg: String):
+        """
+        Callback function for the /generate_report topic.
+        Compiles all ledger histories (interventions, operations and weather data) into a Markdown report.
+        :param msg: String message that triggers the report generation (data value is arbitrary)
+        """
         self.get_logger().info("Compiling Sustainability Report...")
         
         # Estimate savings: Assume each aborted fertilizer spray saves 1.5kg of nitrogen
