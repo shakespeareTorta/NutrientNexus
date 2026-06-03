@@ -34,8 +34,8 @@ class TwinSupervisorNode(Node):
         self.pending_zones_b: List[str] = ['zone_3', 'zone_0']
         
         self.robot_states = {
-            'A': {'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown'},
-            'B': {'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown'}
+            'A': {'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown', 'faulted': False},
+            'B': {'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown', 'faulted': False}
         }
         
         self.current_weather = "sunny"
@@ -95,6 +95,16 @@ class TwinSupervisorNode(Node):
         """Handles requests from robots for their next task."""
         self.get_logger().info(f"Received zone request from Robot {robot_id}")
         
+        # --- Auto-Recovery Mechanism ---
+        if self.robot_states[robot_id].get('faulted', False):
+            # If the robot is now IDLE (navigation cleared) and has sufficient battery, reset the fault
+            if self.robot_states[robot_id]['battery'] >= 20.0 and self.robot_states[robot_id]['status'] == 'IDLE':
+                self.get_logger().info(f"Robot {robot_id} has recovered from its fault. Resetting fault state!")
+                self.robot_states[robot_id]['faulted'] = False
+            else:
+                self.get_logger().warn(f"Robot {robot_id} is currently FAULTED. Ignoring zone request.")
+                return
+
         if self.current_weather == "storm":
             self._dispatch_zone(robot_id, "BASE")
             return
@@ -132,6 +142,8 @@ class TwinSupervisorNode(Node):
     def _handle_robot_fault(self, faulted_robot: str) -> None:
         """If a robot fails, give its tasks to the other robot, and broadcast a global pause/abort."""
         self.get_logger().warn(f"Handling fault for Robot {faulted_robot}...")
+        self.robot_states[faulted_robot]['faulted'] = True
+
         if faulted_robot == 'A':
             self.pending_zones_b.extend(self.pending_zones_a)
             self.pending_zones_a.clear()

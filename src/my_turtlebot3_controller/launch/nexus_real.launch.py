@@ -81,14 +81,18 @@ def generate_launch_description():
         condition=IfCondition(gui),
     )
 
-    # Bridge: forward /cmd_vel to Gazebo so the twin mirrors real motion.
-    # Real robot topics (/scan, /odom, /tf) come from the physical robot over
-    # the network — do NOT bridge them back from Gazebo.
+    # Bridge: forward /sim/cmd_vel to Gazebo so the twin mirrors real motion.
+    # Bridge Gazebo's /scan back to ROS as /sim/scan for the Twin Safety Node.
     gz_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
             '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+        ],
+        remappings=[
+            ('/cmd_vel', '/sim/cmd_vel'),
+            ('/scan', '/sim/scan'),
         ],
         output='screen',
     )
@@ -138,14 +142,16 @@ def generate_launch_description():
 
     safety_stop = Node(
         package='my_turtlebot3_controller',
-        executable='safety_stop_node',
-        name='safety_stop_node',
+        executable='twin_safety_node',
+        name='twin_safety_node',
         output='screen',
         emulate_tty=True,
         parameters=[
-            {'scan_topic': '/scan'},
+            {'real_scan_topic': '/scan'},
+            {'sim_scan_topic': '/sim/scan'},
             {'input_cmd_topic': '/cmd_vel_nav'},
-            {'output_cmd_topic': '/cmd_vel'},
+            {'real_cmd_topic': '/cmd_vel'},
+            {'sim_cmd_topic': '/sim/cmd_vel'},
             {'stop_distance': 0.25},
             {'front_angle_deg': 30.0},
         ],
