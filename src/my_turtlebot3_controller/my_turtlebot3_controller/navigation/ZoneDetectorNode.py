@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+"""
+Zone Detector Node
+ 
+Determines which agricultural zone the robot is currently in (by looking up its
+map-frame pose via TF and testing it against the zone bounding boxes from
+config/zones.yaml), publishes that zone name on /current_zone, and publishes
+RViz markers (/zone_markers) visualising the zone boxes and their target points.
+"""
 import os
 import yaml
 from typing import Dict, Any
@@ -15,14 +23,62 @@ from my_turtlebot3_controller.qos import STATE_QOS
 
 
 def _package_share_or_source_dir() -> str:
+    """
+    Resolve the directory that is expected to contain 'config/zones.yaml'.
+ 
+    @param  (none)
+    @pre    (none)
+    @post   Returns the installed package share directory of
+            'my_turtlebot3_controller' if it can be resolved; otherwise returns
+            the parent-of-parent directory of this source file as a fallback
+            (useful when running from source without a built/sourced install).
+    @return str - a directory path. NOTe: the path is not guaranteed to exist;
+            the caller is still responsible for handling a missing file.
+    @throws (none) - the only expected failure, PackageNotFoundError (raised by
+            get_package_share_directory when the package is not built/sourced),
+            is caught here and handled by the source-dir fallback.
+    """
     try:
         return get_package_share_directory('my_turtlebot3_controller')
-    except Exception:
+    except PackageNotFoundError:
         return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class ZoneDetectorNode(Node):
+    """
+    Publishes the robot's current zone and the RViz visualisation of all zones.
+ 
+    Class invariant (must hold between every call):
+        - self.zones is a dict (possibly empty) mapping zone-name -> zone
+          definition (each definition ideally provides min_x/max_x/min_y/max_y
+          and target_x/target_y).
+        - self.current_zone is either 'no_zone' or a key of self.zones.
+        - (self.current_x, self.current_y) is the most recent map-frame position
+          for which a zone was resolved; it is (0.0, 0.0) until the first
+          successful TF lookup.
+    """
     def __init__(self) -> None:
+        """
+        Construct the node: load the zone definitions from zones.yaml, set up the
+        TF listener, the two publishers (/current_zone, /zone_markers) and the
+        two periodic timers.
+ 
+        @param  (none besides self)
+        @pre    rclpy.init() has been called (a ROS 2 context exists) before this
+                node is constructed.
+        @post   - The node is registered in the ROS graph as 'zone_detector_node'.
+                - self.zones holds the parsed contents of config/zones.yaml, or an
+                  empty dict if the file is missing (an error is logged).
+                - self.current_x == 0.0, self.current_y == 0.0,
+                  self.current_zone == 'no_zone' (class invariant established).
+                - A TF buffer and listener are active so map->base_footprint can
+                  be looked up.
+                - Publishers on '/current_zone' (String, STATE_QOS) and
+                  '/zone_markers' (MarkerArray) are active.
+                - A 0.5 s timer calls update_and_publish_zone() and a 1.0 s timer
+                  calls publish_markers().
+        @return None
+        """
         super().__init__('zone_detector_node')
 
         pkg_dir = _package_share_or_source_dir()
@@ -51,6 +107,29 @@ class ZoneDetectorNode(Node):
         self.marker_timer = self.create_timer(1.0, self.publish_markers)
 
     def update_and_publish_zone(self) -> None:
+        """
+        Look up the robot's pose in the map frame, resolve which zone it is in,
+        and publish that zone name on /current_zone.
+ 
+        Client: the ROS 2 executor, via the 0.5 s timer.
+ 
+        @param  (none besides self)
+        @pre    The TF tree should contain a map->base_footprint transform. If it
+                does not yet (e.g. at start-up, before SLAM/odometry are ready),
+                the method tolerates this - see @post.
+        @post   - If the transform is available: self.current_x / self.current_y
+                  are updated to the looked-up translation and self.current_zone
+                  is set to get_zone(current_x, current_y).
+                - If the transform is NOT available (LookupException /
+                  ConnectivityException / ExtrapolationException): the last known
+                  current_x / current_y / current_zone are kept unchanged.
+                - In BOTH cases, the current value of self.current_zone is
+                  published on /current_zone.
+        @return None
+        @throws (none) - the three TF exceptions are caught with a narrow
+                multi-catch. Any other exception is intentionally NOT caught
+                and would propagate as a genuine bug.
+        """
         try:
             transform = self.tf_buffer.lookup_transform(
                 'map', 'base_footprint', rclpy.time.Time())
@@ -66,6 +145,27 @@ class ZoneDetectorNode(Node):
         self.publisher.publish(msg)
 
     def get_zone(self, x: float, y: float) -> str:
+        """
+        Map a map-frame (x, y) position to the name of the zone whose
+        axis-aligned bounding box contains it.
+ 
+        @param x  float - x coordinate in the 'map' frame (metres).
+        @param y  float - y coordinate in the 'map' frame (metres).
+        @pre   Each zone in self.zones should define numeric 'min_x', 'max_x',
+               'min_y', 'max_y'. A missing bound defaults to 0.0, which yields a
+               degenerate (empty) box. Ideally the zone boxes do NOT overlap (see
+               the tie-break documented in @post).
+        @post  Returns the name of the FIRST matching zone when the keys are
+               visited in ascending (sorted) order - i.e. the zone whose box
+               satisfies (min_x <= x <= max_x) and (min_y <= y <= max_y). If no
+               zone matches, returns 'no_zone'. self.zones is not modified
+               (this method is read-only).
+               Tie-break rule: if several zone boxes overlap the point, the
+               alphabetically smallest zone name wins. For example, a point that
+               lies inside both 'base_station' and 'zone_2' resolves to
+               'base_station'.
+        @return str - a zone name that is a key of self.zones, or 'no_zone'.
+        """
         for zone_name in sorted(self.zones.keys()):
             zone = self.zones[zone_name] or {}
             if (
@@ -76,6 +176,28 @@ class ZoneDetectorNode(Node):
         return 'no_zone'
 
     def publish_markers(self) -> None:
+        """
+        Build and publish the RViz visualisation of all zones: one translucent
+        CUBE per zone box and one white SPHERE per zone target point.
+ 
+        Client: the ROS 2 executor, via the 1.0 s timer.
+ 
+        @param  (none besides self)
+        @pre    self.zones is populated (an empty dict simply yields an empty
+                MarkerArray). self.current_zone reflects the latest detection.
+        @post   A MarkerArray is published on /zone_markers containing, for each
+                zone in self.zones, exactly two markers:
+                  - a CUBE (namespace "zone_boxes", id = index) centred on the
+                    box, sized to the box extents (min 0.1 m per side), coloured
+                    per the fixed palette; the cube of the zone equal to
+                    self.current_zone is drawn more opaque (alpha 0.8) to
+                    highlight the robot's location;
+                  - a SPHERE (namespace "zone_targets", id = index + 100) at the
+                    zone's (target_x, target_y).
+                No node state is mutated (read-only with respect to self.zones and
+                self.current_zone).
+        @return None
+        """
         marker_array = MarkerArray()
         
         colors = {
@@ -148,6 +270,17 @@ class ZoneDetectorNode(Node):
 
 
 def main(args=None) -> None:
+    """
+    ROS 2 entry point: initialise the context, spin the node until interrupted,
+    then shut down cleanly.
+ 
+    @param args  Optional command-line arguments forwarded to rclpy.init().
+                 Defaults to None.
+    @pre   (none) this function initialises rclpy itself.
+    @post  The node has been spun until a KeyboardInterrupt or shutdown, then
+           destroyed; rclpy is shut down if the context was still active.
+    @return None
+    """
     rclpy.init(args=args)
     node = ZoneDetectorNode()
     try:
