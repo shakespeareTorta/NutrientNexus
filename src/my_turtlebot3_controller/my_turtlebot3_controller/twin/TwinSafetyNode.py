@@ -29,6 +29,8 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 
+from my_turtlebot3_controller.lidar_utils import get_front_arc_distances
+
 
 class TwinSafetyNode(Node):
     def __init__(self) -> None:
@@ -107,8 +109,7 @@ class TwinSafetyNode(Node):
         self, msg: LaserScan
     ) -> Tuple[float, bool]:
         """Evaluate whether an obstacle exists in the front arc."""
-        front_ranges = self._get_front_arc_distances(
-            msg, self.front_angle_deg)
+        front_ranges = get_front_arc_distances(msg, self.front_angle_deg)
 
         valid: List[float] = [
             r for r in front_ranges
@@ -122,24 +123,6 @@ class TwinSafetyNode(Node):
         blocked = min_distance < self.stop_distance
         return min_distance, blocked
 
-    def _get_front_arc_distances(
-        self, scan_msg: LaserScan, front_angle_deg: float
-    ) -> List[float]:
-        """Extract LiDAR ranges within the front arc (±front_angle_deg)."""
-        ranges = scan_msg.ranges
-        angle_min = scan_msg.angle_min
-        angle_increment = scan_msg.angle_increment
-        front_angle_rad = math.radians(front_angle_deg)
-
-        selected: List[float] = []
-        for i, distance in enumerate(ranges):
-            angle = angle_min + i * angle_increment
-            # Normalize angle to [-pi, pi]
-            angle = math.atan2(math.sin(angle), math.cos(angle))
-            if abs(angle) <= front_angle_rad:
-                selected.append(distance)
-
-        return selected
 
     # ------------------------------------------------------------------ #
     #  Command velocity callback                                           #

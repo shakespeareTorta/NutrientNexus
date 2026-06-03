@@ -18,15 +18,13 @@ from typing import Optional
 
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
-STATE_QOS = QoSProfile(
-    depth=1,
-    reliability=ReliabilityPolicy.RELIABLE,
-    durability=DurabilityPolicy.TRANSIENT_LOCAL
-)
+from my_turtlebot3_controller.qos import STATE_QOS
 
 class RobotResourceNode(Node):
     def __init__(self) -> None:
         super().__init__('robot_resource_node')
+        
+        self.declare_parameter('robot_id', 'A')
 
         # Resource levels (0.0 to 100.0)
         self.battery: float = 100.0
@@ -70,7 +68,7 @@ class RobotResourceNode(Node):
             data = json.loads(msg.data)
             robot_id = data.get("robot")
             # If the payload specifies a robot, only drain if it matches our namespace
-            my_id = 'B' if self.get_namespace() == '/tb2' else 'A'
+            my_id = self.get_parameter('robot_id').get_parameter_value().string_value
             if robot_id and robot_id != my_id:
                 return
         except json.JSONDecodeError:

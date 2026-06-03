@@ -44,8 +44,8 @@ def generate_launch_description():
         ),
         launch_arguments={
             'gui': gui,
-            'x_pose': '0.8',
-            'y_pose': '-1.4',
+            'x_pose': '0.6',
+            'y_pose': '-1.6',
             'yaw': '1.5708',
         }.items(),
     )
@@ -62,8 +62,9 @@ def generate_launch_description():
             {'scan_topic': '/scan'},
             {'input_cmd_topic': '/cmd_vel_nav'},
             {'output_cmd_topic': '/cmd_vel'},
-            {'stop_distance': 0.14},
+            {'stop_distance': 0.25},
             {'front_angle_deg': 30.0},
+            {'use_sim_time': True}, {'robot_id': 'A'},
         ],
     )
 
@@ -74,6 +75,7 @@ def generate_launch_description():
         name="field_sensor_mock_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 4. Navigation Executor Node (Nav2 Action Client Relay)
@@ -83,6 +85,7 @@ def generate_launch_description():
         name="navigation_executor_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 5. Zone Detector Node (Physical Spatial Verification)
@@ -92,6 +95,7 @@ def generate_launch_description():
         name="zone_detector_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 6. Robot Resource Node (Battery & Tank tracking)
@@ -101,6 +105,7 @@ def generate_launch_description():
         name="robot_resource_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 7. Crop Decision Node (Agricultural State Machine & SDG-14 controller)
@@ -110,6 +115,7 @@ def generate_launch_description():
         name="crop_decision_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 8. Real-Time Dashboard Node (Tkinter GUI)
@@ -119,6 +125,7 @@ def generate_launch_description():
         name="dashboard_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 9. Sustainability Audit Node
@@ -128,6 +135,7 @@ def generate_launch_description():
         name="sustainability_audit_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 10. Twin Supervisor Node (Lecture Week 6)
@@ -137,7 +145,10 @@ def generate_launch_description():
         name="twin_supervisor_node",
         output="screen",
         emulate_tty=True,
-        parameters=[{'system_mode': 'SIM_ONLY'}],
+        parameters=[
+            {'system_mode': 'SIM_ONLY'},
+            {'use_sim_time': True}, {'robot_id': 'A'},
+        ],
     )
 
     # 11. RViz2 (with Nav2 Default View)

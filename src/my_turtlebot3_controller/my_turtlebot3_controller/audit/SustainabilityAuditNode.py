@@ -25,12 +25,17 @@ class SustainabilityAuditNode(Node):
         self.current_weather = "sunny"
         self.zone_states = {} # Track latest moisture/nutrients per zone
 
-        # Subscribers
+        # Subscribers (Robot A)
         self.create_subscription(String, '/weather_forecast', self.weather_cb, 10)
         self.create_subscription(String, '/fertilise_zone', self.fert_cb, 10)
         self.create_subscription(String, '/irrigate_zone', self.irrig_cb, 10)
         self.create_subscription(String, '/sdg14_intervention', self.intervention_cb, 10)
         self.create_subscription(String, '/generate_report', self.generate_report_cb, 10)
+        
+        # Subscribers (Robot B)
+        self.create_subscription(String, '/tb2/fertilise_zone', self.fert_cb, 10)
+        self.create_subscription(String, '/tb2/irrigate_zone', self.irrig_cb, 10)
+        self.create_subscription(String, '/tb2/sdg14_intervention', self.intervention_cb, 10)
         
         # We can also listen to /robot_resources or field telemetry if needed, 
         # but the decision node's intervention string will be rich enough for now.
@@ -41,22 +46,38 @@ class SustainabilityAuditNode(Node):
         self.current_weather = msg.data
 
     def fert_cb(self, msg: String):
-        zone_id = msg.data
+        try:
+            data = json.loads(msg.data)
+            zone_id = data.get('zone', msg.data)
+            robot_id = data.get('robot', 'Unknown')
+        except (json.JSONDecodeError, AttributeError):
+            zone_id = msg.data
+            robot_id = 'Unknown'
+
         self.fertilizations.append({
             "time": datetime.now().strftime("%H:%M:%S"),
             "zone": zone_id,
+            "robot": robot_id,
             "weather": self.current_weather
         })
-        self.get_logger().info(f"[AUDIT] Logged fertilisation in {zone_id}.")
+        self.get_logger().info(f"[AUDIT] Logged fertilisation by Robot {robot_id} in {zone_id}.")
 
     def irrig_cb(self, msg: String):
-        zone_id = msg.data
+        try:
+            data = json.loads(msg.data)
+            zone_id = data.get('zone', msg.data)
+            robot_id = data.get('robot', 'Unknown')
+        except (json.JSONDecodeError, AttributeError):
+            zone_id = msg.data
+            robot_id = 'Unknown'
+
         self.irrigations.append({
             "time": datetime.now().strftime("%H:%M:%S"),
             "zone": zone_id,
+            "robot": robot_id,
             "weather": self.current_weather
         })
-        self.get_logger().info(f"[AUDIT] Logged irrigation in {zone_id}.")
+        self.get_logger().info(f"[AUDIT] Logged irrigation by Robot {robot_id} in {zone_id}.")
 
     def intervention_cb(self, msg: String):
         """Receives a JSON string detailing an aborted action due to SDG-14 rules."""

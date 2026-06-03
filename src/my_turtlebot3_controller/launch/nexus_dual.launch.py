@@ -121,7 +121,7 @@ def generate_launch_description():
             {'scan_topic': '/scan'},
             {'input_cmd_topic': '/cmd_vel_nav'},
             {'output_cmd_topic': '/cmd_vel'},
-            {'stop_distance': 0.14},
+            {'stop_distance': 0.25},
             {'front_angle_deg': 30.0},
         ],
     )
@@ -147,7 +147,7 @@ def generate_launch_description():
         executable="robot_resource_node",
         name="robot_resource_node",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}],
+        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     crop_decision_a = Node(
@@ -155,7 +155,7 @@ def generate_launch_description():
         executable="crop_decision_node",
         name="crop_decision_node_a",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}, {'zone_assignment': [0, 1]}],
+        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}, {'zone_assignment': [0, 1]}],
     )
 
     # ── 6. Robot B nodes (Zone 2 & 3) ─────────────────────────────────
@@ -171,7 +171,7 @@ def generate_launch_description():
             {'scan_topic': '/tb2/scan'},
             {'input_cmd_topic': '/tb2/cmd_vel_nav'},
             {'output_cmd_topic': '/tb2/cmd_vel'},
-            {'stop_distance': 0.14},
+            {'stop_distance': 0.25},
             {'front_angle_deg': 30.0},
         ],
     )
@@ -210,7 +210,7 @@ def generate_launch_description():
         name="robot_resource_node_b",
         namespace="tb2",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}],
+        parameters=[{'use_sim_time': True}, {'robot_id': 'B'}],
         remappings=[
             ('/odom', '/tb2/odom'),
             ('/robot_resources', '/tb2/robot_resources'),
@@ -224,7 +224,7 @@ def generate_launch_description():
         name="crop_decision_node_b",
         namespace="tb2",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}, {'zone_assignment': [2, 3]}],
+        parameters=[{'use_sim_time': True}, {'robot_id': 'B'}, {'zone_assignment': [2, 3]}],
         remappings=[
             ('/dispatch_nav_goal', '/tb2/dispatch_nav_goal'),
             ('/navigation_executor_status', '/tb2/navigation_executor_status'),

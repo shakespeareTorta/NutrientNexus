@@ -17,12 +17,9 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 from std_msgs.msg import String
+from my_turtlebot3_controller.qos import STATE_QOS
 
-STATE_QOS = QoSProfile(
-    depth=10,
-    reliability=ReliabilityPolicy.RELIABLE,
-    durability=DurabilityPolicy.TRANSIENT_LOCAL,
-)
+
 
 class TwinSupervisorNode(Node):
     def __init__(self) -> None:
@@ -110,6 +107,7 @@ class TwinSupervisorNode(Node):
         my_queue = self.pending_zones_a if robot_id == 'A' else self.pending_zones_b
         if my_queue:
             next_zone = my_queue.pop(0)
+            my_queue.append(next_zone)  # Requeue for continuous patrol
             self._dispatch_zone(robot_id, next_zone)
             return
             
@@ -117,6 +115,7 @@ class TwinSupervisorNode(Node):
         other_queue = self.pending_zones_b if robot_id == 'A' else self.pending_zones_a
         if other_queue:
             stolen_zone = other_queue.pop(0)
+            my_queue.append(stolen_zone)  # Add to own queue for future
             self.get_logger().info(f"[COLLABORATION] Robot {robot_id} is stealing {stolen_zone} to help out!")
             self._dispatch_zone(robot_id, stolen_zone)
             return

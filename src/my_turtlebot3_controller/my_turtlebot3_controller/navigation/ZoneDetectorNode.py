@@ -11,11 +11,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from tf2_ros import Buffer, TransformListener, LookupException, ConnectivityException, ExtrapolationException
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
-STATE_QOS = QoSProfile(
-    depth=1,
-    reliability=ReliabilityPolicy.RELIABLE,
-    durability=DurabilityPolicy.TRANSIENT_LOCAL
-)
+from my_turtlebot3_controller.qos import STATE_QOS
 
 
 def _package_share_or_source_dir() -> str:

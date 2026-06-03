@@ -146,7 +146,7 @@ def generate_launch_description():
             {'scan_topic': '/scan'},
             {'input_cmd_topic': '/cmd_vel_nav'},
             {'output_cmd_topic': '/cmd_vel'},
-            {'stop_distance': 0.14},
+            {'stop_distance': 0.25},
             {'front_angle_deg': 30.0},
         ],
     )
@@ -181,6 +181,7 @@ def generate_launch_description():
         name='robot_resource_node',
         output='screen',
         emulate_tty=True,
+        parameters=[{'robot_id': 'A'}],
     )
 
     crop_decision = Node(
@@ -189,6 +190,7 @@ def generate_launch_description():
         name='crop_decision_node',
         output='screen',
         emulate_tty=True,
+        parameters=[{'robot_id': 'A'}],
     )
 
     dashboard = Node(
@@ -203,6 +205,14 @@ def generate_launch_description():
         package='my_turtlebot3_controller',
         executable='sustainability_audit_node',
         name='sustainability_audit_node',
+        output='screen',
+        emulate_tty=True,
+    )
+
+    twin_supervisor = Node(
+        package='my_turtlebot3_controller',
+        executable='twin_supervisor_node',
+        name='twin_supervisor_node',
         output='screen',
         emulate_tty=True,
     )
@@ -234,5 +244,6 @@ def generate_launch_description():
         crop_decision,
         dashboard,
         sustainability_audit,
+        twin_supervisor,
         rviz,
     ])

@@ -12,13 +12,10 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+from my_turtlebot3_controller.qos import STATE_QOS
 
 # ── QoS profiles (Lecture Week 6) ────────────────────────────────────
-STATE_QOS = QoSProfile(
-    depth=10,
-    reliability=ReliabilityPolicy.RELIABLE,
-    durability=DurabilityPolicy.TRANSIENT_LOCAL,
-)
+
 
 class DashboardNode(Node):
     def __init__(self) -> None:

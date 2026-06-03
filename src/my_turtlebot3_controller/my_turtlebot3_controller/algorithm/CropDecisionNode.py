@@ -11,25 +11,23 @@ import json
 from ament_index_python.packages import get_package_share_directory
 from typing import Dict, List, Optional, Any
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+from my_turtlebot3_controller.qos import STATE_QOS
 
-STATE_QOS = QoSProfile(
-    depth=10,
-    reliability=ReliabilityPolicy.RELIABLE,
-    durability=DurabilityPolicy.TRANSIENT_LOCAL,
-)
+
 
 class CropDecisionNode(Node):
     def __init__(self) -> None:
         super().__init__('crop_decision_node')
 
         # Identify robot (A or B)
-        self.robot_id = 'B' if self.get_namespace() == '/tb2' else 'A'
+        self.declare_parameter('robot_id', 'A')
+        self.robot_id = self.get_parameter('robot_id').get_parameter_value().string_value
 
         # Publishers (using relative topics to respect namespace)
         self.goal_pub = self.create_publisher(PoseStamped, 'dispatch_nav_goal', 10)
         self.irrigate_pub = self.create_publisher(String, 'irrigate_zone', STATE_QOS)
         self.fertilise_pub = self.create_publisher(String, 'fertilise_zone', STATE_QOS)
-        self.treatment_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.treatment_vel_pub = self.create_publisher(Twist, 'cmd_vel_nav', 10)
         self.refill_pub = self.create_publisher(String, 'refill_resources', STATE_QOS)
         self.intervention_pub = self.create_publisher(String, 'sdg14_intervention', STATE_QOS)
         
@@ -43,6 +41,7 @@ class CropDecisionNode(Node):
         # Shared/Global Subscribers
         self.moisture_sub = self.create_subscription(Float32MultiArray, '/field_moisture', self.moisture_callback, 10)
         self.nutrients_sub = self.create_subscription(Float32MultiArray, '/field_nutrients', self.nutrients_callback, 10)
+        self.vulnerability_sub = self.create_subscription(Float32MultiArray, '/field_vulnerability', self.vulnerability_callback, 10)
         self.assignment_sub = self.create_subscription(String, '/supervisor/zone_assignment', self.assignment_callback, STATE_QOS)
         self.alerts_sub = self.create_subscription(String, '/system_alerts', self.alerts_callback, STATE_QOS)
 
@@ -51,6 +50,11 @@ class CropDecisionNode(Node):
         zones_file = os.path.join(pkg_dir, 'config', 'zones.yaml')
         with open(zones_file, 'r', encoding='utf-8') as f:
             self.raw_zones = yaml.safe_load(f) or {}
+            
+        self.ordered_zones = sorted([z for z in self.raw_zones.keys() if z != 'base_station'])
+        self.latest_moisture = {}
+        self.latest_nutrients = {}
+        self.latest_vulnerability = {}
 
         # System state machine
         self.current_phase = "IDLE"
@@ -85,10 +89,19 @@ class CropDecisionNode(Node):
         self.physical_current_zone = msg.data
 
     def moisture_callback(self, msg: Float32MultiArray) -> None:
-        pass # Using raw thresholds for simplicity right now
+        for i, val in enumerate(msg.data):
+            if i < len(self.ordered_zones):
+                self.latest_moisture[self.ordered_zones[i]] = val
 
     def nutrients_callback(self, msg: Float32MultiArray) -> None:
-        pass
+        for i, val in enumerate(msg.data):
+            if i < len(self.ordered_zones):
+                self.latest_nutrients[self.ordered_zones[i]] = val
+
+    def vulnerability_callback(self, msg: Float32MultiArray) -> None:
+        for i, val in enumerate(msg.data):
+            if i < len(self.ordered_zones):
+                self.latest_vulnerability[self.ordered_zones[i]] = val
 
     def alerts_callback(self, msg: String) -> None:
         try:
@@ -210,16 +223,49 @@ class CropDecisionNode(Node):
         self._cancel_and_destroy('_scan_timer')
         self.current_phase = "DECIDING"
         
-        # Simulated context decision (in reality, read from field sensors)
-        # We will actuate briefly to prove environment interaction
-        self.current_phase = "ACTUATING"
-        self._actuation_start_time = self.get_clock().now().nanoseconds / 1e9
-        self._cancel_and_destroy('_actuation_timer')
-        self._actuation_timer = self.create_timer(0.1, self._actuation_tick)
+        # Read from field sensors for the active zone
+        moist = self.latest_moisture.get(self.active_zone_id, 100.0)
+        nutri = self.latest_nutrients.get(self.active_zone_id, 100.0)
+        vuln = self.latest_vulnerability.get(self.active_zone_id, 0.0)
         
-        msg = String()
-        msg.data = json.dumps({"robot": self.robot_id, "zone": self.active_zone_id})
-        self.fertilise_pub.publish(msg)
+        self.get_logger().info(f"[{self.active_zone_id}] Stats - Moisture: {moist:.1f}%, Nutrients: {nutri:.1f}%, Vulnerability: {vuln:.1f}%")
+
+        action_taken = False
+
+        if vuln > 70.0:
+            self.get_logger().warn(f"[{self.active_zone_id}] High vulnerability ({vuln:.1f}%). Halting fertilization to prevent runoff! (SDG-14)")
+            intervention_msg = String()
+            intervention_msg.data = json.dumps({
+                "robot": self.robot_id,
+                "zone": self.active_zone_id,
+                "action": "HALT_FERTILIZER",
+                "reason": "High runoff risk"
+            })
+            self.intervention_pub.publish(intervention_msg)
+        elif nutri < self.nutrient_threshold:
+            self.get_logger().info(f"[{self.active_zone_id}] Nutrients low ({nutri:.1f}% < {self.nutrient_threshold}%). Fertilizing.")
+            msg = String()
+            msg.data = json.dumps({"robot": self.robot_id, "zone": self.active_zone_id})
+            self.fertilise_pub.publish(msg)
+            action_taken = True
+
+        if moist < self.moisture_threshold:
+            self.get_logger().info(f"[{self.active_zone_id}] Moisture low ({moist:.1f}% < {self.moisture_threshold}%). Irrigating.")
+            irr_msg = String()
+            irr_msg.data = json.dumps({"robot": self.robot_id, "zone": self.active_zone_id})
+            self.irrigate_pub.publish(irr_msg)
+            action_taken = True
+            
+        if not action_taken and vuln <= 70.0:
+            self.get_logger().info(f"[{self.active_zone_id}] Zone is healthy. No treatment needed.")
+
+        if action_taken:
+            self.current_phase = "ACTUATING"
+            self._actuation_start_time = self.get_clock().now().nanoseconds / 1e9
+            self._cancel_and_destroy('_actuation_timer')
+            self._actuation_timer = self.create_timer(0.1, self._actuation_tick)
+        else:
+            self._start_cooldown()
 
     def _actuation_tick(self):
         now = self.get_clock().now().nanoseconds / 1e9
