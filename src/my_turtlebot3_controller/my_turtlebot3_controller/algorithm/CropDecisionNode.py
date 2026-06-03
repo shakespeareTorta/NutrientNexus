@@ -46,8 +46,10 @@ class CropDecisionNode(Node):
         self.alerts_sub = self.create_subscription(String, '/system_alerts', self.alerts_callback, STATE_QOS)
 
         # Load Zones
+        self.declare_parameter('zones_file_name', 'zones_old.yaml')
+        zones_file_name = self.get_parameter('zones_file_name').get_parameter_value().string_value
         pkg_dir = get_package_share_directory('my_turtlebot3_controller')
-        zones_file = os.path.join(pkg_dir, 'config', 'zones.yaml')
+        zones_file = os.path.join(pkg_dir, 'config', zones_file_name)
         with open(zones_file, 'r', encoding='utf-8') as f:
             self.raw_zones = yaml.safe_load(f) or {}
             

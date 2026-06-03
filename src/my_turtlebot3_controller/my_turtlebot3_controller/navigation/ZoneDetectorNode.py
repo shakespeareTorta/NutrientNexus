@@ -81,8 +81,11 @@ class ZoneDetectorNode(Node):
         """
         super().__init__('zone_detector_node')
 
+        self.declare_parameter('zones_file_name', 'zones_old.yaml')
+        zones_file_name = self.get_parameter('zones_file_name').get_parameter_value().string_value
+
         pkg_dir = _package_share_or_source_dir()
-        zones_file = os.path.join(pkg_dir, 'config', 'zones.yaml')
+        zones_file = os.path.join(pkg_dir, 'config', zones_file_name)
         
         try:
             with open(zones_file, 'r', encoding='utf-8') as f:

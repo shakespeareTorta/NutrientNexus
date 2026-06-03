@@ -39,14 +39,28 @@ def generate_launch_description():
         description='Set to "false" to run headless (no Gazebo GUI).')
     gui = LaunchConfiguration("gui")
 
+    declare_arena = DeclareLaunchArgument(
+        'arena', default_value='lab',
+        description='Choose arena: old or lab')
+    arena = LaunchConfiguration('arena')
+
+    from launch.substitutions import PythonExpression
+    zones_file_name = PythonExpression(["'zones_lab.yaml' if '", arena, "' == 'lab' else 'zones_old.yaml'"])
+
+    robot_a_x = PythonExpression(["'-1.0' if '", arena, "' == 'lab' else '0.6'"])
+    robot_a_y = PythonExpression(["'0.0' if '", arena, "' == 'lab' else '-1.6'"])
+    robot_b_x = PythonExpression(["'1.0' if '", arena, "' == 'lab' else '-0.7'"])
+    robot_b_y = PythonExpression(["'0.0' if '", arena, "' == 'lab' else '-0.5'"])
+
     # ── 1. Base infrastructure (Gazebo + Robot A + SLAM + Nav2) ────────
     base_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(my_controller_share, "launch", "base.launch.py")),
         launch_arguments={
             'gui': gui,
-            'x_pose': '0.6',
-            'y_pose': '-1.6',
+            'arena': arena,
+            'x_pose': robot_a_x,
+            'y_pose': robot_a_y,
             'yaw': '-1.5708',   # Face outwards to the field
         }.items(),
     )
@@ -64,8 +78,8 @@ def generate_launch_description():
         arguments=[
             '-name', 'tb2',
             '-file', urdf_path,
-            '-x', '-0.7',       # Start in open space West
-            '-y', '-0.5',
+            '-x', robot_b_x,
+            '-y', robot_b_y,
             '-z', '0.01',
             '-Y', '1.5708',     # Face North
             '-allow_renaming',  # Safety: rename if name conflict
@@ -139,7 +153,7 @@ def generate_launch_description():
         executable="zone_detector_node",
         name="zone_detector_node",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}],
+        parameters=[{'use_sim_time': True, 'zones_file_name': zones_file_name}],
     )
 
     resource_a = Node(
@@ -155,7 +169,7 @@ def generate_launch_description():
         executable="crop_decision_node",
         name="crop_decision_node_a",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}, {'zone_assignment': [0, 1]}],
+        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}, {'zone_assignment': [0, 1]}, {'zones_file_name': zones_file_name}],
     )
 
     # ── 6. Robot B nodes (Zone 2 & 3) ─────────────────────────────────
@@ -196,7 +210,7 @@ def generate_launch_description():
         name="zone_detector_node_b",
         namespace="tb2",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}],
+        parameters=[{'use_sim_time': True, 'zones_file_name': zones_file_name}],
         remappings=[
             ('/current_zone', '/tb2/current_zone'),
             ('/tf', 'tf'),
@@ -224,7 +238,7 @@ def generate_launch_description():
         name="crop_decision_node_b",
         namespace="tb2",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}, {'robot_id': 'B'}, {'zone_assignment': [2, 3]}],
+        parameters=[{'use_sim_time': True}, {'robot_id': 'B'}, {'zone_assignment': [2, 3]}, {'zones_file_name': zones_file_name}],
         remappings=[
             ('/dispatch_nav_goal', '/tb2/dispatch_nav_goal'),
             ('/navigation_executor_status', '/tb2/navigation_executor_status'),
@@ -273,7 +287,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='tb2_static_tf',
         namespace='tb2',
-        arguments=['-0.7', '-0.5', '0.01', '1.5708', '0', '0', 'map', 'odom'],
+        arguments=[robot_b_x, robot_b_y, '0.01', '1.5708', '0', '0', 'map', 'odom'],
         parameters=[{'use_sim_time': True}],
         remappings=[
             ('/tf', 'tf'),
@@ -351,6 +365,7 @@ def generate_launch_description():
     # ── Assemble ──────────────────────────────────────────────────────
     return LaunchDescription([
         declare_gui_cmd,
+        declare_arena,
         # Infrastructure
         base_launch,
         spawn_tb2,

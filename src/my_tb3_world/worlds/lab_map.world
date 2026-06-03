@@ -1,0 +1,132 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <world name="lab_map">
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"></plugin>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"></plugin>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"></plugin>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"></plugin>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Ground Plane -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Boundary Walls (Outer dimension: 5.4m x 4.2m) -->
+    <!-- Center is (0,0). X spans -2.7 to 2.7. Y spans -2.1 to 2.1 -->
+    <model name="lab_boundaries">
+      <static>true</static>
+      <!-- Top Wall -->
+      <link name="wall_top">
+        <pose>0 2.125 0.25 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>5.5 0.05 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>5.5 0.05 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+      <!-- Bottom Wall -->
+      <link name="wall_bottom">
+        <pose>0 -2.125 0.25 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>5.5 0.05 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>5.5 0.05 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+      <!-- Left Wall -->
+      <link name="wall_left">
+        <pose>-2.725 0 0.25 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.05 4.2 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.05 4.2 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+      <!-- Right Wall -->
+      <link name="wall_right">
+        <pose>2.725 0 0.25 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.05 4.2 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.05 4.2 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+    </model>
+
+    <!-- Inner Obstacles -->
+    <model name="inner_obstacles">
+      <static>true</static>
+      
+      <!-- Bottom-Left Diagonal Cut -->
+      <link name="obs_bl_diag">
+        <pose>-2.1 -1.8 0.25 0 0 -0.4636</pose>
+        <collision name="collision"><geometry><box><size>1.35 0.05 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>1.35 0.05 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+
+      <!-- Left-Middle Protrusion -->
+      <link name="obs_lm_horiz">
+        <pose>-2.4 -0.3 0.25 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.6 0.05 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.6 0.05 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+
+      <!-- Center L-Shape -->
+      <link name="obs_center_horiz">
+        <pose>-0.3 0.3 0.25 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.6 0.05 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.6 0.05 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+      <link name="obs_center_vert">
+        <pose>-0.6 0.0 0.25 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.05 0.6 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.05 0.6 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+
+      <!-- Top-Middle Protrusion -->
+      <link name="obs_tm_vert">
+        <pose>0.3 1.8 0.25 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.05 0.6 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.05 0.6 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+
+      <!-- Top-Right Diagonal Cut -->
+      <link name="obs_tr_diag">
+        <pose>2.1 1.5 0.25 0 0 -0.7853</pose>
+        <collision name="collision"><geometry><box><size>1.7 0.05 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>1.7 0.05 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+
+      <!-- Bottom-Right Triangle Area -->
+      <link name="obs_br_vert">
+        <pose>0.9 -1.8 0.25 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.05 0.6 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.05 0.6 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+      <link name="obs_br_diag">
+        <pose>1.2 -1.8 0.25 0 0 -0.7853</pose>
+        <collision name="collision"><geometry><box><size>0.85 0.05 0.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.85 0.05 0.5</size></box></geometry><material><ambient>0.3 0.3 0.3 1</ambient></material></visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

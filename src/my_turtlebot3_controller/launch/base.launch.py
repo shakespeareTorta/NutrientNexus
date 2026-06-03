@@ -65,11 +65,16 @@ def generate_launch_description():
               "Using default nav2_bringup params.",
               file=sys.stderr)
 
-    # Declare gui argument for headless mode
     declare_gui_cmd = DeclareLaunchArgument(
         'gui',
         default_value='true',
         description='Set to "false" to run headless (no Gazebo GUI).'
+    )
+
+    declare_arena = DeclareLaunchArgument(
+        'arena',
+        default_value='lab',
+        description='Choose arena: old or lab'
     )
 
     # Set launch arguments. Set initial position of robot
@@ -78,13 +83,17 @@ def generate_launch_description():
     y_pose = LaunchConfiguration("y_pose", default="0.0")
     yaw = LaunchConfiguration("yaw", default="0.0")
     gui = LaunchConfiguration("gui")
+    arena = LaunchConfiguration("arena")
 
     # ------------------------------------------------------------------
     # World file (graceful fallback if my_tb3_world is not built/sourced)
     # ------------------------------------------------------------------
+    from launch.substitutions import PythonExpression, PathJoinSubstitution
+    world_name = PythonExpression(["'lab_map.world' if '", arena, "' == 'lab' else 'new_world.world'"])
+
     try:
         my_pkg_share = get_package_share_directory("my_tb3_world")
-        world = os.path.join(my_pkg_share, "worlds", "new_world.world")
+        world = PathJoinSubstitution([my_pkg_share, "worlds", world_name])
     except PackageNotFoundError:
         world = "empty.sdf"
         print("\n" + "=" * 72 + "\n"
@@ -108,7 +117,7 @@ def generate_launch_description():
             os.path.join(ros_gz_sim_share, "launch", "gz_sim.launch.py")
         ),
         launch_arguments={
-            "gz_args": f"-r -s -v2 {world}",
+            "gz_args": ['-r -s -v2 ', world],
             "on_exit_shutdown": "true",
         }.items(),
     )
@@ -211,6 +220,7 @@ def generate_launch_description():
 
     # Add the commands to the launch description
     ld.add_action(declare_gui_cmd)
+    ld.add_action(declare_arena)
     ld.add_action(gzserver_cmd)
     ld.add_action(gzclient_cmd)
     ld.add_action(spawn_turtlebot_cmd)

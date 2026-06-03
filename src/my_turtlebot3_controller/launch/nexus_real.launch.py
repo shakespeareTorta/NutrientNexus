@@ -50,8 +50,19 @@ def generate_launch_description():
     slam = LaunchConfiguration('slam')
     gui = LaunchConfiguration('gui')
 
+    declare_arena = DeclareLaunchArgument(
+        'arena',
+        default_value='lab',
+        description='Choose arena: old or lab')
+    arena = LaunchConfiguration('arena')
+
+    from launch.substitutions import PythonExpression, PathJoinSubstitution
+
+    zones_file_name = PythonExpression(["'zones_lab.yaml' if '", arena, "' == 'lab' else 'zones_old.yaml'"])
+    map_name = PythonExpression(["'lab_map_nav.yaml' if '", arena, "' == 'lab' else 'big_map.yaml'"])
+    map_file = PathJoinSubstitution([my_pkg, 'maps', map_name])
+
     nav2_params = os.path.join(my_pkg, 'config', 'nav2_real_params.yaml')
-    map_file = os.path.join(my_pkg, 'maps', 'big_map.yaml')
 
     bt_navigator_share = get_package_share_directory('nav2_bt_navigator')
     bt_xml_nav_to_pose = os.path.join(
@@ -63,13 +74,14 @@ def generate_launch_description():
 
     ros_gz_sim_share = get_package_share_directory('ros_gz_sim')
     my_tb3_world_share = get_package_share_directory('my_tb3_world')
-    world = os.path.join(my_tb3_world_share, 'worlds', 'new_world.world')
+    world_name = PythonExpression(["'lab_map.world' if '", arena, "' == 'lab' else 'new_world.world'"])
+    world = PathJoinSubstitution([my_tb3_world_share, 'worlds', world_name])
 
     gzserver = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(ros_gz_sim_share, 'launch', 'gz_sim.launch.py')),
         launch_arguments={
-            'gz_args': f'-r -s -v2 {world}',
+            'gz_args': ['-r -s -v2 ', world],
             'on_exit_shutdown': 'false',
         }.items(),
     )
@@ -179,6 +191,7 @@ def generate_launch_description():
         name='zone_detector_node',
         output='screen',
         emulate_tty=True,
+        parameters=[{'zones_file_name': zones_file_name}],
     )
 
     robot_resource = Node(
@@ -196,7 +209,7 @@ def generate_launch_description():
         name='crop_decision_node',
         output='screen',
         emulate_tty=True,
-        parameters=[{'robot_id': 'A'}],
+        parameters=[{'robot_id': 'A', 'zones_file_name': zones_file_name}],
     )
 
     dashboard = Node(
@@ -234,6 +247,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        declare_arena,
         declare_slam,
         declare_gui,
         gzserver,
