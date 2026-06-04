@@ -1,0 +1,868 @@
+[INFO] [launch]: All log files can be found below /home/team38/.ros/log/2026-06-04-12-30-39-944475-2IRR10-NB26-7794
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [twin_safety_node-5]: process started with pid [7825]
+[INFO] [field_sensor_mock_node-6]: process started with pid [7826]
+[INFO] [navigation_executor_node-7]: process started with pid [7827]
+[INFO] [zone_detector_node-8]: process started with pid [7828]
+[INFO] [robot_resource_node-9]: process started with pid [7829]
+[INFO] [crop_decision_node-10]: process started with pid [7830]
+[INFO] [dashboard_node-11]: process started with pid [7831]
+[INFO] [sustainability_audit_node-12]: process started with pid [7832]
+[INFO] [twin_supervisor_node-13]: process started with pid [7833]
+[INFO] [gazebo-1]: process started with pid [7819]
+[INFO] [gazebo-2]: process started with pid [7820]
+[INFO] [parameter_bridge-3]: process started with pid [7822]
+[INFO] [component_container_isolated-4]: process started with pid [7823]
+[INFO] [rviz2-14]: process started with pid [7834]
+[parameter_bridge-3] [INFO] [1780569041.670303806] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/cmd_vel (geometry_msgs/msg/Twist) -> /cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[component_container_isolated-4] [INFO] [1780569041.688816715] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libmap_server_core.so
+[component_container_isolated-4] [INFO] [1780569041.737841025] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_map_server::CostmapFilterInfoServer>
+[component_container_isolated-4] [INFO] [1780569041.737960246] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_map_server::MapSaver>
+[component_container_isolated-4] [INFO] [1780569041.737987000] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_map_server::MapServer>
+[component_container_isolated-4] [INFO] [1780569041.738022357] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_map_server::MapServer>
+[component_container_isolated-4] [INFO] [1780569041.773285562] [map_server]: 
+[component_container_isolated-4] 	map_server lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-4] [INFO] [1780569041.773417522] [map_server]: Creating
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/map_server' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569041.775240173] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libamcl_core.so
+[component_container_isolated-4] [INFO] [1780569041.789418964] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_amcl::AmclNode>
+[component_container_isolated-4] [INFO] [1780569041.789608535] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_amcl::AmclNode>
+[component_container_isolated-4] [INFO] [1780569041.812714885] [amcl]: 
+[component_container_isolated-4] 	amcl lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-4] [INFO] [1780569041.814359128] [amcl]: Creating
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/amcl' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569041.818645381] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libcontroller_server_core.so
+[component_container_isolated-4] [INFO] [1780569041.837635561] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_controller::ControllerServer>
+[component_container_isolated-4] [INFO] [1780569041.837780192] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_controller::ControllerServer>
+[component_container_isolated-4] [INFO] [1780569041.856913008] [controller_server]: 
+[component_container_isolated-4] 	controller_server lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-4] [INFO] [1780569041.871604917] [controller_server]: Creating controller server
+[component_container_isolated-4] [INFO] [1780569041.894560409] [local_costmap.local_costmap]: 
+[component_container_isolated-4] 	local_costmap lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-4] [INFO] [1780569041.896324364] [local_costmap.local_costmap]: Creating Costmap
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/controller_server' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569041.898794077] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libnav2_lifecycle_manager_core.so
+[component_container_isolated-4] [INFO] [1780569041.902594036] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_lifecycle_manager::LifecycleManager>
+[component_container_isolated-4] [INFO] [1780569041.902704198] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_lifecycle_manager::LifecycleManager>
+[component_container_isolated-4] [INFO] [1780569041.933775340] [lifecycle_manager_localization]: Creating
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/lifecycle_manager_localization' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569041.947415151] [lifecycle_manager_localization]:  [34m [1mCreating and initializing lifecycle service clients [0m [0m
+[component_container_isolated-4] [INFO] [1780569041.947774740] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libsmoother_server_core.so
+[component_container_isolated-4] [INFO] [1780569041.955925319] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_smoother::SmootherServer>
+[component_container_isolated-4] [INFO] [1780569041.956072466] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_smoother::SmootherServer>
+[component_container_isolated-4] [INFO] [1780569041.968056798] [lifecycle_manager_localization]:  [34m [1mStarting managed nodes bringup... [0m [0m
+[component_container_isolated-4] [INFO] [1780569041.968242659] [lifecycle_manager_localization]:  [34m [1mConfiguring map_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569041.968771699] [map_server]: Configuring
+[component_container_isolated-4] [INFO] [1780569041.968976509] [map_io]: Loading yaml file: /home/team38/dev/NutrientNexus/install/my_turtlebot3_controller/share/my_turtlebot3_controller/maps/big_map.yaml
+[component_container_isolated-4] [INFO] [1780569041.970041329] [map_io]: resolution: 0.05
+[component_container_isolated-4] [INFO] [1780569041.970088339] [map_io]: origin[0]: -0.579
+[component_container_isolated-4] [INFO] [1780569041.970109361] [map_io]: origin[1]: -2.79
+[component_container_isolated-4] [INFO] [1780569041.970272303] [map_io]: origin[2]: 0
+[component_container_isolated-4] [INFO] [1780569041.970289957] [map_io]: free_thresh: 0.25
+[component_container_isolated-4] [INFO] [1780569041.970305644] [map_io]: occupied_thresh: 0.65
+[component_container_isolated-4] [INFO] [1780569041.970329150] [map_io]: mode: trinary
+[component_container_isolated-4] [INFO] [1780569041.970347623] [map_io]: negate: 0
+[component_container_isolated-4] [INFO] [1780569041.970981994] [map_io]: Loading image_file: /home/team38/dev/NutrientNexus/install/my_turtlebot3_controller/share/my_turtlebot3_controller/maps/big_map.pgm
+[component_container_isolated-4] [INFO] [1780569041.972386160] [map_io]: Read map /home/team38/dev/NutrientNexus/install/my_turtlebot3_controller/share/my_turtlebot3_controller/maps/big_map.pgm: 56 X 109 map @ 0.05 m/cell
+[component_container_isolated-4] [INFO] [1780569041.991563203] [lifecycle_manager_localization]:  [34m [1mConfiguring amcl [0m [0m
+[component_container_isolated-4] [INFO] [1780569041.991991813] [amcl]: Configuring
+[component_container_isolated-4] [INFO] [1780569041.992265896] [amcl]: initTransforms
+[component_container_isolated-4] [INFO] [1780569042.013305445] [amcl]: initPubSub
+[component_container_isolated-4] [INFO] [1780569042.041736474] [smoother_server]: 
+[component_container_isolated-4] 	smoother_server lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-4] [INFO] [1780569042.043892340] [amcl]: Subscribed to map topic.
+[component_container_isolated-4] [INFO] [1780569042.049410450] [smoother_server]: Creating smoother server
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/smoother_server' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569042.055119356] [lifecycle_manager_localization]:  [34m [1mActivating map_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569042.056123729] [map_server]: Activating
+[component_container_isolated-4] [INFO] [1780569042.056480843] [map_server]: Creating bond (map_server) to lifecycle manager.
+[component_container_isolated-4] [INFO] [1780569042.056791946] [amcl]: Received a 56 X 109 map @ 0.050 m/pix
+[component_container_isolated-4] [INFO] [1780569042.060225225] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libplanner_server_core.so
+[component_container_isolated-4] [INFO] [1780569042.063021092] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_planner::PlannerServer>
+[component_container_isolated-4] [INFO] [1780569042.063070820] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_planner::PlannerServer>
+[component_container_isolated-4] [INFO] [1780569042.096012174] [planner_server]: 
+[component_container_isolated-4] 	planner_server lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-4] [INFO] [1780569042.103582816] [planner_server]: Creating
+[component_container_isolated-4] [INFO] [1780569042.145382778] [global_costmap.global_costmap]: 
+[component_container_isolated-4] 	global_costmap lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-4] [INFO] [1780569042.147210660] [global_costmap.global_costmap]: Creating Costmap
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/planner_server' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569042.156819572] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libroute_server_core.so
+[component_container_isolated-4] [INFO] [1780569042.162295567] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_route::RouteServer>
+[component_container_isolated-4] [INFO] [1780569042.162391134] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_route::RouteServer>
+[component_container_isolated-4] [INFO] [1780569042.174794528] [lifecycle_manager_localization]: Server map_server connected with bond.
+[component_container_isolated-4] [INFO] [1780569042.174928292] [lifecycle_manager_localization]:  [34m [1mActivating amcl [0m [0m
+[component_container_isolated-4] [INFO] [1780569042.176841324] [amcl]: Activating
+[component_container_isolated-4] [INFO] [1780569042.176948006] [amcl]: initialPoseReceived
+[component_container_isolated-4] [INFO] [1780569042.177183323] [amcl]: Setting pose (1780569042.177183): 0.800 -1.400 0.000
+[component_container_isolated-4] [INFO] [1780569042.178827407] [amcl]: Creating bond (amcl) to lifecycle manager.
+[component_container_isolated-4] [INFO] [1780569042.208723940] [route_server]: 
+[component_container_isolated-4] 	route_server lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/route_server' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569042.216038053] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libbehavior_server_core.so
+[component_container_isolated-4] [INFO] [1780569042.221303472] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<behavior_server::BehaviorServer>
+[component_container_isolated-4] [INFO] [1780569042.221427798] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<behavior_server::BehaviorServer>
+[component_container_isolated-4] [INFO] [1780569042.297486964] [lifecycle_manager_localization]: Server amcl connected with bond.
+[component_container_isolated-4] [INFO] [1780569042.297743468] [lifecycle_manager_localization]:  [34m [1mManaged nodes are active [0m [0m
+[component_container_isolated-4] [INFO] [1780569042.297783726] [lifecycle_manager_localization]:  [34m [1mCreating bond timer... [0m [0m
+[component_container_isolated-4] [INFO] [1780569042.342543068] [behavior_server]: 
+[component_container_isolated-4] 	behavior_server lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/behavior_server' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569042.356213748] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libbt_navigator_core.so
+[component_container_isolated-4] [INFO] [1780569042.359730897] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_bt_navigator::BtNavigator>
+[component_container_isolated-4] [INFO] [1780569042.360282080] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_bt_navigator::BtNavigator>
+[component_container_isolated-4] [INFO] [1780569042.407100493] [bt_navigator]: 
+[component_container_isolated-4] 	bt_navigator lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-4] [INFO] [1780569042.412624097] [bt_navigator]: Creating
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/bt_navigator' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569042.418543343] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libwaypoint_follower_core.so
+[component_container_isolated-4] [INFO] [1780569042.424883242] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_waypoint_follower::WaypointFollower>
+[component_container_isolated-4] [INFO] [1780569042.425014432] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_waypoint_follower::WaypointFollower>
+[rviz2-14] [INFO] [1780569042.450239972] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-14] [INFO] [1780569042.450893867] [rviz2]: OpenGl version: 4.6 (GLSL 4.6)
+[rviz2-14] [INFO] [1780569042.524942894] [rviz2]: Stereo is NOT SUPPORTED
+[component_container_isolated-4] [INFO] [1780569042.559024451] [waypoint_follower]: 
+[component_container_isolated-4] 	waypoint_follower lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-4] [INFO] [1780569042.561858015] [waypoint_follower]: Creating
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/waypoint_follower' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569042.571834712] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libvelocity_smoother_core.so
+[component_container_isolated-4] [INFO] [1780569042.575685061] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_velocity_smoother::VelocitySmoother>
+[component_container_isolated-4] [INFO] [1780569042.575785357] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_velocity_smoother::VelocitySmoother>
+[component_container_isolated-4] [INFO] [1780569042.759036802] [velocity_smoother]: 
+[component_container_isolated-4] 	velocity_smoother lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/velocity_smoother' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569042.769723478] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libcollision_monitor_core.so
+[component_container_isolated-4] [INFO] [1780569042.794096122] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_collision_monitor::CollisionMonitor>
+[component_container_isolated-4] [INFO] [1780569042.794296458] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_collision_monitor::CollisionMonitor>
+[twin_supervisor_node-13]  [0m[INFO] [1780569042.872773511] [twin_supervisor_node]: Twin Supervisor Central Orchestrator Initialized. [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:413:17: QML ToolButton: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[rviz2-14] [INFO] [1780569042.904146589] [rviz2]: Subscribing to: /mobile_base/sensors/bumper_pointcloud
+[rviz2-14] 
+[rviz2-14] [INFO] [1780569042.906743612] [rviz2]: Subscribing to: /mobile_base/sensors/bumper_pointcloud
+[rviz2-14] 
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:413:17: QML ToolButton: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[sustainability_audit_node-12]  [0m[INFO] [1780569042.968889579] [sustainability_audit_node]: Sustainability Audit Node started. Ledger initialized. [0m
+[component_container_isolated-4] [INFO] [1780569042.975626934] [collision_monitor]: 
+[component_container_isolated-4] 	collision_monitor lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-4] [WARN] [1780569042.977487957] [amcl]: New subscription discovered on topic '/particle_cloud', requesting incompatible QoS. No messages will be sent to it. Last incompatible policy: RELIABILITY_QOS_POLICY
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/collision_monitor' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569042.985428351] [nav2_container]: Load Library: /opt/ros/jazzy/lib/libopennav_docking_core.so
+[rviz2-14] [INFO] [1780569042.991647078] [rviz2]: Subscribing to: /local_costmap/voxel_marked_cloud
+[rviz2-14] 
+[component_container_isolated-4] [INFO] [1780569042.993062982] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<opennav_docking::DockingServer>
+[component_container_isolated-4] [INFO] [1780569042.993228016] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<opennav_docking::DockingServer>
+[field_sensor_mock_node-6]  [0m[INFO] [1780569043.022857659] [field_sensor_mock_node]: Field Sensor Mock Node Initialized for Nutrient Nexus. [0m
+[field_sensor_mock_node-6]  [0m[INFO] [1780569043.024051369] [field_sensor_mock_node]: Initial Zone States: [ zone_0: Moisture=50.0%, Nutrients=20.0%, Growth=30.4% | zone_1: Moisture=95.0%, Nutrients=30.0%, Growth=13.7% | zone_2: Moisture=20.0%, Nutrients=80.0%, Growth=38.7% | zone_3: Moisture=50.0%, Nutrients=45.0%, Growth=11.0% ] [0m
+[rviz2-14] [INFO] [1780569043.070614549] [rviz2]: Subscribing to: /global_costmap/voxel_marked_cloud
+[rviz2-14] 
+[rviz2-14] [INFO] [1780569043.112502765] [rviz2]: Subscribing to: /mobile_base/sensors/bumper_pointcloud
+[rviz2-14] 
+[rviz2-14] [INFO] [1780569043.118472148] [rviz2]: Subscribing to: /local_costmap/voxel_marked_cloud
+[rviz2-14] 
+[crop_decision_node-10]  [0m[INFO] [1780569043.137906079] [crop_decision_node]: CropDecisionNode for Robot A started. Operating as twin client. [0m
+[rviz2-14] [INFO] [1780569043.139779522] [rviz2]: Subscribing to: /global_costmap/voxel_marked_cloud
+[rviz2-14] 
+[component_container_isolated-4] [INFO] [1780569043.141506095] [docking_server]: 
+[component_container_isolated-4] 	docking_server lifecycle node launched. 
+[component_container_isolated-4] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-4] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-4] [INFO] [1780569043.141616983] [docking_server]: Creating docking_server
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/docking_server' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569043.149354108] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_lifecycle_manager::LifecycleManager>
+[component_container_isolated-4] [INFO] [1780569043.149433339] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_lifecycle_manager::LifecycleManager>
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:413:17: QML ToolButton: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[robot_resource_node-9]  [0m[INFO] [1780569043.193333344] [robot_resource_node]: Robot Resource Node started. [0m
+[component_container_isolated-4] [INFO] [1780569043.194118578] [lifecycle_manager_navigation]: Creating
+[twin_safety_node-5]  [0m[INFO] [1780569043.205933538] [twin_safety_node]: Twin Safety Node started (real: /scan, sim: /sim/scan, stop_distance=0.25m) [0m
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/lifecycle_manager_navigation' in container '/nav2_container'
+[component_container_isolated-4] [INFO] [1780569043.207146197] [lifecycle_manager_navigation]:  [34m [1mCreating and initializing lifecycle service clients [0m [0m
+[rviz2-14] [WARN] [1780569043.234117344] [rcl.logging_rosout]: Publisher already registered for node name: 'rviz2'. If this is due to multiple nodes with the same name then all logs for the logger named 'rviz2' will go out over the existing publisher. As soon as any node with that name is destructed it will unregister the publisher, preventing any further logs for that name from being published on the rosout topic.
+[rviz2-14] [INFO] [1780569043.256990393] [rviz2]: Trying to load plugins...
+[rviz2-14] [WARN] [1780569043.259885023] [rcl.logging_rosout]: Publisher already registered for node name: 'rviz2'. If this is due to multiple nodes with the same name then all logs for the logger named 'rviz2' will go out over the existing publisher. As soon as any node with that name is destructed it will unregister the publisher, preventing any further logs for that name from being published on the rosout topic.
+[component_container_isolated-4] [INFO] [1780569043.282076956] [lifecycle_manager_navigation]:  [34m [1mStarting managed nodes bringup... [0m [0m
+[component_container_isolated-4] [INFO] [1780569043.282184093] [lifecycle_manager_navigation]:  [34m [1mConfiguring controller_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569043.282501013] [controller_server]: Configuring controller interface
+[component_container_isolated-4] [INFO] [1780569043.282563371] [controller_server]: getting progress checker plugins..
+[component_container_isolated-4] [INFO] [1780569043.283088873] [controller_server]: getting goal checker plugins..
+[component_container_isolated-4] [INFO] [1780569043.283655091] [controller_server]: Controller frequency set to 10.0000Hz
+[component_container_isolated-4] [INFO] [1780569043.283728517] [local_costmap.local_costmap]: Configuring
+[component_container_isolated-4] [INFO] [1780569043.333288098] [local_costmap.local_costmap]: Using plugin "obstacle_layer"
+[component_container_isolated-4] [INFO] [1780569043.340835334] [local_costmap.local_costmap]: Subscribed to Topics: scan
+[component_container_isolated-4] [INFO] [1780569043.348785645] [local_costmap.local_costmap]: Initialized plugin "obstacle_layer"
+[component_container_isolated-4] [INFO] [1780569043.348858567] [local_costmap.local_costmap]: Using plugin "inflation_layer"
+[component_container_isolated-4] [INFO] [1780569043.351135195] [local_costmap.local_costmap]: Initialized plugin "inflation_layer"
+[component_container_isolated-4] [INFO] [1780569043.391193441] [controller_server]: Created progress_checker : progress_checker of type nav2_controller::SimpleProgressChecker
+[component_container_isolated-4] [INFO] [1780569043.392003063] [controller_server]: Controller Server has progress_checker  progress checkers available.
+[component_container_isolated-4] [INFO] [1780569043.392981929] [controller_server]: Created goal checker : goal_checker of type nav2_controller::SimpleGoalChecker
+[component_container_isolated-4] [INFO] [1780569043.393857383] [controller_server]: Controller Server has goal_checker  goal checkers available.
+[component_container_isolated-4] [INFO] [1780569043.401098886] [controller_server]: Created controller : FollowPath of type dwb_core::DWBLocalPlanner
+[component_container_isolated-4] [INFO] [1780569043.404926953] [controller_server]: Setting transform_tolerance to 0.200000
+[component_container_isolated-4] [INFO] [1780569043.489028316] [controller_server]: Using critic "RotateToGoal" (dwb_critics::RotateToGoalCritic)
+[component_container_isolated-4] [INFO] [1780569043.490701505] [controller_server]: Critic plugin initialized
+[component_container_isolated-4] [INFO] [1780569043.490978315] [controller_server]: Using critic "Oscillation" (dwb_critics::OscillationCritic)
+[component_container_isolated-4] [INFO] [1780569043.492095241] [controller_server]: Critic plugin initialized
+[component_container_isolated-4] [INFO] [1780569043.492374915] [controller_server]: Using critic "BaseObstacle" (dwb_critics::BaseObstacleCritic)
+[component_container_isolated-4] [INFO] [1780569043.492770019] [controller_server]: Critic plugin initialized
+[component_container_isolated-4] [INFO] [1780569043.492999994] [controller_server]: Using critic "GoalAlign" (dwb_critics::GoalAlignCritic)
+[component_container_isolated-4] [INFO] [1780569043.493708384] [controller_server]: Critic plugin initialized
+[component_container_isolated-4] [INFO] [1780569043.493977126] [controller_server]: Using critic "PathAlign" (dwb_critics::PathAlignCritic)
+[component_container_isolated-4] [INFO] [1780569043.494742846] [controller_server]: Critic plugin initialized
+[zone_detector_node-8]  [0m[INFO] [1780569043.494722741] [zone_detector_node]: Loaded 5 zones from config. [0m
+[component_container_isolated-4] [INFO] [1780569043.495000586] [controller_server]: Using critic "PathDist" (dwb_critics::PathDistCritic)
+[component_container_isolated-4] [INFO] [1780569043.495484217] [controller_server]: Critic plugin initialized
+[component_container_isolated-4] [INFO] [1780569043.495725763] [controller_server]: Using critic "GoalDist" (dwb_critics::GoalDistCritic)
+[component_container_isolated-4] [INFO] [1780569043.496197171] [controller_server]: Critic plugin initialized
+[component_container_isolated-4] [INFO] [1780569043.496222655] [controller_server]: Controller Server has FollowPath  controllers available.
+[component_container_isolated-4] [INFO] [1780569043.511650551] [lifecycle_manager_navigation]:  [34m [1mConfiguring smoother_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569043.511905588] [smoother_server]: Configuring smoother server
+[component_container_isolated-4] [INFO] [1780569043.533241724] [smoother_server]: Created smoother : simple_smoother of type nav2_smoother::SimpleSmoother
+[component_container_isolated-4] [INFO] [1780569043.534586531] [smoother_server]: Smoother Server has simple_smoother  smoothers available.
+[component_container_isolated-4] [INFO] [1780569043.545099409] [lifecycle_manager_navigation]:  [34m [1mConfiguring planner_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569043.545485044] [planner_server]: Configuring
+[component_container_isolated-4] [INFO] [1780569043.545695772] [global_costmap.global_costmap]: Configuring
+[rviz2-14] [INFO] [1780569043.572436850] [rviz2]: Trying to create a map of size 56 x 109 using 1 swatches
+[component_container_isolated-4] [INFO] [1780569043.575938787] [global_costmap.global_costmap]: Using plugin "obstacle_layer"
+[rviz2-14] [ERROR] [1780569043.579355685] [rviz2]: rviz/glsl120/indexed_8bit_image.vert
+[rviz2-14] rviz/glsl120/indexed_8bit_image.frag
+[rviz2-14]  GLSL link result : 
+[rviz2-14] active samplers with a different type refer to the same texture image unit
+[component_container_isolated-4] [INFO] [1780569043.580457647] [global_costmap.global_costmap]: Subscribed to Topics: scan
+[component_container_isolated-4] [INFO] [1780569043.592360116] [global_costmap.global_costmap]: Initialized plugin "obstacle_layer"
+[component_container_isolated-4] [INFO] [1780569043.592434239] [global_costmap.global_costmap]: Using plugin "inflation_layer"
+[component_container_isolated-4] [INFO] [1780569043.594389983] [global_costmap.global_costmap]: Initialized plugin "inflation_layer"
+[component_container_isolated-4] [INFO] [1780569043.626642213] [planner_server]: Created global planner plugin GridBased of type nav2_navfn_planner::NavfnPlanner
+[component_container_isolated-4] [INFO] [1780569043.626727116] [planner_server]: Configuring plugin GridBased of type NavfnPlanner
+[component_container_isolated-4] [INFO] [1780569043.628493766] [planner_server]: Planner Server has GridBased  planners available.
+[component_container_isolated-4] [INFO] [1780569043.661384852] [lifecycle_manager_navigation]:  [34m [1mConfiguring route_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569043.661995344] [route_server]: Configuring
+[component_container_isolated-4] [INFO] [1780569043.895667140] [route_server]: Created GraphFileLoader GeoJsonGraphFileLoader of type nav2_route::GeoJsonGraphFileLoader
+[component_container_isolated-4] [INFO] [1780569043.895736033] [route_server]: Configuring geojson graph file loader
+[component_container_isolated-4] [INFO] [1780569043.895754405] [route_server]: No graph file provided to load yet.
+[component_container_isolated-4] [INFO] [1780569043.901508008] [route_server]: Created edge cost function plugin DistanceScorer of type nav2_route::DistanceScorer
+[component_container_isolated-4] [INFO] [1780569043.901564730] [route_server]: Configuring distance scorer.
+[component_container_isolated-4] [INFO] [1780569043.902233349] [route_server]: Created edge cost function plugin DynamicEdgesScorer of type nav2_route::DynamicEdgesScorer
+[component_container_isolated-4] [INFO] [1780569043.902257047] [route_server]: Configuring adjust edges scorer.
+[component_container_isolated-4] [INFO] [1780569043.917622094] [route_server]: Created route operation AdjustSpeedLimit of type nav2_route::AdjustSpeedLimit
+[component_container_isolated-4] [INFO] [1780569043.917802768] [route_server]: Configuring Adjust speed limit operation.
+[component_container_isolated-4] [INFO] [1780569043.923611272] [route_server]: Created route operation ReroutingService of type nav2_route::ReroutingService
+[component_container_isolated-4] [INFO] [1780569043.923715503] [route_server]: Configuring Rerouting service operation.
+[component_container_isolated-4] [INFO] [1780569043.932926022] [lifecycle_manager_navigation]:  [34m [1mConfiguring behavior_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569043.933281591] [behavior_server]: Configuring
+[component_container_isolated-4] [INFO] [1780569043.945772260] [behavior_server]: Creating behavior plugin spin of type nav2_behaviors::Spin
+[component_container_isolated-4] [INFO] [1780569043.952001127] [behavior_server]: Creating behavior plugin backup of type nav2_behaviors::BackUp
+[component_container_isolated-4] [INFO] [1780569043.957345431] [behavior_server]: Creating behavior plugin drive_on_heading of type nav2_behaviors::DriveOnHeading
+[component_container_isolated-4] [INFO] [1780569043.962608398] [behavior_server]: Creating behavior plugin wait of type nav2_behaviors::Wait
+[component_container_isolated-4] [INFO] [1780569043.978187180] [behavior_server]: Configuring spin
+[component_container_isolated-4] [INFO] [1780569044.019356661] [behavior_server]: Configuring backup
+[component_container_isolated-4] [INFO] [1780569044.045852838] [behavior_server]: Configuring drive_on_heading
+[component_container_isolated-4] [INFO] [1780569044.065740319] [behavior_server]: Configuring wait
+[component_container_isolated-4] [INFO] [1780569044.084546928] [lifecycle_manager_navigation]:  [34m [1mConfiguring velocity_smoother [0m [0m
+[component_container_isolated-4] [INFO] [1780569044.085038719] [velocity_smoother]: Configuring velocity smoother
+[component_container_isolated-4] [INFO] [1780569044.098778470] [lifecycle_manager_navigation]:  [34m [1mConfiguring collision_monitor [0m [0m
+[component_container_isolated-4] [INFO] [1780569044.099753039] [collision_monitor]: Configuring
+[component_container_isolated-4] [INFO] [1780569044.128835504] [collision_monitor]: [scan]: Creating Scan
+[component_container_isolated-4] [INFO] [1780569044.140038873] [collision_monitor]: [PolygonStop]: Creating Polygon
+[component_container_isolated-4] [INFO] [1780569044.165752509] [lifecycle_manager_navigation]:  [34m [1mConfiguring bt_navigator [0m [0m
+[component_container_isolated-4] [INFO] [1780569044.166356915] [bt_navigator]: Configuring
+[component_container_isolated-4] [INFO] [1780569044.176907373] [bt_navigator]: Creating navigator id navigate_to_pose of type nav2_bt_navigator::NavigateToPoseNavigator
+[component_container_isolated-4] [WARN] [1780569044.183481485] [bt_navigator]: Error_code parameters were not set. Using default values of: follow_path_error_code compute_path_error_code
+[component_container_isolated-4] Make sure these match your BT and there are not other sources of error codes youreported to your application
+[navigation_executor_node-7]  [0m[INFO] [1780569044.299360658] [navigation_executor_node]: Navigation Executor Node Initialized. Waiting for goals on dispatch_nav_goal. [0m
+[component_container_isolated-4] [INFO] [1780569044.486042716] [bt_navigator]: Creating navigator id navigate_through_poses of type nav2_bt_navigator::NavigateThroughPosesNavigator
+[component_container_isolated-4] [INFO] [1780569044.545746019] [lifecycle_manager_navigation]:  [34m [1mConfiguring waypoint_follower [0m [0m
+[component_container_isolated-4] [INFO] [1780569044.546325036] [waypoint_follower]: Configuring
+[component_container_isolated-4] [INFO] [1780569044.605148868] [waypoint_follower]: Created waypoint_task_executor : wait_at_waypoint of type nav2_waypoint_follower::WaitAtWaypoint
+[component_container_isolated-4] [INFO] [1780569044.606538479] [waypoint_follower]: Waypoint pause duration is set to zero, disabling task executor plugin.
+[component_container_isolated-4] [INFO] [1780569044.607391580] [lifecycle_manager_navigation]:  [34m [1mConfiguring docking_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569044.607817580] [docking_server]: Configuring docking_server
+[component_container_isolated-4] [INFO] [1780569044.607937422] [docking_server]: Controller frequency set to 50.0000Hz
+[rviz2-14] [INFO] [1780569044.642210900] [rviz2]: Loading dock plugins
+[component_container_isolated-4] [INFO] [1780569044.671588269] [docking_server]: Created charging dock plugin nexus_charging_dock of type opennav_docking::SimpleChargingDock
+[component_container_isolated-4] [WARN] [1780569044.683480673] [docking_server]: Dock database filepath nor dock parameters set. Docking actions can only be executed specifying the dock pose via the action request. Or update the dock database via the reload_database service.
+[component_container_isolated-4] [INFO] [1780569044.683556471] [docking_server]: Docking Server has 1 dock types and 0 dock instances available.
+[component_container_isolated-4] [INFO] [1780569044.687478709] [lifecycle_manager_navigation]:  [34m [1mActivating controller_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569044.688041534] [controller_server]: Activating
+[component_container_isolated-4] [INFO] [1780569044.688115253] [local_costmap.local_costmap]: Activating
+[component_container_isolated-4] [INFO] [1780569044.688128305] [local_costmap.local_costmap]: Checking transform
+[component_container_isolated-4] [INFO] [1780569044.688199218] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:413:17: QML ToolButton: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[crop_decision_node-10]  [0m[INFO] [1780569045.100298415] [crop_decision_node]: Requesting zone from Supervisor... [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569045.102296146] [twin_supervisor_node]: Received zone request from Robot A [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569045.103751702] [twin_supervisor_node]: Dispatched zone_2 to Robot A [0m
+[crop_decision_node-10]  [0m[INFO] [1780569045.104502674] [crop_decision_node]: Supervisor assigned zone_2. Generating sub-targets... [0m
+[crop_decision_node-10]  [0m[INFO] [1780569045.105602274] [crop_decision_node]: Navigating to sub-target at (0.80, -0.80) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569045.107919761] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=-0.80 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569045.108572666] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569045.109770286] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569045.110520860] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:-0.80) [0m
+[component_container_isolated-4] [INFO] [1780569045.111598964] [bt_navigator]: Action server is inactive. Rejecting the goal.
+[navigation_executor_node-7]  [0m[INFO] [1780569045.112043126] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [31m[ERROR] [1780569045.113691195] [navigation_executor_node]: Goal rejected by Nav2 server. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569045.114564656] [navigation_executor_node]: Status: NAVIGATING -> REJECTED [0m
+[crop_decision_node-10]  [33m[WARN] [1780569045.115210056] [crop_decision_node]: Navigation failed with status REJECTED. Skipping sub-target. [0m
+[component_container_isolated-4] [INFO] [1780569045.188228606] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[navigation_executor_node-7]  [0m[INFO] [1780569045.316287392] [navigation_executor_node]: Status: REJECTED -> IDLE [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file::/ComponentInspector/ComponentInspector.qml:251:3: QML Dialog: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:413:17: QML ToolButton: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file:///usr/lib/x86_64-linux-gnu/qt5/qml/QtQuick/Dialogs/DefaultFileDialog.qml:309:21: QML Button: Binding loop detected for property "implicitHeight" [0m [1;33m [0m
+[component_container_isolated-4] [INFO] [1780569045.688355906] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[crop_decision_node-10]  [0m[INFO] [1780569046.116506138] [crop_decision_node]: Navigating to sub-target at (0.80, -1.20) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569046.118685058] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=-1.20 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569046.119577044] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569046.121010290] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569046.121781910] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:-1.20) [0m
+[component_container_isolated-4] [INFO] [1780569046.122669756] [bt_navigator]: Action server is inactive. Rejecting the goal.
+[navigation_executor_node-7]  [0m[INFO] [1780569046.123035738] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [31m[ERROR] [1780569046.124337525] [navigation_executor_node]: Goal rejected by Nav2 server. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569046.125044586] [navigation_executor_node]: Status: NAVIGATING -> REJECTED [0m
+[crop_decision_node-10]  [33m[WARN] [1780569046.125597023] [crop_decision_node]: Navigation failed with status REJECTED. Skipping sub-target. [0m
+[component_container_isolated-4] [INFO] [1780569046.188345575] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[navigation_executor_node-7]  [0m[INFO] [1780569046.326842705] [navigation_executor_node]: Status: REJECTED -> IDLE [0m
+[component_container_isolated-4] [INFO] [1780569046.688193824] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[component_container_isolated-4] [INFO] [1780569047.188351317] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[component_container_isolated-4] [INFO] [1780569047.688380222] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[crop_decision_node-10]  [0m[INFO] [1780569048.100476985] [crop_decision_node]: Requesting zone from Supervisor... [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569048.101983996] [twin_supervisor_node]: Received zone request from Robot A [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569048.102678829] [twin_supervisor_node]: Dispatched zone_1 to Robot A [0m
+[crop_decision_node-10]  [0m[INFO] [1780569048.103339887] [crop_decision_node]: Supervisor assigned zone_1. Generating sub-targets... [0m
+[crop_decision_node-10]  [0m[INFO] [1780569048.104047117] [crop_decision_node]: Navigating to sub-target at (0.80, 0.90) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569048.105532110] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=0.90 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569048.106357296] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569048.107449540] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569048.108351496] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:0.90) [0m
+[component_container_isolated-4] [INFO] [1780569048.109077500] [bt_navigator]: Action server is inactive. Rejecting the goal.
+[navigation_executor_node-7]  [0m[INFO] [1780569048.109502864] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [31m[ERROR] [1780569048.111637061] [navigation_executor_node]: Goal rejected by Nav2 server. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569048.112815355] [navigation_executor_node]: Status: NAVIGATING -> REJECTED [0m
+[crop_decision_node-10]  [33m[WARN] [1780569048.113236618] [crop_decision_node]: Navigation failed with status REJECTED. Skipping sub-target. [0m
+[component_container_isolated-4] [INFO] [1780569048.188349760] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[navigation_executor_node-7]  [0m[INFO] [1780569048.314558868] [navigation_executor_node]: Status: REJECTED -> IDLE [0m
+[component_container_isolated-4] [INFO] [1780569048.688303319] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[gazebo-2]  [1;33m[GUI] [Wrn] [Application.cc:908]  [0m [1;33m[QT] file::/WorldStats/WorldStats.qml:53:3: QML RowLayout: Binding loop detected for property "x" [0m [1;33m [0m
+[crop_decision_node-10]  [0m[INFO] [1780569049.114982828] [crop_decision_node]: Navigating to sub-target at (0.80, 0.50) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569049.116847458] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=0.50 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569049.117742351] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569049.119540005] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569049.120828829] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:0.50) [0m
+[component_container_isolated-4] [INFO] [1780569049.121651751] [bt_navigator]: Action server is inactive. Rejecting the goal.
+[navigation_executor_node-7]  [0m[INFO] [1780569049.122607959] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [31m[ERROR] [1780569049.124107395] [navigation_executor_node]: Goal rejected by Nav2 server. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569049.124895605] [navigation_executor_node]: Status: NAVIGATING -> REJECTED [0m
+[crop_decision_node-10]  [33m[WARN] [1780569049.125721412] [crop_decision_node]: Navigation failed with status REJECTED. Skipping sub-target. [0m
+[component_container_isolated-4] [INFO] [1780569049.188353294] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[navigation_executor_node-7]  [0m[INFO] [1780569049.326715140] [navigation_executor_node]: Status: REJECTED -> IDLE [0m
+[component_container_isolated-4] [INFO] [1780569049.688192234] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[component_container_isolated-4] [INFO] [1780569050.188264423] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[component_container_isolated-4] [INFO] [1780569050.688340213] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[gazebo-2] libEGL warning: egl: failed to create dri2 screen
+[crop_decision_node-10]  [0m[INFO] [1780569051.100243474] [crop_decision_node]: Requesting zone from Supervisor... [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569051.102303117] [twin_supervisor_node]: Received zone request from Robot A [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569051.103553569] [twin_supervisor_node]: Dispatched zone_2 to Robot A [0m
+[crop_decision_node-10]  [0m[INFO] [1780569051.103961621] [crop_decision_node]: Supervisor assigned zone_2. Generating sub-targets... [0m
+[crop_decision_node-10]  [0m[INFO] [1780569051.104716078] [crop_decision_node]: Navigating to sub-target at (0.80, -0.80) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569051.106297468] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=-0.80 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569051.106927706] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569051.108111406] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569051.109123301] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:-0.80) [0m
+[component_container_isolated-4] [INFO] [1780569051.109676207] [bt_navigator]: Action server is inactive. Rejecting the goal.
+[navigation_executor_node-7]  [0m[INFO] [1780569051.110251788] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [31m[ERROR] [1780569051.111690628] [navigation_executor_node]: Goal rejected by Nav2 server. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569051.112470451] [navigation_executor_node]: Status: NAVIGATING -> REJECTED [0m
+[crop_decision_node-10]  [33m[WARN] [1780569051.113216688] [crop_decision_node]: Navigation failed with status REJECTED. Skipping sub-target. [0m
+[component_container_isolated-4] [INFO] [1780569051.188228760] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[navigation_executor_node-7]  [0m[INFO] [1780569051.314115798] [navigation_executor_node]: Status: REJECTED -> IDLE [0m
+[component_container_isolated-4] [INFO] [1780569051.688220293] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[crop_decision_node-10]  [0m[INFO] [1780569052.115374432] [crop_decision_node]: Navigating to sub-target at (0.80, -1.20) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569052.119063540] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=-1.20 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569052.120259419] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569052.121889727] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569052.122840347] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:-1.20) [0m
+[component_container_isolated-4] [INFO] [1780569052.123601740] [bt_navigator]: Action server is inactive. Rejecting the goal.
+[navigation_executor_node-7]  [0m[INFO] [1780569052.124484621] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [31m[ERROR] [1780569052.126911982] [navigation_executor_node]: Goal rejected by Nav2 server. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569052.128435932] [navigation_executor_node]: Status: NAVIGATING -> REJECTED [0m
+[crop_decision_node-10]  [33m[WARN] [1780569052.130380737] [crop_decision_node]: Navigation failed with status REJECTED. Skipping sub-target. [0m
+[component_container_isolated-4] [INFO] [1780569052.188209637] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[navigation_executor_node-7]  [0m[INFO] [1780569052.331067995] [navigation_executor_node]: Status: REJECTED -> IDLE [0m
+[component_container_isolated-4] [INFO] [1780569052.688333592] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[component_container_isolated-4] [INFO] [1780569053.188286475] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[component_container_isolated-4] [INFO] [1780569053.688230605] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[crop_decision_node-10]  [0m[INFO] [1780569054.100770103] [crop_decision_node]: Requesting zone from Supervisor... [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569054.102921344] [twin_supervisor_node]: Received zone request from Robot A [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569054.103783750] [twin_supervisor_node]: Dispatched zone_1 to Robot A [0m
+[crop_decision_node-10]  [0m[INFO] [1780569054.104605142] [crop_decision_node]: Supervisor assigned zone_1. Generating sub-targets... [0m
+[crop_decision_node-10]  [0m[INFO] [1780569054.105324870] [crop_decision_node]: Navigating to sub-target at (0.80, 0.90) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569054.107311021] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=0.90 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569054.108058916] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569054.109749022] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569054.110608726] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:0.90) [0m
+[component_container_isolated-4] [INFO] [1780569054.111618194] [bt_navigator]: Action server is inactive. Rejecting the goal.
+[navigation_executor_node-7]  [0m[INFO] [1780569054.112242570] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [31m[ERROR] [1780569054.115120174] [navigation_executor_node]: Goal rejected by Nav2 server. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569054.117838039] [navigation_executor_node]: Status: NAVIGATING -> REJECTED [0m
+[crop_decision_node-10]  [33m[WARN] [1780569054.119083749] [crop_decision_node]: Navigation failed with status REJECTED. Skipping sub-target. [0m
+[component_container_isolated-4] [INFO] [1780569054.188228248] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[navigation_executor_node-7]  [0m[INFO] [1780569054.320249360] [navigation_executor_node]: Status: REJECTED -> IDLE [0m
+[component_container_isolated-4] [INFO] [1780569054.688232021] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[rviz2-14] [INFO] [1780569054.767817737] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569053.722 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569054.926197723] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569053.832 for reason 'discarding message because the queue is full'
+[crop_decision_node-10]  [0m[INFO] [1780569055.121417188] [crop_decision_node]: Navigating to sub-target at (0.80, 0.50) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569055.124394192] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=0.50 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569055.126085656] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569055.129191465] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569055.131212200] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:0.50) [0m
+[component_container_isolated-4] [INFO] [1780569055.132269076] [bt_navigator]: Action server is inactive. Rejecting the goal.
+[navigation_executor_node-7]  [0m[INFO] [1780569055.133735517] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [31m[ERROR] [1780569055.136135643] [navigation_executor_node]: Goal rejected by Nav2 server. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569055.137459829] [navigation_executor_node]: Status: NAVIGATING -> REJECTED [0m
+[crop_decision_node-10]  [33m[WARN] [1780569055.138272426] [crop_decision_node]: Navigation failed with status REJECTED. Skipping sub-target. [0m
+[rviz2-14] [INFO] [1780569055.181666042] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569053.932 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569055.188237424] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[rviz2-14] [INFO] [1780569055.214404632] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569054.032 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569055.246664195] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569054.132 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569055.309962912] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569054.242 for reason 'discarding message because the queue is full'
+[navigation_executor_node-7]  [0m[INFO] [1780569055.339449087] [navigation_executor_node]: Status: REJECTED -> IDLE [0m
+[rviz2-14] [INFO] [1780569055.661705872] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569054.342 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569055.688229467] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[rviz2-14] [INFO] [1780569055.693791439] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569054.442 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569055.726533403] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569054.542 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569055.758275869] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569054.642 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569055.790219895] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569054.742 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569055.886994823] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569054.842 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569056.013586880] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569054.942 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569056.142547142] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569055.042 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569056.188236439] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Invalid frame ID "base_link" passed to canTransform argument source_frame - frame does not exist
+[rviz2-14] [INFO] [1780569056.206670046] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569055.142 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569056.301744338] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569055.252 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569056.398343898] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569055.352 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569056.526005970] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569055.452 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569056.589905101] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569055.552 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569056.685597638] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569055.662 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569056.688283845] [local_costmap.local_costmap]: Timed out waiting for transform from base_link to odom to become available, tf error: Could not find a connection between 'odom' and 'base_link' because they are not part of the same tree.Tf has two or more unconnected trees.
+[rviz2-14] [INFO] [1780569056.814481764] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569055.762 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569056.973989837] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569055.862 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569057.038128348] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569055.962 for reason 'discarding message because the queue is full'
+[crop_decision_node-10]  [0m[INFO] [1780569057.100874082] [crop_decision_node]: Requesting zone from Supervisor... [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569057.102753163] [twin_supervisor_node]: Received zone request from Robot A [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569057.104223266] [twin_supervisor_node]: Dispatched zone_2 to Robot A [0m
+[crop_decision_node-10]  [0m[INFO] [1780569057.105071392] [crop_decision_node]: Supervisor assigned zone_2. Generating sub-targets... [0m
+[crop_decision_node-10]  [0m[INFO] [1780569057.106635177] [crop_decision_node]: Navigating to sub-target at (0.80, -0.80) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569057.109652282] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=-0.80 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569057.111118836] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569057.114051421] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569057.115814352] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:-0.80) [0m
+[component_container_isolated-4] [INFO] [1780569057.116698831] [bt_navigator]: Action server is inactive. Rejecting the goal.
+[navigation_executor_node-7]  [0m[INFO] [1780569057.117835614] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [31m[ERROR] [1780569057.119948887] [navigation_executor_node]: Goal rejected by Nav2 server. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569057.120963032] [navigation_executor_node]: Status: NAVIGATING -> REJECTED [0m
+[crop_decision_node-10]  [33m[WARN] [1780569057.123366537] [crop_decision_node]: Navigation failed with status REJECTED. Skipping sub-target. [0m
+[rviz2-14] [INFO] [1780569057.165986909] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569056.062 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569057.188499934] [local_costmap.local_costmap]: start
+[rviz2-14] [INFO] [1780569057.198208673] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569056.162 for reason 'discarding message because the queue is full'
+[navigation_executor_node-7]  [0m[INFO] [1780569057.323500391] [navigation_executor_node]: Status: REJECTED -> IDLE [0m
+[component_container_isolated-4] [INFO] [1780569057.393434241] [controller_server]: Creating bond (controller_server) to lifecycle manager.
+[component_container_isolated-4] [INFO] [1780569057.510320899] [lifecycle_manager_navigation]: Server controller_server connected with bond.
+[component_container_isolated-4] [INFO] [1780569057.510493636] [lifecycle_manager_navigation]:  [34m [1mActivating smoother_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569057.511517916] [smoother_server]: Activating
+[component_container_isolated-4] [INFO] [1780569057.511712334] [smoother_server]: Creating bond (smoother_server) to lifecycle manager.
+[rviz2-14] [INFO] [1780569057.517885539] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569056.262 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569057.549630306] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569056.362 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569057.582231439] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569056.462 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569057.614330714] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569056.572 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569057.632476797] [lifecycle_manager_navigation]: Server smoother_server connected with bond.
+[component_container_isolated-4] [INFO] [1780569057.632614863] [lifecycle_manager_navigation]:  [34m [1mActivating planner_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569057.634041571] [planner_server]: Activating
+[component_container_isolated-4] [INFO] [1780569057.634223330] [global_costmap.global_costmap]: Activating
+[component_container_isolated-4] [INFO] [1780569057.634252910] [global_costmap.global_costmap]: Checking transform
+[component_container_isolated-4] [INFO] [1780569057.634291857] [global_costmap.global_costmap]: Timed out waiting for transform from base_link to map to become available, tf error: Invalid frame ID "map" passed to canTransform argument target_frame - frame does not exist
+[rviz2-14] [INFO] [1780569057.742352672] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569056.672 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569057.838452038] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569056.772 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569058.094045227] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569056.872 for reason 'discarding message because the queue is full'
+[crop_decision_node-10]  [0m[INFO] [1780569058.125330804] [crop_decision_node]: Navigating to sub-target at (0.80, -1.20) [0m
+[rviz2-14] [INFO] [1780569058.126334846] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569056.982 for reason 'discarding message because the queue is full'
+[navigation_executor_node-7]  [0m[INFO] [1780569058.127705952] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=-1.20 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569058.128562589] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569058.129922547] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569058.130848025] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:-1.20) [0m
+[component_container_isolated-4] [INFO] [1780569058.131811993] [bt_navigator]: Action server is inactive. Rejecting the goal.
+[navigation_executor_node-7]  [0m[INFO] [1780569058.132394211] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [31m[ERROR] [1780569058.134485316] [navigation_executor_node]: Goal rejected by Nav2 server. [0m
+[component_container_isolated-4] [INFO] [1780569058.134398383] [global_costmap.global_costmap]: Timed out waiting for transform from base_link to map to become available, tf error: Invalid frame ID "map" passed to canTransform argument target_frame - frame does not exist
+[navigation_executor_node-7]  [0m[INFO] [1780569058.136391234] [navigation_executor_node]: Status: NAVIGATING -> REJECTED [0m
+[crop_decision_node-10]  [33m[WARN] [1780569058.137917589] [crop_decision_node]: Navigation failed with status REJECTED. Skipping sub-target. [0m
+[rviz2-14] [INFO] [1780569058.254119694] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569057.082 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569058.286028727] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569057.182 for reason 'discarding message because the queue is full'
+[navigation_executor_node-7]  [0m[INFO] [1780569058.338452098] [navigation_executor_node]: Status: REJECTED -> IDLE [0m
+[rviz2-14] [INFO] [1780569058.381535613] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569057.282 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569058.445976896] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569057.382 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569058.545322525] [amcl]: createLaserObject
+[rviz2-14] [INFO] [1780569058.573820788] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569057.482 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569058.634458039] [global_costmap.global_costmap]: Timed out waiting for transform from base_link to map to become available, tf error: Lookup would require extrapolation at time 1780569058.562297, but only time 1780569059.002091 is in the buffer, when looking up transform from frame [base_link] to frame [map]
+[rviz2-14] [INFO] [1780569058.702302967] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569057.582 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569058.766457228] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569057.682 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569058.894483471] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569057.782 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569058.958721943] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569057.882 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569059.118470710] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569057.992 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569059.134661610] [global_costmap.global_costmap]: start
+[rviz2-14] [INFO] [1780569059.214587823] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569058.092 for reason 'discarding message because the queue is full'
+[rviz2-14] [ERROR] [1780569059.218706639] [rviz2]: Lookup would require extrapolation into the future.  Requested time 1780569059.203816 but the latest data is at time 1780569059.162269, when looking up transform from frame [base_scan] to frame [map]
+[rviz2-14] [INFO] [1780569059.218949575] [rviz2]: Trying to create a map of size 60 x 60 using 1 swatches
+[rviz2-14] [INFO] [1780569059.630500451] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569058.192 for reason 'discarding message because the queue is full'
+[crop_decision_node-10]  [0m[INFO] [1780569060.101343656] [crop_decision_node]: Requesting zone from Supervisor... [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569060.103706608] [twin_supervisor_node]: Received zone request from Robot A [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569060.104995859] [twin_supervisor_node]: Dispatched zone_1 to Robot A [0m
+[crop_decision_node-10]  [0m[INFO] [1780569060.106582721] [crop_decision_node]: Supervisor assigned zone_1. Generating sub-targets... [0m
+[crop_decision_node-10]  [0m[INFO] [1780569060.107338207] [crop_decision_node]: Navigating to sub-target at (0.80, 0.90) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569060.109892680] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=0.90 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569060.111604615] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569060.114063169] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569060.115834272] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:0.90) [0m
+[component_container_isolated-4] [INFO] [1780569060.117058934] [bt_navigator]: Action server is inactive. Rejecting the goal.
+[navigation_executor_node-7]  [0m[INFO] [1780569060.118921356] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [31m[ERROR] [1780569060.122328437] [navigation_executor_node]: Goal rejected by Nav2 server. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569060.124351762] [navigation_executor_node]: Status: NAVIGATING -> REJECTED [0m
+[crop_decision_node-10]  [33m[WARN] [1780569060.124713091] [crop_decision_node]: Navigation failed with status REJECTED. Skipping sub-target. [0m
+[component_container_isolated-4] [INFO] [1780569060.139204776] [planner_server]: Activating plugin GridBased of type NavfnPlanner
+[component_container_isolated-4] [INFO] [1780569060.144036024] [planner_server]: Creating bond (planner_server) to lifecycle manager.
+[rviz2-14] [INFO] [1780569060.146113179] [rviz2]: Trying to create a map of size 300 x 300 using 1 swatches
+[component_container_isolated-4] [INFO] [1780569060.260141486] [lifecycle_manager_navigation]: Server planner_server connected with bond.
+[component_container_isolated-4] [INFO] [1780569060.260317142] [lifecycle_manager_navigation]:  [34m [1mActivating route_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569060.261605895] [route_server]: Activating
+[component_container_isolated-4] [INFO] [1780569060.262095377] [route_server]: Creating bond (route_server) to lifecycle manager.
+[navigation_executor_node-7]  [0m[INFO] [1780569060.326573115] [navigation_executor_node]: Status: REJECTED -> IDLE [0m
+[component_container_isolated-4] [INFO] [1780569060.375320879] [lifecycle_manager_navigation]: Server route_server connected with bond.
+[component_container_isolated-4] [INFO] [1780569060.375435859] [lifecycle_manager_navigation]:  [34m [1mActivating behavior_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569060.376680782] [behavior_server]: Activating
+[component_container_isolated-4] [INFO] [1780569060.376769816] [behavior_server]: Activating spin
+[component_container_isolated-4] [INFO] [1780569060.376846942] [behavior_server]: Activating backup
+[component_container_isolated-4] [INFO] [1780569060.376886685] [behavior_server]: Activating drive_on_heading
+[component_container_isolated-4] [INFO] [1780569060.376923105] [behavior_server]: Activating wait
+[component_container_isolated-4] [INFO] [1780569060.376971290] [behavior_server]: Creating bond (behavior_server) to lifecycle manager.
+[component_container_isolated-4] [INFO] [1780569060.495746642] [lifecycle_manager_navigation]: Server behavior_server connected with bond.
+[component_container_isolated-4] [INFO] [1780569060.495917763] [lifecycle_manager_navigation]:  [34m [1mActivating velocity_smoother [0m [0m
+[component_container_isolated-4] [INFO] [1780569060.496931704] [velocity_smoother]: Activating
+[component_container_isolated-4] [INFO] [1780569060.497083614] [velocity_smoother]: Creating bond (velocity_smoother) to lifecycle manager.
+[component_container_isolated-4] [INFO] [1780569060.611146844] [lifecycle_manager_navigation]: Server velocity_smoother connected with bond.
+[component_container_isolated-4] [INFO] [1780569060.611433347] [lifecycle_manager_navigation]:  [34m [1mActivating collision_monitor [0m [0m
+[component_container_isolated-4] [INFO] [1780569060.612345688] [collision_monitor]: Activating
+[component_container_isolated-4] [INFO] [1780569060.612556419] [collision_monitor]: Creating bond (collision_monitor) to lifecycle manager.
+[component_container_isolated-4] [INFO] [1780569060.728683727] [lifecycle_manager_navigation]: Server collision_monitor connected with bond.
+[component_container_isolated-4] [INFO] [1780569060.728815217] [lifecycle_manager_navigation]:  [34m [1mActivating bt_navigator [0m [0m
+[component_container_isolated-4] [INFO] [1780569060.729874164] [bt_navigator]: Activating
+[crop_decision_node-10]  [0m[INFO] [1780569061.126975691] [crop_decision_node]: Navigating to sub-target at (0.80, 0.50) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569061.129949598] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=0.50 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569061.131220126] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569061.132962677] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569061.134069403] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:0.50) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569061.136952612] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[component_container_isolated-4] [INFO] [1780569061.426376378] [bt_navigator]: Creating bond (bt_navigator) to lifecycle manager.
+[component_container_isolated-4] [INFO] [1780569061.455345929] [bt_navigator]: Begin navigating from current location (0.80, -1.40) to (0.80, 0.50)
+[navigation_executor_node-7]  [0m[INFO] [1780569061.456563069] [navigation_executor_node]: Goal accepted by Nav2 server. Waiting for result... [0m
+[component_container_isolated-4] [INFO] [1780569061.477713993] [controller_server]: Received a goal, begin computing control effort.
+[component_container_isolated-4] [WARN] [1780569061.477872059] [controller_server]: No goal checker was specified in parameter 'current_goal_checker'. Server will use only plugin loaded goal_checker . This warning will appear once.
+[component_container_isolated-4] [WARN] [1780569061.477921073] [controller_server]: No progress checker was specified in parameter 'current_progress_checker'. Server will use only plugin loaded progress_checker . This warning will appear once.
+[parameter_bridge-3] [INFO] [1780569061.508715543] [ros_gz_bridge]: Passing message from ROS geometry_msgs/msg/Twist to Gazebo gz.msgs.Twist (showing msg only once per type)
+[component_container_isolated-4] [INFO] [1780569061.560529377] [lifecycle_manager_navigation]: Server bt_navigator connected with bond.
+[component_container_isolated-4] [INFO] [1780569061.560681873] [lifecycle_manager_navigation]:  [34m [1mActivating waypoint_follower [0m [0m
+[component_container_isolated-4] [INFO] [1780569061.561698720] [waypoint_follower]: Activating
+[component_container_isolated-4] [INFO] [1780569061.561848491] [waypoint_follower]: Creating bond (waypoint_follower) to lifecycle manager.
+[component_container_isolated-4] [INFO] [1780569061.687214788] [lifecycle_manager_navigation]: Server waypoint_follower connected with bond.
+[component_container_isolated-4] [INFO] [1780569061.687319452] [lifecycle_manager_navigation]:  [34m [1mActivating docking_server [0m [0m
+[component_container_isolated-4] [INFO] [1780569061.688100488] [docking_server]: Activating docking_server
+[component_container_isolated-4] [INFO] [1780569061.903024577] [docking_server]: Creating bond (docking_server) to lifecycle manager.
+[component_container_isolated-4] [WARN] [1780569061.903596275] [controller_server]: Control loop missed its desired rate of 10.0000 Hz. Current loop rate is 7.9961 Hz.
+[component_container_isolated-4] [INFO] [1780569062.034743628] [lifecycle_manager_navigation]: Server docking_server connected with bond.
+[component_container_isolated-4] [INFO] [1780569062.034865888] [lifecycle_manager_navigation]:  [34m [1mManaged nodes are active [0m [0m
+[component_container_isolated-4] [INFO] [1780569062.034897502] [lifecycle_manager_navigation]:  [34m [1mCreating bond timer... [0m [0m
+[component_container_isolated-4] [INFO] [1780569062.578572894] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569063.578530083] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569064.578500581] [controller_server]: Passing new path to controller.
+[rviz2-14] [INFO] [1780569065.347205732] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569055.762 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569065.348104746] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569055.762 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569065.348457718] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569055.762 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569065.348834886] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569055.762 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569065.348994098] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569055.762 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569065.678602795] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569066.678565886] [controller_server]: Passing new path to controller.
+[rviz2-14] [INFO] [1780569067.005927772] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569057.391 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569067.583407000] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569057.989 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569067.678605010] [controller_server]: Passing new path to controller.
+[rviz2-14] [INFO] [1780569067.918248911] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569058.313 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569068.103880855] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569058.514 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569068.184271794] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569058.589 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569068.314598036] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569058.716 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569068.488710466] [rviz2]: Message Filter dropping message: frame 'odom' at time 1780569058.918 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569068.778547154] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569069.778520823] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569070.778514620] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [ERROR] [1780569071.578661225] [controller_server]: Failed to make progress
+[component_container_isolated-4] [WARN] [1780569071.578937766] [controller_server]: [follow_path] [ActionServer] Aborting handle.
+[component_container_isolated-4] [INFO] [1780569071.593511296] [local_costmap.local_costmap]: Received request to clear entirely the local_costmap
+[component_container_isolated-4] [INFO] [1780569071.594889654] [controller_server]: Received a goal, begin computing control effort.
+[component_container_isolated-4] [INFO] [1780569071.795417071] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [WARN] [1780569071.814545753] [controller_server]: Control loop missed its desired rate of 10.0000 Hz. Current loop rate is 4.5615 Hz.
+[component_container_isolated-4] [INFO] [1780569072.814644987] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569073.914762223] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569074.914670068] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569075.914661780] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569076.914678966] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569078.014678611] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569079.014644799] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569080.014684383] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569081.114822571] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [ERROR] [1780569081.814850667] [controller_server]: Failed to make progress
+[component_container_isolated-4] [WARN] [1780569081.815304017] [controller_server]: [follow_path] [ActionServer] Aborting handle.
+[component_container_isolated-4] [INFO] [1780569081.833793196] [local_costmap.local_costmap]: Received request to clear entirely the local_costmap
+[component_container_isolated-4] [INFO] [1780569081.834436729] [global_costmap.global_costmap]: Received request to clear entirely the global_costmap
+[component_container_isolated-4] [WARN] [1780569082.151742855] [planner_server]: Planner loop missed its desired rate of 10.0000 Hz. Current loop rate is 3.1680 Hz
+[component_container_isolated-4] [INFO] [1780569082.164403701] [controller_server]: Received a goal, begin computing control effort.
+[component_container_isolated-4] [INFO] [1780569083.265109688] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569083.861979739] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569083.552 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569084.265090761] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569085.265131749] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569086.365211933] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569087.365106743] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569088.365116570] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569089.465106282] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569090.465094643] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569091.465239978] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [ERROR] [1780569092.165280783] [controller_server]: Failed to make progress
+[component_container_isolated-4] [WARN] [1780569092.165733865] [controller_server]: [follow_path] [ActionServer] Aborting handle.
+[component_container_isolated-4] [INFO] [1780569092.183648880] [local_costmap.local_costmap]: Received request to clear entirely the local_costmap
+[component_container_isolated-4] [INFO] [1780569092.186054876] [controller_server]: Received a goal, begin computing control effort.
+[component_container_isolated-4] [INFO] [1780569092.486531891] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569093.486529501] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569094.586602061] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569095.083015447] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569094.782 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.283196700] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569094.782 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.283248939] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569094.782 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [ERROR] [1780569095.296238202] [getTransform]: Failed to get "base_scan"->"base_link" frame transform: Lookup would require extrapolation into the future.  Requested time 1780569094.787298 but the latest data is at time 1780569094.762253, when looking up transform from frame [odom] to frame [base_link]
+[component_container_isolated-4] [WARN] [1780569095.296581277] [collision_monitor]: Robot to stop due to invalid source. Either due to data not published yet, or to lack of new data received within the sensor timeout, or if impossible to transform data to base frame
+[rviz2-14] [INFO] [1780569095.470352965] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569058.292 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569095.501816865] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569058.402 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569095.533994896] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569058.502 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569095.566826176] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569058.602 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569095.586540786] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [ERROR] [1780569095.601548542] [tf_help]: Transform data too old when converting from map to odom
+[component_container_isolated-4] [ERROR] [1780569095.601748258] [tf_help]: Data time: 1780569095s 513792718ns, Transform time: 1780569095s 182050636ns
+[component_container_isolated-4] [INFO] [1780569095.601811371] [controller_server]: Reached the goal!
+[component_container_isolated-4] [INFO] [1780569095.633584405] [bt_navigator]: Goal succeeded
+[navigation_executor_node-7]  [0m[INFO] [1780569095.636817170] [navigation_executor_node]: Navigation Succeeded! [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569095.638199247] [navigation_executor_node]: Status: NAVIGATING -> SUCCEEDED_AT_POSE [0m
+[rviz2-14] [INFO] [1780569095.725958628] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569058.702 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569095.745357519] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569094.992 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.747508346] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.092 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.747789667] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.192 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.748749246] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.292 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569095.757740084] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569058.802 for reason 'discarding message because the queue is full'
+[rviz2-14] [INFO] [1780569095.789640208] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569058.902 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [ERROR] [1780569095.807504401] [getTransform]: Failed to get "base_scan"->"base_link" frame transform: Lookup would require extrapolation into the future.  Requested time 1780569095.298645 but the latest data is at time 1780569094.762253, when looking up transform from frame [odom] to frame [base_link]
+[rviz2-14] [INFO] [1780569095.821681081] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569059.002 for reason 'discarding message because the queue is full'
+[navigation_executor_node-7]  [0m[INFO] [1780569095.840692114] [navigation_executor_node]: Status: SUCCEEDED_AT_POSE -> IDLE [0m
+[rviz2-14] [INFO] [1780569095.853644228] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569094.682 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569095.945209487] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569094.992 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.945343839] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569094.992 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.947409738] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.092 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.947554390] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569095.092 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.947839032] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569095.192 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.947925964] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.192 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.948465636] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.292 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569095.948585745] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569095.292 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569095.950171457] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569094.782 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569096.024738147] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.392 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.025512370] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.492 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.026385584] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.692 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.026509517] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.592 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569096.046289191] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569094.992 for reason 'discarding message because the queue is full'
+[crop_decision_node-10]  [33m[WARN] [1780569096.102181097] [crop_decision_node]: Not in zone_1 yet. Moving to next sub-target. [0m
+[component_container_isolated-4] [INFO] [1780569096.153874503] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.802 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.224883613] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.392 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.224922159] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569095.392 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.225210636] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.492 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.225448774] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569095.492 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.226356777] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569095.692 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.226409481] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.592 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.226755585] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569095.592 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.227097585] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.692 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.228169868] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.902 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569096.302030071] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569095.092 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [ERROR] [1780569096.318310995] [getTransform]: Failed to get "base_scan"->"base_link" frame transform: Lookup would require extrapolation into the future.  Requested time 1780569095.292078 but the latest data is at time 1780569095.182051, when looking up transform from frame [base_scan] to frame [odom]
+[component_container_isolated-4] [INFO] [1780569096.323390097] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.002 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569096.334421819] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569095.192 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569096.353457569] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569095.802 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.353516600] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.802 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569096.367324306] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569095.292 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569096.428363339] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569095.902 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.428382160] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569095.902 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569096.430358312] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569095.392 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569096.523443160] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.002 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.523448118] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569096.002 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569096.558461093] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569095.492 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569096.588800423] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.102 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.622718997] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.202 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.623376472] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.302 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569096.654513512] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569095.592 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569096.719205126] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.402 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.788904437] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569096.102 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.789041666] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.102 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569096.814276288] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569095.692 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569096.822717998] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569096.202 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.822899296] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.202 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.823434364] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.302 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.823565180] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569096.302 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [ERROR] [1780569096.828295402] [getTransform]: Failed to get "base_scan"->"base_link" frame transform: Lookup would require extrapolation into the future.  Requested time 1780569095.692077 but the latest data is at time 1780569095.182051, when looking up transform from frame [base_scan] to frame [odom]
+[component_container_isolated-4] [INFO] [1780569096.834567955] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.502 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569096.846232454] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569095.802 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569096.919241008] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569096.402 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.919327405] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.402 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569096.930882962] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.602 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569096.974262750] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569095.902 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569097.034465935] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569096.502 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569097.034479953] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.502 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569097.069838848] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569096.002 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569097.099386055] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.712 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569097.124022442] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.812 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569097.130900954] [global_costmap.global_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569096.602 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569097.130966962] [amcl]: Message Filter dropping message: frame 'base_scan' at time 1780569096.602 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-14] [INFO] [1780569097.166500681] [rviz2]: Message Filter dropping message: frame 'base_scan' at time 1780569096.102 for reason 'discarding message because the queue is full'
+[component_container_isolated-4] [INFO] [1780569097.207114702] [collision_monitor]: Robot to continue normal operation
+[crop_decision_node-10]  [0m[INFO] [1780569098.100986221] [crop_decision_node]: Requesting zone from Supervisor... [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569098.105317112] [twin_supervisor_node]: Received zone request from Robot A [0m
+[twin_supervisor_node-13]  [0m[INFO] [1780569098.108565341] [twin_supervisor_node]: Dispatched zone_2 to Robot A [0m
+[crop_decision_node-10]  [0m[INFO] [1780569098.109512998] [crop_decision_node]: Supervisor assigned zone_2. Generating sub-targets... [0m
+[crop_decision_node-10]  [0m[INFO] [1780569098.111016081] [crop_decision_node]: Navigating to sub-target at (0.80, -0.80) [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569098.113574510] [navigation_executor_node]: Received dispatch goal: X=0.80, Y=-0.80 [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569098.114547021] [navigation_executor_node]: Waiting for /navigate_to_pose action server... [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569098.116316234] [navigation_executor_node]: /navigate_to_pose action server is available. [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569098.117198386] [navigation_executor_node]: Sending goal to Nav2: Pos(X:0.80, Y:-0.80) [0m
+[component_container_isolated-4] [INFO] [1780569098.118423777] [bt_navigator]: Begin navigating from current location (0.80, -1.40) to (0.80, -0.80)
+[navigation_executor_node-7]  [0m[INFO] [1780569098.118839670] [navigation_executor_node]: Status: IDLE -> NAVIGATING [0m
+[navigation_executor_node-7]  [0m[INFO] [1780569098.121039017] [navigation_executor_node]: Goal accepted by Nav2 server. Waiting for result... [0m
+[component_container_isolated-4] [INFO] [1780569098.139715474] [controller_server]: Received a goal, begin computing control effort.
+[component_container_isolated-4] [INFO] [1780569099.240846940] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569100.240842085] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569101.240886920] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569102.175515438] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569101.872 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569102.340899641] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569103.340888989] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569104.340859118] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569105.340856019] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569106.440871114] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569107.440873121] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [ERROR] [1780569108.240995915] [controller_server]: Failed to make progress
+[component_container_isolated-4] [WARN] [1780569108.241476642] [controller_server]: [follow_path] [ActionServer] Aborting handle.
+[component_container_isolated-4] [INFO] [1780569108.259371513] [local_costmap.local_costmap]: Received request to clear entirely the local_costmap
+[component_container_isolated-4] [INFO] [1780569108.260345986] [controller_server]: Received a goal, begin computing control effort.
+[component_container_isolated-4] [WARN] [1780569108.403081883] [controller_server]: Control loop missed its desired rate of 10.0000 Hz. Current loop rate is 7.0228 Hz.
+[component_container_isolated-4] [INFO] [1780569108.460788782] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569109.074212375] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569108.762 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569109.460809222] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569110.460822240] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569111.560775580] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569112.560805739] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569113.560807172] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569114.560835334] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569115.660906305] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569116.661016596] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569117.387854648] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569117.062 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569117.660785269] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [ERROR] [1780569118.461810841] [controller_server]: Failed to make progress
+[component_container_isolated-4] [WARN] [1780569118.462180417] [controller_server]: [follow_path] [ActionServer] Aborting handle.
+[component_container_isolated-4] [INFO] [1780569118.479063607] [local_costmap.local_costmap]: Received request to clear entirely the local_costmap
+[component_container_isolated-4] [INFO] [1780569118.479506033] [global_costmap.global_costmap]: Received request to clear entirely the global_costmap
+[component_container_isolated-4] [WARN] [1780569119.143289923] [planner_server]: Planner loop missed its desired rate of 10.0000 Hz. Current loop rate is 1.5104 Hz
+[component_container_isolated-4] [INFO] [1780569119.160237492] [controller_server]: Received a goal, begin computing control effort.
+[component_container_isolated-4] [INFO] [1780569120.261209707] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569121.261226947] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569122.261220173] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569123.261197310] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569124.361215244] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569125.361337487] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569126.361219653] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569127.361223730] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569128.461200036] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [ERROR] [1780569129.261355489] [controller_server]: Failed to make progress
+[component_container_isolated-4] [WARN] [1780569129.261699668] [controller_server]: [follow_path] [ActionServer] Aborting handle.
+[component_container_isolated-4] [INFO] [1780569129.279063733] [local_costmap.local_costmap]: Received request to clear entirely the local_costmap
+[component_container_isolated-4] [INFO] [1780569129.279911528] [controller_server]: Received a goal, begin computing control effort.
+[component_container_isolated-4] [WARN] [1780569129.399662191] [controller_server]: Control loop missed its desired rate of 10.0000 Hz. Current loop rate is 8.3773 Hz.
+[component_container_isolated-4] [INFO] [1780569129.480390792] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569130.480390864] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569131.480403886] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569132.366683527] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569132.052 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569132.580425273] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569133.580438632] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569134.580428435] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569135.580415822] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569136.680379749] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569137.680392496] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569138.680372764] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [ERROR] [1780569139.480723479] [controller_server]: Failed to make progress
+[component_container_isolated-4] [WARN] [1780569139.481206732] [controller_server]: [follow_path] [ActionServer] Aborting handle.
+[component_container_isolated-4] [INFO] [1780569139.499766329] [behavior_server]: Running spin
+[component_container_isolated-4] [INFO] [1780569139.500009812] [behavior_server]: Turning 1.57 for spin behavior.
+[component_container_isolated-4] [WARN] [1780569149.500514924] [behavior_server]: Exceeded time allowance before reaching the Spin goal - Exiting Spin
+[component_container_isolated-4] [WARN] [1780569149.500576224] [behavior_server]: spin failed
+[component_container_isolated-4] [WARN] [1780569149.500596762] [behavior_server]: [spin] [ActionServer] Aborting handle.
+[component_container_isolated-4] [INFO] [1780569149.520104863] [behavior_server]: Running wait
+[component_container_isolated-4] [INFO] [1780569150.386997823] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569150.092 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569154.520459977] [behavior_server]: wait completed successfully
+[component_container_isolated-4] [INFO] [1780569154.559397978] [controller_server]: Received a goal, begin computing control effort.
+[component_container_isolated-4] [INFO] [1780569155.659850909] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569156.659860474] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569157.092342938] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569156.762 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569157.660193110] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569158.759837179] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569159.759889429] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569160.759868549] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569161.759846984] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569162.859873672] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569163.859865190] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [ERROR] [1780569164.559996257] [controller_server]: Failed to make progress
+[component_container_isolated-4] [WARN] [1780569164.560324563] [controller_server]: [follow_path] [ActionServer] Aborting handle.
+[component_container_isolated-4] [INFO] [1780569164.579764275] [local_costmap.local_costmap]: Received request to clear entirely the local_costmap
+[component_container_isolated-4] [INFO] [1780569164.580883974] [controller_server]: Received a goal, begin computing control effort.
+[component_container_isolated-4] [INFO] [1780569164.881319229] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569165.881336270] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569166.981362196] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569167.981314814] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569168.981305770] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569169.981280899] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569170.680079981] [local_costmap.local_costmap]: Message Filter dropping message: frame 'base_scan' at time 1780569170.382 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-4] [INFO] [1780569171.081297188] [controller_server]: Passing new path to controller.
+[component_container_isolated-4] [INFO] [1780569172.081310146] [controller_server]: Passing new path to controller.

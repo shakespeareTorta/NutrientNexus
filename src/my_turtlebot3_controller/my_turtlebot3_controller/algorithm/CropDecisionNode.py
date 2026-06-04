@@ -73,6 +73,7 @@ class CropDecisionNode(Node):
         self._actuation_timer = None
         self._cooldown_timer = None
         self._actuation_start_time = 0.0
+        self._zone_request_time = 0.0
 
         self.create_timer(1.0, self.state_machine_tick)
         self.get_logger().info(f"CropDecisionNode for Robot {self.robot_id} started. Operating as twin client.")
