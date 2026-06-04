@@ -208,8 +208,15 @@ class CropDecisionNode(Node):
             req = String()
             req.data = json.dumps({"robot": self.robot_id})
             self.zone_request_pub.publish(req)
+            self._zone_request_time = self.get_clock().now().nanoseconds / 1e9
             self.current_phase = "WAITING_FOR_ASSIGNMENT"
-            
+
+        elif self.current_phase == "WAITING_FOR_ASSIGNMENT":
+            elapsed = self.get_clock().now().nanoseconds / 1e9 - self._zone_request_time
+            if elapsed > 5.0:
+                self.get_logger().warn("No zone assignment received after 5s, retrying...")
+                self.current_phase = "IDLE"
+
         elif self.current_phase == "VERIFYING_ZONE":
             if self.physical_current_zone == self.active_zone_id:
                 self.current_phase = "SCANNING"
