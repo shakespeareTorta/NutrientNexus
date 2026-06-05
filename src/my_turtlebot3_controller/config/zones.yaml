@@ -5,8 +5,8 @@
 # Room center ≈ (0.8, -1.4)
 
 base_station:
-  target_x: -0.3
-  target_y: 0.0
+  target_x: -0.6
+  target_y: -0.1
   target_theta: 0.0
   runoff_risk: "Low"
   min_x: 0.3
@@ -32,8 +32,8 @@ zone_0:
 
 #Blue — Upper Right
 zone_1:
-  target_x: 0.8
-  target_y: 0.7
+  target_x: 0.9
+  target_y: 0.8
   target_theta: 90.0
   runoff_risk: "High"
   min_x: 0.4
@@ -45,11 +45,11 @@ zone_1:
 
 #Yellow — Lower Right
 zone_2:
-  target_x: 0.8
+  target_x: 1.2
   target_y: -1.0
   target_theta: 180.0
   runoff_risk: "Medium"
-  min_x: 0.4
+  min_x: 0.6
   max_x: 1.2
   min_y: -2.0
   max_y: -0.4
@@ -58,13 +58,13 @@ zone_2:
 
 #Red — Lower Left
 zone_3:
-  target_x: -0.7
-  target_y: -1.0
+  target_x: -0.4
+  target_y: -1.6
   target_theta: 270.0
   runoff_risk: "High"
   min_x: -1.5
   max_x: 0.0
   min_y: -2.0
-  max_y: -0.4
+  max_y: -0.6
   baseline_moisture: 50.0
   baseline_nutrients: 45.0

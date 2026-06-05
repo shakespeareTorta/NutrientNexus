@@ -49,6 +49,18 @@ class FieldSensorMockNode(Node):
         self.num_zones = len(self.zones)
         self.weather = "sunny"
 
+        # Externalised parameters (configurable via nexus_params.yaml)
+        self.declare_parameter('sim_tick_interval', 2.0)
+        self.declare_parameter('irrigate_replenish_pct', 95.0)
+        self.declare_parameter('fertilise_replenish_pct', 90.0)
+
+        self.sim_tick_interval: float = self.get_parameter(
+            'sim_tick_interval').get_parameter_value().double_value
+        self.irrigate_replenish: float = self.get_parameter(
+            'irrigate_replenish_pct').get_parameter_value().double_value
+        self.fertilise_replenish: float = self.get_parameter(
+            'fertilise_replenish_pct').get_parameter_value().double_value
+
         # Publishers
         self.moisture_pub = self.create_publisher(Float32MultiArray, '/field_moisture', STATE_QOS)
         self.nutrients_pub = self.create_publisher(Float32MultiArray, '/field_nutrients', STATE_QOS)
@@ -67,7 +79,7 @@ class FieldSensorMockNode(Node):
 
         # Single timer for environment simulation + telemetry publishing
         # (merged to avoid race conditions between depletion and publishing)
-        self.sim_timer = self.create_timer(2.0, self.simulation_tick)
+        self.sim_timer = self.create_timer(self.sim_tick_interval, self.simulation_tick)
 
         self.get_logger().info("Field Sensor Mock Node Initialized for Nutrient Nexus.")
         self.log_zone_states("Initial")
@@ -149,8 +161,8 @@ class FieldSensorMockNode(Node):
 
         for zone in self.zones:
             if zone['id'] == zone_id:
-                self.get_logger().info(f"Irrigating {zone_id}. Moisture replenished from {zone['moisture']:.1f}% to 95.0%")
-                zone['moisture'] = 95.0
+                self.get_logger().info(f"Irrigating {zone_id}. Moisture replenished from {zone['moisture']:.1f}% to {self.irrigate_replenish:.0f}%")
+                zone['moisture'] = self.irrigate_replenish
                 break
         self.publish_telemetry_tick()
 
@@ -163,8 +175,8 @@ class FieldSensorMockNode(Node):
 
         for zone in self.zones:
             if zone['id'] == zone_id:
-                self.get_logger().info(f"Fertilising {zone_id}. Nutrients replenished from {zone['nutrients']:.1f}% to 90.0%")
-                zone['nutrients'] = 90.0
+                self.get_logger().info(f"Fertilising {zone_id}. Nutrients replenished from {zone['nutrients']:.1f}% to {self.fertilise_replenish:.0f}%")
+                zone['nutrients'] = self.fertilise_replenish
                 break
         self.publish_telemetry_tick()
 

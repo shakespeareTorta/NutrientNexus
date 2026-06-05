@@ -58,11 +58,14 @@ class RobotResourceNode(Node):
         self.battery: float = 100.0
         self.fertilizer: float = 100.0
 
-        # Depletion rates
-        # E.g., 2% battery per meter driven
-        self.battery_drain_per_meter: float = 2.0 
-        # 15% tank used per actuation
-        self.fertilizer_drain_per_spray: float = 15.0 
+        # Depletion rates (configurable via nexus_params.yaml)
+        self.declare_parameter('battery_drain_per_meter', 2.0)
+        self.declare_parameter('fertilizer_drain_per_spray', 15.0)
+
+        self.battery_drain_per_meter: float = self.get_parameter(
+            'battery_drain_per_meter').get_parameter_value().double_value
+        self.fertilizer_drain_per_spray: float = self.get_parameter(
+            'fertilizer_drain_per_spray').get_parameter_value().double_value
 
         self.last_x: Optional[float] = None
         self.last_y: Optional[float] = None

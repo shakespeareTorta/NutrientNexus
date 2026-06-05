@@ -1,0 +1,339 @@
+#!/usr/bin/env python3
+"""
+System Monitor Node — Hardware health watchdog for Nutrient Nexus.
+
+Monitors TurtleBot3 sensor health and publishes diagnostics on
+/system_health as JSON. Works in both real-robot and Gazebo-sim
+contexts (gracefully handles missing topics in simulation).
+
+Monitored topics:
+    /battery_state  sensor_msgs/BatteryState  (real robot only)
+        WARNING   < warn_voltage (11.5 V) or < warn_percent (35%)
+        CRITICAL  < crit_voltage (10.8 V) or < crit_percent (20%)
+
+    /scan           sensor_msgs/LaserScan
+        STALE     no message for > scan_stale_sec (2.0 s)
+        DROPOUT   > dropout_pct (40%) of rays are inf/out-of-range
+        ALL_INF   every ray is invalid
+
+    /imu            sensor_msgs/Imu  (real robot only)
+        STALE     no message for > imu_stale_sec (2.0 s)
+        HIGH_ACCEL  |acceleration| > accel_warn_g (2.5 g)
+        HIGH_GYRO   |angular_vel| > gyro_warn_rps (5.0 rad/s)
+
+All thresholds are configurable via nexus_params.yaml.
+"""
+
+import math
+import time
+import json
+
+import rclpy
+from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy
+
+from sensor_msgs.msg import BatteryState, LaserScan, Imu
+from std_msgs.msg import String
+
+from my_turtlebot3_controller.qos import STATE_QOS
+
+
+class SystemMonitorNode(Node):
+
+    def __init__(self):
+        super().__init__('system_monitor_node')
+
+        # ── Parameters ────────────────────────────────────────────────
+        # Topics
+        self.declare_parameter('battery_topic', '/battery_state')
+        self.declare_parameter('scan_topic', '/scan')
+        self.declare_parameter('imu_topic', '/imu')
+
+        # Check rate
+        self.declare_parameter('check_hz', 2.0)
+
+        # Battery thresholds
+        self.declare_parameter('warn_voltage', 11.5)
+        self.declare_parameter('crit_voltage', 10.8)
+        self.declare_parameter('warn_percent', 35.0)
+        self.declare_parameter('crit_percent', 20.0)
+
+        # LiDAR thresholds
+        self.declare_parameter('scan_stale_sec', 2.0)
+        self.declare_parameter('dropout_pct', 0.40)
+
+        # IMU thresholds
+        self.declare_parameter('imu_stale_sec', 2.0)
+        self.declare_parameter('accel_warn_g', 2.5)
+        self.declare_parameter('gyro_warn_rps', 5.0)
+
+        # Read parameters
+        battery_topic = self.get_parameter('battery_topic').value
+        scan_topic = self.get_parameter('scan_topic').value
+        imu_topic = self.get_parameter('imu_topic').value
+        check_hz = float(self.get_parameter('check_hz').value)
+
+        self.warn_voltage = float(self.get_parameter('warn_voltage').value)
+        self.crit_voltage = float(self.get_parameter('crit_voltage').value)
+        self.warn_pct = float(self.get_parameter('warn_percent').value)
+        self.crit_pct = float(self.get_parameter('crit_percent').value)
+        self.scan_stale = float(self.get_parameter('scan_stale_sec').value)
+        self.dropout_pct = float(self.get_parameter('dropout_pct').value)
+        self.imu_stale = float(self.get_parameter('imu_stale_sec').value)
+        self.accel_limit = float(self.get_parameter('accel_warn_g').value) * 9.81
+        self.gyro_limit = float(self.get_parameter('gyro_warn_rps').value)
+
+        # ── State: last received messages and timestamps ──────────────
+        self._battery_msg = None
+        self._scan_msg = None
+        self._imu_msg = None
+
+        self._battery_stamp: float = 0.0
+        self._scan_stamp: float = 0.0
+        self._imu_stamp: float = 0.0
+
+        self._last_battery_level: str = ''
+
+        # ── QoS — BEST_EFFORT for sensor topics ──────────────────────
+        sensor_qos = QoSProfile(
+            depth=10,
+            reliability=ReliabilityPolicy.BEST_EFFORT
+        )
+
+        # ── Subscriptions ─────────────────────────────────────────────
+        self.create_subscription(
+            BatteryState, battery_topic,
+            self._battery_callback, sensor_qos
+        )
+        self.create_subscription(
+            LaserScan, scan_topic,
+            self._scan_callback, sensor_qos
+        )
+        self.create_subscription(
+            Imu, imu_topic,
+            self._imu_callback, sensor_qos
+        )
+
+        # ── Publisher for system health status ────────────────────────
+        self.health_pub = self.create_publisher(String, '/system_health', STATE_QOS)
+
+        # ── Check timer ───────────────────────────────────────────────
+        self.create_timer(1.0 / check_hz, self._check)
+
+        self.get_logger().info(
+            f'System Monitor Node started\n'
+            f'  battery : {battery_topic}  '
+            f'warn={self.warn_voltage}V/{self.warn_pct:.0f}%  '
+            f'crit={self.crit_voltage}V/{self.crit_pct:.0f}%\n'
+            f'  scan    : {scan_topic}  '
+            f'stale>{self.scan_stale}s  dropout>{self.dropout_pct*100:.0f}%\n'
+            f'  imu     : {imu_topic}  '
+            f'stale>{self.imu_stale}s  '
+            f'accel>{self.accel_limit/9.81:.1f}g  '
+            f'gyro>{self.gyro_limit:.1f}rad/s\n'
+            f'  check rate: {check_hz} Hz')
+
+    # ── Callbacks: store message and wall-clock timestamp ─────────────
+
+    def _battery_callback(self, msg: BatteryState) -> None:
+        self._battery_msg = msg
+        self._battery_stamp = time.monotonic()
+
+    def _scan_callback(self, msg: LaserScan) -> None:
+        self._scan_msg = msg
+        self._scan_stamp = time.monotonic()
+
+    def _imu_callback(self, msg: Imu) -> None:
+        self._imu_msg = msg
+        self._imu_stamp = time.monotonic()
+
+    # ── Master check (called by timer) ────────────────────────────────
+
+    def _check(self) -> None:
+        health = {}
+        health['battery'] = self._check_battery()
+        health['lidar'] = self._check_scan()
+        health['imu'] = self._check_imu()
+
+        # Publish combined health status
+        msg = String()
+        msg.data = json.dumps(health)
+        self.health_pub.publish(msg)
+
+    # ── Battery check ─────────────────────────────────────────────────
+
+    def _check_battery(self) -> dict:
+        now = time.monotonic()
+
+        if self._battery_msg is None:
+            if self._battery_stamp == 0.0:
+                self.get_logger().info(
+                    '[BATTERY] No /battery_state received — '
+                    'normal in Gazebo simulation',
+                    throttle_duration_sec=30.0)
+            return {'status': 'NO_DATA', 'source': 'simulation'}
+
+        msg = self._battery_msg
+        voltage = msg.voltage
+        pct = msg.percentage * 100.0  # ROS2 spec: 0.0–1.0 → 0–100%
+
+        if voltage <= self.crit_voltage or pct <= self.crit_pct:
+            level = 'CRITICAL'
+        elif voltage <= self.warn_voltage or pct <= self.warn_pct:
+            level = 'WARNING'
+        else:
+            level = 'OK'
+
+        # Only log when the level changes to avoid flooding
+        if level != self._last_battery_level:
+            self._last_battery_level = level
+            if level == 'CRITICAL':
+                self.get_logger().error(
+                    f'[BATTERY] CRITICAL  {voltage:.2f}V  {pct:.1f}%  '
+                    f'— stop robot immediately')
+            elif level == 'WARNING':
+                self.get_logger().warn(
+                    f'[BATTERY] LOW  {voltage:.2f}V  {pct:.1f}%  '
+                    f'— return to charge soon')
+            else:
+                self.get_logger().info(
+                    f'[BATTERY] OK  {voltage:.2f}V  {pct:.1f}%')
+
+        # Health anomalies
+        if not msg.present:
+            self.get_logger().error(
+                '[BATTERY] Battery NOT PRESENT — check connection')
+
+        return {
+            'status': level,
+            'voltage': round(voltage, 2),
+            'percent': round(pct, 1),
+            'present': msg.present,
+        }
+
+    # ── LiDAR check ───────────────────────────────────────────────────
+
+    def _check_scan(self) -> dict:
+        now = time.monotonic()
+
+        # Staleness
+        if self._scan_msg is None or (now - self._scan_stamp) > self.scan_stale:
+            age = now - self._scan_stamp if self._scan_stamp > 0 else float('inf')
+            self.get_logger().error(
+                f'[LIDAR] STALE — no scan for {age:.1f}s  '
+                f'(threshold {self.scan_stale}s)  '
+                f'Check USB cable and LiDAR power',
+                throttle_duration_sec=5.0)
+            return {'status': 'STALE', 'age_sec': round(age, 1)}
+
+        msg = self._scan_msg
+        total = len(msg.ranges)
+
+        if total == 0:
+            self.get_logger().error('[LIDAR] Empty scan — 0 rays')
+            return {'status': 'EMPTY', 'total_rays': 0}
+
+        # Ray quality
+        inf_count = sum(1 for r in msg.ranges if not math.isfinite(r))
+        oob_count = sum(
+            1 for r in msg.ranges
+            if math.isfinite(r) and not (msg.range_min <= r <= msg.range_max)
+        )
+        bad_count = inf_count + oob_count
+        bad_ratio = bad_count / total
+
+        if bad_ratio >= 1.0:
+            self.get_logger().error(
+                f'[LIDAR] ALL RAYS INVALID ({total}/{total})  '
+                f'Sensor may be disconnected or obstructed',
+                throttle_duration_sec=5.0)
+            status = 'ALL_INVALID'
+        elif bad_ratio >= self.dropout_pct:
+            self.get_logger().warn(
+                f'[LIDAR] HIGH DROPOUT  {bad_count}/{total} rays invalid '
+                f'({bad_ratio*100:.1f}%)',
+                throttle_duration_sec=5.0)
+            status = 'HIGH_DROPOUT'
+        else:
+            status = 'OK'
+
+        # Below-range rays (sensor noise or hardware fault)
+        below_min = sum(
+            1 for r in msg.ranges
+            if math.isfinite(r) and r < msg.range_min
+        )
+        if below_min > 0:
+            self.get_logger().warn(
+                f'[LIDAR] {below_min} rays below range_min ({msg.range_min}m)',
+                throttle_duration_sec=10.0)
+
+        return {
+            'status': status,
+            'total_rays': total,
+            'valid_rays': total - bad_count,
+            'dropout_pct': round(bad_ratio * 100, 1),
+        }
+
+    # ── IMU check ─────────────────────────────────────────────────────
+
+    def _check_imu(self) -> dict:
+        now = time.monotonic()
+
+        # Staleness
+        if self._imu_msg is None or (now - self._imu_stamp) > self.imu_stale:
+            if self._imu_stamp == 0.0:
+                self.get_logger().info(
+                    '[IMU] No /imu received — '
+                    'normal in Gazebo simulation',
+                    throttle_duration_sec=30.0)
+            else:
+                age = now - self._imu_stamp
+                self.get_logger().error(
+                    f'[IMU] STALE — no message for {age:.1f}s  '
+                    f'Check OpenCR board connection',
+                    throttle_duration_sec=5.0)
+            return {'status': 'NO_DATA', 'source': 'simulation'}
+
+        msg = self._imu_msg
+        a = msg.linear_acceleration
+        g = msg.angular_velocity
+
+        # Linear acceleration magnitude
+        accel_mag = math.sqrt(a.x**2 + a.y**2 + a.z**2)
+        if accel_mag > self.accel_limit:
+            self.get_logger().warn(
+                f'[IMU] HIGH ACCELERATION  '
+                f'{accel_mag:.2f} m/s² ({accel_mag/9.81:.2f}g)  '
+                f'— possible collision or fall')
+
+        # Angular velocity magnitude
+        gyro_mag = math.sqrt(g.x**2 + g.y**2 + g.z**2)
+        if gyro_mag > self.gyro_limit:
+            self.get_logger().warn(
+                f'[IMU] HIGH ROTATION  '
+                f'{gyro_mag:.2f} rad/s  '
+                f'— robot spinning very fast')
+
+        return {
+            'status': 'OK',
+            'accel_ms2': round(accel_mag, 2),
+            'gyro_rps': round(gyro_mag, 2),
+        }
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = SystemMonitorNode()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.get_logger().info('System Monitor shutting down.')
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

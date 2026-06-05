@@ -28,6 +28,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # Locate package share directory
     my_controller_share = get_package_share_directory("my_turtlebot3_controller")
+    nexus_params_file = os.path.join(my_controller_share, 'config', 'nexus_params.yaml')
 
     # Declare gui argument (passed through to base.launch.py)
     declare_gui_cmd = DeclareLaunchArgument(
@@ -59,12 +60,11 @@ def generate_launch_description():
         output="screen",
         emulate_tty=True,
         parameters=[
+            nexus_params_file,
             {'scan_topic': '/scan'},
             {'input_cmd_topic': '/cmd_vel_nav'},
             {'output_cmd_topic': '/cmd_vel'},
-            {'stop_distance': 0.25},
-            {'front_angle_deg': 30.0},
-            {'use_sim_time': True}, {'robot_id': 'A'},
+            {'use_sim_time': True},
         ],
     )
 
@@ -75,7 +75,7 @@ def generate_launch_description():
         name="field_sensor_mock_node",
         output="screen",
         emulate_tty=True,
-        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
+        parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 4. Navigation Executor Node (Nav2 Action Client Relay)
@@ -105,7 +105,7 @@ def generate_launch_description():
         name="robot_resource_node",
         output="screen",
         emulate_tty=True,
-        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
+        parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 7. Crop Decision Node (Agricultural State Machine & SDG-14 controller)
@@ -115,7 +115,7 @@ def generate_launch_description():
         name="crop_decision_node",
         output="screen",
         emulate_tty=True,
-        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
+        parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 8. Real-Time Dashboard Node (Tkinter GUI)
@@ -149,6 +149,16 @@ def generate_launch_description():
             {'system_mode': 'SIM_ONLY'},
             {'use_sim_time': True}, {'robot_id': 'A'},
         ],
+    )
+
+    # 11. System Monitor Node (Hardware watchdog)
+    system_monitor = Node(
+        package="my_turtlebot3_controller",
+        executable="system_monitor_node",
+        name="system_monitor_node",
+        output="screen",
+        emulate_tty=True,
+        parameters=[nexus_params_file, {'use_sim_time': True}],
     )
 
     # 11. RViz2 (with Nav2 Default View)
@@ -189,6 +199,7 @@ def generate_launch_description():
             dashboard,
             sustainability_audit,
             twin_supervisor,
+            system_monitor,
             rosbag_record,
             rviz_node,
         ]

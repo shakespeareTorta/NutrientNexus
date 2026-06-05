@@ -32,6 +32,7 @@ from launch_ros.actions import Node, PushRosNamespace, SetRemap
 
 def generate_launch_description():
     my_controller_share = get_package_share_directory("my_turtlebot3_controller")
+    nexus_params_file = os.path.join(my_controller_share, 'config', 'nexus_params.yaml')
 
     # ── Launch Arguments ──────────────────────────────────────────────
     declare_gui_cmd = DeclareLaunchArgument(
@@ -117,12 +118,11 @@ def generate_launch_description():
         name="safety_stop_node",
         output="screen", emulate_tty=True,
         parameters=[
+            nexus_params_file,
             {'use_sim_time': True},
             {'scan_topic': '/scan'},
             {'input_cmd_topic': '/cmd_vel_nav'},
             {'output_cmd_topic': '/cmd_vel'},
-            {'stop_distance': 0.25},
-            {'front_angle_deg': 30.0},
         ],
     )
 
@@ -147,7 +147,7 @@ def generate_launch_description():
         executable="robot_resource_node",
         name="robot_resource_node",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
+        parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     crop_decision_a = Node(
@@ -155,7 +155,15 @@ def generate_launch_description():
         executable="crop_decision_node",
         name="crop_decision_node_a",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}, {'robot_id': 'A'}, {'zone_assignment': [0, 1]}],
+        parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'A'}, {'zone_assignment': [0, 1]}],
+    )
+
+    system_monitor_a = Node(
+        package="my_turtlebot3_controller",
+        executable="system_monitor_node",
+        name="system_monitor_node_a",
+        output="screen", emulate_tty=True,
+        parameters=[nexus_params_file, {'use_sim_time': True}],
     )
 
     # ── 6. Robot B nodes (Zone 2 & 3) ─────────────────────────────────
@@ -167,12 +175,11 @@ def generate_launch_description():
         namespace="tb2",
         output="screen", emulate_tty=True,
         parameters=[
+            nexus_params_file,
             {'use_sim_time': True},
             {'scan_topic': '/tb2/scan'},
             {'input_cmd_topic': '/tb2/cmd_vel_nav'},
             {'output_cmd_topic': '/tb2/cmd_vel'},
-            {'stop_distance': 0.25},
-            {'front_angle_deg': 30.0},
         ],
     )
 
@@ -210,7 +217,7 @@ def generate_launch_description():
         name="robot_resource_node_b",
         namespace="tb2",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}, {'robot_id': 'B'}],
+        parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'B'}],
         remappings=[
             ('/odom', '/tb2/odom'),
             ('/robot_resources', '/tb2/robot_resources'),
@@ -224,7 +231,7 @@ def generate_launch_description():
         name="crop_decision_node_b",
         namespace="tb2",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}, {'robot_id': 'B'}, {'zone_assignment': [2, 3]}],
+        parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'B'}, {'zone_assignment': [2, 3]}],
         remappings=[
             ('/dispatch_nav_goal', '/tb2/dispatch_nav_goal'),
             ('/navigation_executor_status', '/tb2/navigation_executor_status'),
@@ -246,6 +253,21 @@ def generate_launch_description():
             ('/tf', 'tf'),
             ('/tf_static', 'tf_static'),
         ],
+    )
+
+    system_monitor_b = Node(
+        package="my_turtlebot3_controller",
+        executable="system_monitor_node",
+        name="system_monitor_node_b",
+        namespace="tb2",
+        output="screen", emulate_tty=True,
+        parameters=[nexus_params_file, {'use_sim_time': True}],
+        remappings=[
+            ('/battery_state', '/tb2/battery_state'),
+            ('/scan', '/tb2/scan'),
+            ('/imu', '/tb2/imu'),
+            ('/system_health', '/tb2/system_health'),
+        ]
     )
 
     # ── 7. Robot B Nav2 ───────────────────────────────────────────────
@@ -287,7 +309,7 @@ def generate_launch_description():
         executable="field_sensor_mock_node",
         name="field_sensor_mock_node",
         output="screen", emulate_tty=True,
-        parameters=[{'use_sim_time': True}],
+        parameters=[nexus_params_file, {'use_sim_time': True}],
     )
 
     dashboard = Node(
@@ -362,12 +384,14 @@ def generate_launch_description():
         zone_detector_a,
         resource_a,
         crop_decision_a,
+        system_monitor_a,
         # Robot B nodes
         safety_stop_b,
         nav_exec_b,
         zone_detector_b,
         resource_b,
         crop_decision_b,
+        system_monitor_b,
         odom_to_tf_b,
         nav2_tb2_cmd,
         tb2_tf_cmd,

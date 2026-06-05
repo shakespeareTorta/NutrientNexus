@@ -1,0 +1,72 @@
+# ── Nutrient Nexus — Centralised Node Parameters ──────────────────────
+#
+# All tunable parameters for the Nexus application nodes.
+# Loaded by nexus.launch.py and nexus_dual.launch.py.
+#
+# Inspired by OceanDeepSeek's parameter externalisation pattern:
+# every magic number lives here, not in Python source code.
+
+# ── Safety Stop Node ──────────────────────────────────────────────────
+safety_stop_node:
+  ros__parameters:
+    # Distances (metres)
+    stop_distance:    0.13
+    narrow_obj_dist:  0.10
+
+    # Sector angles (degrees, half-width from forward axis)
+    #   FRONT       : ±front_angle_deg
+    #   FRONT_LEFT  : front .. side
+    #   FRONT_RIGHT : -side .. -front
+    #   LEFT        : side .. rear
+    #   RIGHT       : -rear .. -side
+    front_angle_deg:  15.0
+    side_angle_deg:   70.0
+    rear_angle_deg:   130.0
+
+    # Pre-steering nudge
+    nudge_factor:     0.4     # fraction of turn_speed
+    nudge_turn_speed: 0.45    # rad/s
+
+    # Staleness detection
+    scan_stale_sec:   1.0     # seconds without scan → block forward
+
+# ── System Monitor Node ───────────────────────────────────────────────
+system_monitor_node:
+  ros__parameters:
+    check_hz:         2.0
+    warn_voltage:     11.5
+    crit_voltage:     10.8
+    warn_percent:     35.0
+    crit_percent:     20.0
+    scan_stale_sec:   2.0
+    dropout_pct:      0.40
+    imu_stale_sec:    2.0
+    accel_warn_g:     2.5
+    gyro_warn_rps:    5.0
+
+# ── Crop Decision Node ────────────────────────────────────────────────
+crop_decision_node:
+  ros__parameters:
+    moisture_threshold:           40.0    # % — irrigate below this
+    nutrient_threshold:           50.0    # % — fertilise below this
+    vulnerability_halt_threshold: 70.0    # % — block fertiliser (SDG-14)
+    actuation_duration_sec:       2.0     # seconds of spinning to spray
+    scan_duration_sec:            2.0     # seconds to scan a zone
+    cooldown_duration_sec:        1.0     # seconds between zone actions
+    low_battery_threshold:        15.0    # % — return to base below this
+    low_fertilizer_threshold:     10.0    # % — return to base below this
+    battery_drain_per_meter:      2.0     # % per metre (must match RobotResourceNode)
+    battery_safety_margin:        1.5     # multiplier for Nav2 path overhead
+
+# ── Robot Resource Node ───────────────────────────────────────────────
+robot_resource_node:
+  ros__parameters:
+    battery_drain_per_meter:      2.0     # % per metre driven
+    fertilizer_drain_per_spray:   15.0    # % per actuation
+
+# ── Field Sensor Mock Node ────────────────────────────────────────────
+field_sensor_mock_node:
+  ros__parameters:
+    sim_tick_interval:            2.0     # seconds between simulation ticks
+    irrigate_replenish_pct:       95.0    # moisture % after irrigation
+    fertilise_replenish_pct:      90.0    # nutrient % after fertilisation

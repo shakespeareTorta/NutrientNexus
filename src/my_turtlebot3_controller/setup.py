@@ -36,6 +36,7 @@ setup(
             'sustainability_audit_node = my_turtlebot3_controller.audit.SustainabilityAuditNode:main',
             'twin_supervisor_node = my_turtlebot3_controller.twin.TwinSupervisorNode:main',
             'odom_to_tf_node = my_turtlebot3_controller.navigation.odometry.OdomToTFNode:main',
+            'system_monitor_node = my_turtlebot3_controller.SystemMonitorNode:main',
         ],
     },
 )
