@@ -53,8 +53,7 @@ class NavigationExecutorNode(Node):
 
     def dispatch_goal_callback(self, msg: PoseStamped) -> None:
         if self.current_nav_status == "NAVIGATING":
-            self.get_logger().warn("Navigation already in progress. New goal ignored.")
-            return
+            self.get_logger().warn("Navigation already in progress. Preempting current goal with new goal!")
 
         if self._idle_timer is not None:
             self._idle_timer.cancel()

@@ -16,6 +16,7 @@ Usage:
   ros2 launch my_turtlebot3_controller nexus_dual.launch.py gui:=false
 """
 import os
+import xml.etree.ElementTree as ET
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -28,6 +29,37 @@ from launch.actions import (
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node, PushRosNamespace, SetRemap
+
+
+def _generate_namespaced_sdf(urdf_path: str, namespace: str) -> str:
+    """
+    Parses an SDF file into an XML DOM, safely updates sensor and plugin topics 
+    to be prefixed with the given namespace, and returns the modified XML string.
+    """
+    tree = ET.parse(urdf_path)
+    root = tree.getroot()
+    
+    # 1. Namespacing Sensors (scan, imu, etc.)
+    for sensor in root.findall(".//sensor"):
+        topic_elem = sensor.find("topic")
+        if topic_elem is not None and topic_elem.text:
+            if not topic_elem.text.startswith(f"{namespace}/"):
+                topic_elem.text = f"{namespace}/{topic_elem.text}"
+
+    # 2. Namespacing Plugins (DiffDrive cmd_vel, odom, joint_states)
+    for plugin in root.findall(".//plugin"):
+        for tag in ["topic", "odom_topic"]:
+            elem = plugin.find(tag)
+            if elem is not None and elem.text:
+                if not elem.text.startswith('/') and not elem.text.startswith(f"{namespace}/"):
+                    elem.text = f"{namespace}/{elem.text}"
+                    
+        # For absolute topics like '/tf', replace with '/{namespace}/tf'
+        tf_elem = plugin.find("tf_topic")
+        if tf_elem is not None and tf_elem.text:
+            tf_elem.text = f"/{namespace}/tf"
+            
+    return ET.tostring(root, encoding='unicode')
 
 
 def generate_launch_description():
@@ -58,13 +90,15 @@ def generate_launch_description():
     urdf_path = os.path.join(
         get_package_share_directory('turtlebot3_gazebo'),
         'models', model_folder, 'model.sdf')
+        
+    tb2_sdf_string = _generate_namespaced_sdf(urdf_path, 'tb2')
 
     spawn_tb2 = Node(
         package='ros_gz_sim',
         executable='create',
         arguments=[
             '-name', 'tb2',
-            '-file', urdf_path,
+            '-string', tb2_sdf_string,
             '-x', '-0.7',       # Start in open space West
             '-y', '-0.5',
             '-z', '0.01',
@@ -80,16 +114,18 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
-            '/model/tb2/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
-            '/model/tb2/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-            '/model/tb2/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-            '/model/tb2/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
+            '/tb2/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
+            '/tb2/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            '/tb2/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            '/tb2/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            '/tb2/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
         ],
         remappings=[
-            ('/model/tb2/cmd_vel', '/tb2/cmd_vel'),
-            ('/model/tb2/odometry', '/tb2/odom'),
-            ('/model/tb2/scan', '/tb2/scan'),
-            ('/model/tb2/joint_states', '/tb2/joint_states'),
+            ('/tb2/cmd_vel', '/tb2/cmd_vel'),
+            ('/tb2/odom', '/tb2/odom'),
+            ('/tb2/imu', '/tb2/imu'),
+            ('/tb2/scan', '/tb2/scan'),
+            ('/tb2/joint_states', '/tb2/joint_states'),
         ],
         output='screen',
     )
@@ -153,7 +189,7 @@ def generate_launch_description():
     crop_decision_a = Node(
         package="my_turtlebot3_controller",
         executable="crop_decision_node",
-        name="crop_decision_node_a",
+        name="crop_decision_node",
         output="screen", emulate_tty=True,
         parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'A'}, {'zone_assignment': [0, 1]}],
     )
@@ -161,7 +197,7 @@ def generate_launch_description():
     system_monitor_a = Node(
         package="my_turtlebot3_controller",
         executable="system_monitor_node",
-        name="system_monitor_node_a",
+        name="system_monitor_node",
         output="screen", emulate_tty=True,
         parameters=[nexus_params_file, {'use_sim_time': True}],
     )
@@ -171,7 +207,7 @@ def generate_launch_description():
     safety_stop_b = Node(
         package="my_turtlebot3_controller",
         executable="safety_stop_node",
-        name="safety_stop_node_b",
+        name="safety_stop_node",
         namespace="tb2",
         output="screen", emulate_tty=True,
         parameters=[
@@ -200,7 +236,7 @@ def generate_launch_description():
     zone_detector_b = Node(
         package="my_turtlebot3_controller",
         executable="zone_detector_node",
-        name="zone_detector_node_b",
+        name="zone_detector_node",
         namespace="tb2",
         output="screen", emulate_tty=True,
         parameters=[{'use_sim_time': True}],
@@ -214,7 +250,7 @@ def generate_launch_description():
     resource_b = Node(
         package="my_turtlebot3_controller",
         executable="robot_resource_node",
-        name="robot_resource_node_b",
+        name="robot_resource_node",
         namespace="tb2",
         output="screen", emulate_tty=True,
         parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'B'}],
@@ -228,7 +264,7 @@ def generate_launch_description():
     crop_decision_b = Node(
         package="my_turtlebot3_controller",
         executable="crop_decision_node",
-        name="crop_decision_node_b",
+        name="crop_decision_node",
         namespace="tb2",
         output="screen", emulate_tty=True,
         parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'B'}, {'zone_assignment': [2, 3]}],
@@ -258,7 +294,7 @@ def generate_launch_description():
     system_monitor_b = Node(
         package="my_turtlebot3_controller",
         executable="system_monitor_node",
-        name="system_monitor_node_b",
+        name="system_monitor_node",
         namespace="tb2",
         output="screen", emulate_tty=True,
         parameters=[nexus_params_file, {'use_sim_time': True}],
@@ -281,8 +317,9 @@ def generate_launch_description():
                 "use_sim_time": "True",
                 "use_namespace": "True",
                 "namespace": "tb2",
-                "cmd_vel_topic": "cmd_vel_nav",
+                "cmd_vel_topic": "cmd_vel_raw",
                 "autostart": "True",
+                "params_file": nexus_params_file.replace("nexus_params.yaml", "nav2_simulation_params.yaml"),
             }.items(),
         )
     ])

@@ -176,7 +176,7 @@ def generate_launch_description():
     nav2_launch_args = {
         "use_sim_time": "True",
         "slam": "True",
-        "cmd_vel_topic": "/cmd_vel_nav",
+        "cmd_vel_topic": "cmd_vel_raw",
         "autostart": "True",
         "default_nav_to_pose_bt_xml": bt_xml_nav_to_pose,
         "default_nav_through_poses_bt_xml": bt_xml_nav_through_poses,
