@@ -13,7 +13,7 @@ from typing import Dict, Any
 
 import rclpy
 from rclpy.node import Node
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_directory, PackageNotFoundError
 from std_msgs.msg import String
 from visualization_msgs.msg import Marker, MarkerArray
 from tf2_ros import Buffer, TransformListener, LookupException, ConnectivityException, ExtrapolationException

@@ -312,6 +312,13 @@ def generate_launch_description():
         parameters=[nexus_params_file, {'use_sim_time': True}],
     )
 
+    weather_adapter = Node(
+        package="my_turtlebot3_controller",
+        executable="weather_adapter_node",
+        name="weather_adapter_node",
+        output="screen", emulate_tty=True,
+    )
+
     dashboard = Node(
         package="my_turtlebot3_controller",
         executable="dashboard_node",
@@ -397,6 +404,7 @@ def generate_launch_description():
         tb2_tf_cmd,
         # Shared nodes
         field_sensor_mock,
+        weather_adapter,
         dashboard,
         sustainability_audit,
         twin_supervisor,

@@ -5,8 +5,8 @@
 # Room center ≈ (0.8, -1.4)
 
 base_station:
-  target_x: -0.6
-  target_y: -0.1
+  target_x: -0.1
+  target_y: 0.0
   target_theta: 0.0
   runoff_risk: "Low"
   min_x: 0.3

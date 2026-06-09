@@ -46,19 +46,19 @@ class TwinSafetyNode(Node):
         self.declare_parameter('front_angle_deg', 30.0)
 
         self.real_scan_topic: str = self.get_parameter(
-            'real_scan_topic').value
+            'real_scan_topic').get_parameter_value().string_value
         self.sim_scan_topic: str = self.get_parameter(
-            'sim_scan_topic').value
+            'sim_scan_topic').get_parameter_value().string_value
         self.input_cmd_topic: str = self.get_parameter(
-            'input_cmd_topic').value
+            'input_cmd_topic').get_parameter_value().string_value
         self.real_cmd_topic: str = self.get_parameter(
-            'real_cmd_topic').value
+            'real_cmd_topic').get_parameter_value().string_value
         self.sim_cmd_topic: str = self.get_parameter(
-            'sim_cmd_topic').value
-        self.stop_distance: float = float(
-            self.get_parameter('stop_distance').value)
-        self.front_angle_deg: float = float(
-            self.get_parameter('front_angle_deg').value)
+            'sim_cmd_topic').get_parameter_value().string_value
+        self.stop_distance: float = self.get_parameter(
+            'stop_distance').get_parameter_value().double_value
+        self.front_angle_deg: float = self.get_parameter(
+            'front_angle_deg').get_parameter_value().double_value
 
         # Obstacle detection state for both sources
         self.real_blocked: bool = False

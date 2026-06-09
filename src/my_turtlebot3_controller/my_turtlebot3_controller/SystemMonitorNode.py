@@ -25,7 +25,6 @@ All thresholds are configurable via nexus_params.yaml.
 """
 
 import math
-import time
 import json
 
 import rclpy
@@ -68,29 +67,29 @@ class SystemMonitorNode(Node):
         self.declare_parameter('gyro_warn_rps', 5.0)
 
         # Read parameters
-        battery_topic = self.get_parameter('battery_topic').value
-        scan_topic = self.get_parameter('scan_topic').value
-        imu_topic = self.get_parameter('imu_topic').value
-        check_hz = float(self.get_parameter('check_hz').value)
+        battery_topic = self.get_parameter('battery_topic').get_parameter_value().string_value
+        scan_topic = self.get_parameter('scan_topic').get_parameter_value().string_value
+        imu_topic = self.get_parameter('imu_topic').get_parameter_value().string_value
+        check_hz = self.get_parameter('check_hz').get_parameter_value().double_value
 
-        self.warn_voltage = float(self.get_parameter('warn_voltage').value)
-        self.crit_voltage = float(self.get_parameter('crit_voltage').value)
-        self.warn_pct = float(self.get_parameter('warn_percent').value)
-        self.crit_pct = float(self.get_parameter('crit_percent').value)
-        self.scan_stale = float(self.get_parameter('scan_stale_sec').value)
-        self.dropout_pct = float(self.get_parameter('dropout_pct').value)
-        self.imu_stale = float(self.get_parameter('imu_stale_sec').value)
-        self.accel_limit = float(self.get_parameter('accel_warn_g').value) * 9.81
-        self.gyro_limit = float(self.get_parameter('gyro_warn_rps').value)
+        self.warn_voltage = self.get_parameter('warn_voltage').get_parameter_value().double_value
+        self.crit_voltage = self.get_parameter('crit_voltage').get_parameter_value().double_value
+        self.warn_pct = self.get_parameter('warn_percent').get_parameter_value().double_value
+        self.crit_pct = self.get_parameter('crit_percent').get_parameter_value().double_value
+        self.scan_stale = self.get_parameter('scan_stale_sec').get_parameter_value().double_value
+        self.dropout_pct = self.get_parameter('dropout_pct').get_parameter_value().double_value
+        self.imu_stale = self.get_parameter('imu_stale_sec').get_parameter_value().double_value
+        self.accel_limit = self.get_parameter('accel_warn_g').get_parameter_value().double_value * 9.81
+        self.gyro_limit = self.get_parameter('gyro_warn_rps').get_parameter_value().double_value
 
         # ── State: last received messages and timestamps ──────────────
         self._battery_msg = None
         self._scan_msg = None
         self._imu_msg = None
 
-        self._battery_stamp: float = 0.0
-        self._scan_stamp: float = 0.0
-        self._imu_stamp: float = 0.0
+        self._battery_stamp = None
+        self._scan_stamp = None
+        self._imu_stamp = None
 
         self._last_battery_level: str = ''
 
@@ -137,15 +136,15 @@ class SystemMonitorNode(Node):
 
     def _battery_callback(self, msg: BatteryState) -> None:
         self._battery_msg = msg
-        self._battery_stamp = time.monotonic()
+        self._battery_stamp = self.get_clock().now()
 
     def _scan_callback(self, msg: LaserScan) -> None:
         self._scan_msg = msg
-        self._scan_stamp = time.monotonic()
+        self._scan_stamp = self.get_clock().now()
 
     def _imu_callback(self, msg: Imu) -> None:
         self._imu_msg = msg
-        self._imu_stamp = time.monotonic()
+        self._imu_stamp = self.get_clock().now()
 
     # ── Master check (called by timer) ────────────────────────────────
 
@@ -163,10 +162,8 @@ class SystemMonitorNode(Node):
     # ── Battery check ─────────────────────────────────────────────────
 
     def _check_battery(self) -> dict:
-        now = time.monotonic()
-
         if self._battery_msg is None:
-            if self._battery_stamp == 0.0:
+            if self._battery_stamp is None:
                 self.get_logger().info(
                     '[BATTERY] No /battery_state received — '
                     'normal in Gazebo simulation',
@@ -214,11 +211,19 @@ class SystemMonitorNode(Node):
     # ── LiDAR check ───────────────────────────────────────────────────
 
     def _check_scan(self) -> dict:
-        now = time.monotonic()
+        now = self.get_clock().now()
 
         # Staleness
-        if self._scan_msg is None or (now - self._scan_stamp) > self.scan_stale:
-            age = now - self._scan_stamp if self._scan_stamp > 0 else float('inf')
+        if self._scan_msg is None or self._scan_stamp is None:
+            self.get_logger().error(
+                f'[LIDAR] STALE — no scan received yet  '
+                f'(threshold {self.scan_stale}s)  '
+                f'Check USB cable and LiDAR power',
+                throttle_duration_sec=5.0)
+            return {'status': 'STALE', 'age_sec': float('inf')}
+
+        age = (now - self._scan_stamp).nanoseconds / 1e9
+        if age > self.scan_stale:
             self.get_logger().error(
                 f'[LIDAR] STALE — no scan for {age:.1f}s  '
                 f'(threshold {self.scan_stale}s)  '
@@ -277,21 +282,23 @@ class SystemMonitorNode(Node):
     # ── IMU check ─────────────────────────────────────────────────────
 
     def _check_imu(self) -> dict:
-        now = time.monotonic()
+        now = self.get_clock().now()
 
-        # Staleness
-        if self._imu_msg is None or (now - self._imu_stamp) > self.imu_stale:
-            if self._imu_stamp == 0.0:
-                self.get_logger().info(
-                    '[IMU] No /imu received — '
-                    'normal in Gazebo simulation',
-                    throttle_duration_sec=30.0)
-            else:
-                age = now - self._imu_stamp
-                self.get_logger().error(
-                    f'[IMU] STALE — no message for {age:.1f}s  '
-                    f'Check OpenCR board connection',
-                    throttle_duration_sec=5.0)
+        # No data received yet
+        if self._imu_msg is None or self._imu_stamp is None:
+            self.get_logger().info(
+                '[IMU] No /imu received — '
+                'normal in Gazebo simulation',
+                throttle_duration_sec=30.0)
+            return {'status': 'NO_DATA', 'source': 'simulation'}
+
+        # Staleness check
+        age = (now - self._imu_stamp).nanoseconds / 1e9
+        if age > self.imu_stale:
+            self.get_logger().error(
+                f'[IMU] STALE — no message for {age:.1f}s  '
+                f'Check OpenCR board connection',
+                throttle_duration_sec=5.0)
             return {'status': 'NO_DATA', 'source': 'simulation'}
 
         msg = self._imu_msg

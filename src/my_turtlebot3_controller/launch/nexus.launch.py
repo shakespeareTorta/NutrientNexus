@@ -78,6 +78,13 @@ def generate_launch_description():
         parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
+    weather_adapter = Node(
+        package="my_turtlebot3_controller",
+        executable="weather_adapter_node",
+        name="weather_adapter_node",
+        output="screen", emulate_tty=True,
+    )
+
     # 4. Navigation Executor Node (Nav2 Action Client Relay)
     navigation_executor = Node(
         package="my_turtlebot3_controller",
@@ -192,6 +199,7 @@ def generate_launch_description():
             base_launch,
             safety_stop,
             field_sensor_mock,
+            weather_adapter,
             navigation_executor,
             zone_detector,
             robot_resource,

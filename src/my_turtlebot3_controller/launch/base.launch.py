@@ -55,15 +55,15 @@ def generate_launch_description():
 
     # Method 3: System default fallback from nav2_bringup
     if not nav2_params_file:
+        print("[WARNING] Could not find 'nav2_simulation_params.yaml'. "
+              "Using default nav2_bringup params.",
+              file=sys.stderr)
         try:
             nav2_params_file = os.path.join(
                 get_package_share_directory("nav2_bringup"),
                 "params", "nav2_params.yaml")
         except PackageNotFoundError:
             pass
-        print("[WARNING] Could not find 'nav2_simulation_params.yaml'. "
-              "Using default nav2_bringup params.",
-              file=sys.stderr)
 
     # Declare gui argument for headless mode
     declare_gui_cmd = DeclareLaunchArgument(

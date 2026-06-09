@@ -33,7 +33,7 @@ class CropDecisionNode(Node):
         self.intervention_pub = self.create_publisher(String, 'sdg14_intervention', STATE_QOS)
         
         # Supervisor Comms
-        self.zone_request_pub = self.create_publisher(String, '/supervisor/zone_request', 10)
+        self.zone_request_pub = self.create_publisher(String, 'supervisor/zone_request', 10)
 
         # Subscribers (robot-specific)
         self.nav_status_sub = self.create_subscription(String, 'navigation_executor_status', self.nav_status_callback, 10)

@@ -29,7 +29,6 @@ Topic pipeline (unchanged):
 """
 
 import math
-import time
 from typing import List
 
 import rclpy
@@ -37,8 +36,10 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
 
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 
+from my_turtlebot3_controller.qos import STATE_QOS
 from my_turtlebot3_controller.lidar_utils import sector_min, narrow_object_in_sector
 
 
@@ -75,10 +76,15 @@ class SafetyStopNode(Node):
         self.output_cmd_topic: str = self.get_parameter(
             'output_cmd_topic').get_parameter_value().string_value
 
-        self.stop_distance: float = self.get_parameter(
+        self._base_stop_distance: float = self.get_parameter(
             'stop_distance').get_parameter_value().double_value
-        self.narrow_dist: float = self.get_parameter(
+        self.stop_distance: float = self._base_stop_distance
+        
+        self._base_narrow_dist: float = self.get_parameter(
             'narrow_obj_dist').get_parameter_value().double_value
+        self.narrow_dist: float = self._base_narrow_dist
+        
+        self.weather_status = 'sunny'
 
         self.front_deg: float = self.get_parameter(
             'front_angle_deg').get_parameter_value().double_value
@@ -103,7 +109,7 @@ class SafetyStopNode(Node):
         self.d_right: float = float('inf')
 
         # ── Staleness tracking ────────────────────────────────────────────
-        self._last_scan_time: float = 0.0  # monotonic clock
+        self._last_scan_time = None  # rclpy.time.Time or None
 
         # ── ROS 2 interfaces ──────────────────────────────────────────────
         scan_qos = QoSProfile(
@@ -125,6 +131,12 @@ class SafetyStopNode(Node):
             10
         )
 
+        self.create_subscription(
+            String,
+            '/weather_forecast',
+            self._weather_callback,
+            STATE_QOS)
+
         self.cmd_pub = self.create_publisher(
             Twist,
             self.output_cmd_topic,
@@ -140,6 +152,18 @@ class SafetyStopNode(Node):
             f'diag=±{self.side_deg}°  side=±{self.rear_deg}°\n'
             f'  scan_stale_sec={self.stale_sec}s  '
             f'nudge_factor={self.nudge_factor}')
+
+    def _weather_callback(self, msg: String) -> None:
+        self.weather_status = msg.data
+        if msg.data == 'rainy':
+            self.stop_distance = self._base_stop_distance * 1.6
+            self.narrow_dist = self._base_narrow_dist * 1.6
+        elif msg.data == 'storm':
+            self.stop_distance = self._base_stop_distance * 2.0
+            self.narrow_dist = self._base_narrow_dist * 2.0
+        else:
+            self.stop_distance = self._base_stop_distance
+            self.narrow_dist = self._base_narrow_dist
 
     # ── Scan callback: 5-sector extraction + narrow object detection ──────
 
@@ -163,17 +187,24 @@ class SafetyStopNode(Node):
                 self.d_front = min(self.d_front, self.narrow_dist - 0.01)
 
         # Record scan arrival time for staleness detection
-        self._last_scan_time = time.monotonic()
+        self._last_scan_time = self.get_clock().now()
 
     # ── Command callback: safety filter with staleness + pre-steering ─────
 
     def cmd_callback(self, msg: Twist) -> None:
         """Filter velocity commands with multi-sector intelligence."""
+        # ── Apply Weather Velocity Scaling ────────────────────────────
+        # (Rain -> max_vel scaled by 40% reduction, i.e., 0.6 multiplier)
+        if self.weather_status == 'rainy':
+            msg.linear.x *= 0.6
+        elif self.weather_status == 'storm':
+            msg.linear.x *= 0.4
+            
         forward_requested: bool = msg.linear.x > 0.0
 
         # ── Staleness check ───────────────────────────────────────────
-        if self._last_scan_time > 0.0:
-            scan_age = time.monotonic() - self._last_scan_time
+        if self._last_scan_time is not None:
+            scan_age = (self.get_clock().now() - self._last_scan_time).nanoseconds / 1e9
             if scan_age > self.stale_sec:
                 if forward_requested:
                     self.get_logger().error(
