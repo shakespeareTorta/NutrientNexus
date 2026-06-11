@@ -97,6 +97,27 @@ def generate_launch_description():
         output='screen',
     )
 
+    # Spawn a TurtleBot3 model in Gazebo as the digital twin visualisation.
+    # Without this, the Gazebo world is empty and cannot mirror the real robot.
+    turtlebot3_model = os.environ.get('TURTLEBOT3_MODEL', 'burger')
+    model_folder = 'turtlebot3_' + turtlebot3_model
+    urdf_path = os.path.join(
+        get_package_share_directory('turtlebot3_gazebo'),
+        'models', model_folder, 'model.sdf')
+
+    spawn_twin = Node(
+        package='ros_gz_sim',
+        executable='create',
+        arguments=[
+            '-name', turtlebot3_model,
+            '-file', urdf_path,
+            '-x', '0.0',
+            '-y', '0.0',
+            '-z', '0.01',
+        ],
+        output='screen',
+    )
+
     nav2_with_map = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -140,6 +161,9 @@ def generate_launch_description():
         condition=IfCondition(slam),
     )
 
+    # TwinSafetyNode outputs Twist to /cmd_vel_unstamped.
+    # cmd_vel_stamper (below) converts it to TwistStamped on /cmd_vel for the
+    # physical TurtleBot3, which requires TwistStamped in ROS 2 Jazzy.
     safety_stop = Node(
         package='my_turtlebot3_controller',
         executable='twin_safety_node',
@@ -150,10 +174,26 @@ def generate_launch_description():
             {'real_scan_topic': '/scan'},
             {'sim_scan_topic': '/sim/scan'},
             {'input_cmd_topic': '/cmd_vel_nav'},
-            {'real_cmd_topic': '/cmd_vel'},
+            {'real_cmd_topic': '/cmd_vel_unstamped'},
             {'sim_cmd_topic': '/sim/cmd_vel'},
             {'stop_distance': 0.25},
             {'front_angle_deg': 30.0},
+        ],
+    )
+
+    # Convert Twist -> TwistStamped for the physical TurtleBot3 (Jazzy requires
+    # TwistStamped on /cmd_vel). Built into this package, so the real-robot
+    # launch has NO out-of-tree runtime dependency.
+    cmd_vel_stamper = Node(
+        package='my_turtlebot3_controller',
+        executable='cmd_vel_stamper_node',
+        name='cmd_vel_stamper_node',
+        output='screen',
+        emulate_tty=True,
+        parameters=[
+            {'input_topic': '/cmd_vel_unstamped'},
+            {'output_topic': '/cmd_vel'},
+            {'frame_id': 'base_link'},
         ],
     )
 
@@ -163,6 +203,13 @@ def generate_launch_description():
         name='field_sensor_mock_node',
         output='screen',
         emulate_tty=True,
+    )
+
+    weather_adapter = Node(
+        package="my_turtlebot3_controller",
+        executable="weather_adapter_node",
+        name="weather_adapter_node",
+        output="screen", emulate_tty=True,
     )
 
     navigation_executor = Node(
@@ -239,11 +286,14 @@ def generate_launch_description():
         gzserver,
         gzclient,
         gz_bridge,
+        spawn_twin,
         nav2_with_map,
         nav2_with_slam,
         slam_toolbox,
         safety_stop,
+        cmd_vel_stamper,
         field_sensor_mock,
+        weather_adapter,
         navigation_executor,
         zone_detector,
         robot_resource,

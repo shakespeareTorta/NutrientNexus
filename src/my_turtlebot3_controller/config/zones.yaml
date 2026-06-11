@@ -5,7 +5,7 @@
 # Room center ≈ (0.8, -1.4)
 
 base_station:
-  target_x: -0.3
+  target_x: -0.1
   target_y: 0.0
   target_theta: 0.0
   runoff_risk: "Low"
@@ -18,8 +18,10 @@ base_station:
 
 #Green — Upper Left
 zone_0:
-  target_x: -0.65
-  target_y: 0.8
+  # target moved clear of the (-0.75, 0.78) obstacle + upper-left notch
+  # (was -0.65, 0.8 → only 0.10 m from obstacle < robot_radius 0.17 = lethal)
+  target_x: -0.3
+  target_y: 0.55
   target_theta: 0.0
   runoff_risk: "Low"
   min_x: -1.5
@@ -32,8 +34,10 @@ zone_0:
 
 #Blue — Upper Right
 zone_1:
-  target_x: 0.8
-  target_y: 0.7
+  # target moved clear of the (0.77, 0.67) obstacle sitting mid-zone
+  # (was 0.9, 0.8 → only 0.18 m from obstacle, right on the lethal edge)
+  target_x: 1.1
+  target_y: 0.4
   target_theta: 90.0
   runoff_risk: "High"
   min_x: 0.4
@@ -45,11 +49,11 @@ zone_1:
 
 #Yellow — Lower Right
 zone_2:
-  target_x: 0.8
+  target_x: 1.2
   target_y: -1.0
   target_theta: 180.0
   runoff_risk: "Medium"
-  min_x: 0.4
+  min_x: 0.6
   max_x: 1.2
   min_y: -2.0
   max_y: -0.4
@@ -58,13 +62,13 @@ zone_2:
 
 #Red — Lower Left
 zone_3:
-  target_x: -0.7
-  target_y: -1.0
+  target_x: -0.4
+  target_y: -1.6
   target_theta: 270.0
   runoff_risk: "High"
   min_x: -1.5
   max_x: 0.0
   min_y: -2.0
-  max_y: -0.4
+  max_y: -0.6
   baseline_moisture: 50.0
   baseline_nutrients: 45.0
