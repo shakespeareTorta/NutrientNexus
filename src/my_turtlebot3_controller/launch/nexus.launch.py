@@ -64,6 +64,7 @@ def generate_launch_description():
             {'output_cmd_topic': '/cmd_vel'},
             {'stop_distance': 0.14},
             {'front_angle_deg': 30.0},
+            {'use_sim_time': True},
         ],
     )
 
@@ -74,6 +75,7 @@ def generate_launch_description():
         name="field_sensor_mock_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}],
     )
 
     # 4. Navigation Executor Node (Nav2 Action Client Relay)
@@ -83,6 +85,7 @@ def generate_launch_description():
         name="navigation_executor_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}],
     )
 
     # 5. Zone Detector Node (Physical Spatial Verification)
@@ -92,6 +95,7 @@ def generate_launch_description():
         name="zone_detector_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}],
     )
 
     # 6. Robot Resource Node (Battery & Tank tracking)
@@ -101,6 +105,7 @@ def generate_launch_description():
         name="robot_resource_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}],
     )
 
     # 7. Crop Decision Node (Agricultural State Machine & SDG-14 controller)
@@ -110,6 +115,7 @@ def generate_launch_description():
         name="crop_decision_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}],
     )
 
     # 8. Real-Time Dashboard Node (Tkinter GUI)
@@ -119,6 +125,7 @@ def generate_launch_description():
         name="dashboard_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}],
     )
 
     # 9. Sustainability Audit Node
@@ -128,6 +135,7 @@ def generate_launch_description():
         name="sustainability_audit_node",
         output="screen",
         emulate_tty=True,
+        parameters=[{'use_sim_time': True}],
     )
 
     # 10. Twin Supervisor Node (Lecture Week 6)
@@ -137,7 +145,7 @@ def generate_launch_description():
         name="twin_supervisor_node",
         output="screen",
         emulate_tty=True,
-        parameters=[{'system_mode': 'SIM_ONLY'}],
+        parameters=[{'system_mode': 'SIM_ONLY'}, {'use_sim_time': True}],
     )
 
     # 11. RViz2 (with Nav2 Default View)
@@ -147,6 +155,7 @@ def generate_launch_description():
         name='rviz2',
         arguments=['-d', os.path.join(get_package_share_directory('nav2_bringup'), 'rviz', 'nav2_default_view.rviz')],
         output='screen',
+        parameters=[{'use_sim_time': True}],
     )
 
     # 12. rosbag2 auto-recording (Lecture Week 6: evidence collection)
