@@ -46,6 +46,7 @@ class CropDecisionNode(Node):
         self.growth_sub = self.create_subscription(Float32MultiArray, '/field_growth', self.growth_callback, 10)
         self.assignment_sub = self.create_subscription(String, '/supervisor/zone_assignment', self.assignment_callback, STATE_QOS)
         self.alerts_sub = self.create_subscription(String, '/system_alerts', self.alerts_callback, STATE_QOS)
+        self.weather_sub = self.create_subscription(String, '/weather_forecast', self.weather_callback, STATE_QOS)
 
         # Load Zones
         pkg_dir = get_package_share_directory('my_turtlebot3_controller')
@@ -78,6 +79,12 @@ class CropDecisionNode(Node):
         
         self.moisture_threshold = 40.0
         self.nutrient_threshold = 50.0
+        # A High-runoff zone is "unsafe to treat" when soil is already saturated.
+        self.high_moisture_threshold = 80.0
+        # Current weather, kept in sync with the digital twin's injections.
+        self.current_weather = "sunny"
+        # SDG-14 vulnerability scoring by zone runoff risk.
+        self.runoff_score_map = {"High": 80, "Medium": 50, "Low": 20}
 
         self._scan_timer = None
         self._actuation_timer = None
@@ -138,6 +145,14 @@ class CropDecisionNode(Node):
         if idx is None or idx >= len(array):
             return None
         return array[idx]
+
+    def weather_callback(self, msg: String) -> None:
+        """Keep the locally-cached weather in sync with the digital twin.
+
+        @param msg: Latest weather string injected by the dashboard.
+        @post self.current_weather is lower-cased and stored.
+        """
+        self.current_weather = msg.data.lower()
 
     def alerts_callback(self, msg: String) -> None:
         try:
@@ -256,19 +271,106 @@ class CropDecisionNode(Node):
                 self._start_cooldown()
 
     def _on_scan_complete(self):
+        """Transition from SCANNING into the data-driven DECIDING step.
+
+        @post Exactly one of HALT / FERTILIZE / IRRIGATE / SKIP is taken via
+              _decide_treatment.
+        """
         self._cancel_and_destroy('_scan_timer')
         self.current_phase = "DECIDING"
-        
-        # Simulated context decision (in reality, read from field sensors)
-        # We will actuate briefly to prove environment interaction
+        self._decide_treatment()
+
+    def _decide_treatment(self) -> None:
+        """Sustainability-first treatment decision for the active zone.
+
+        Uses live soil moisture/nutrients (Task 2.1), the injected weather, and
+        the zone's runoff_risk to choose an action:
+          - HALT (SDG-14): High runoff risk in unsafe conditions → log an
+            intervention and skip treatment.
+          - FERTILIZE: nutrients below threshold → publish /fertilise_zone.
+          - IRRIGATE: moisture below threshold → publish /irrigate_zone.
+          - SKIP: nothing needed.
+
+        @pre self.active_zone_id identifies the zone under treatment.
+        @post A treatment is published and actuation begins, or the node enters
+              cooldown; no fertiliser is applied while a HALT condition holds.
+        """
+        zone_id = self.active_zone_id
+        risk = self.raw_zones.get(zone_id, {}).get('runoff_risk', 'Low')
+        moisture = self._zone_metric(self.field_moisture, zone_id)
+        nutrients = self._zone_metric(self.field_nutrients, zone_id)
+
+        weather_unsafe = self.current_weather in ("rainy", "storm")
+        moisture_high = moisture is not None and moisture >= self.high_moisture_threshold
+
+        # HALT — SDG-14 runoff protection (do NOT fertilise).
+        if risk == "High" and (weather_unsafe or moisture_high):
+            moisture_str = f"{moisture:.1f}%" if moisture is not None else "unknown"
+            reason = (
+                f"Aborted fertilisation in {zone_id}: High runoff risk under "
+                f"weather '{self.current_weather}', moisture {moisture_str}.")
+            self.get_logger().warn(f"SDG-14 HALT in {zone_id}: {reason}")
+            self._publish_intervention(zone_id, reason)
+            self._start_cooldown()
+            return
+
+        # FERTILIZE — soil is nutrient-deficient.
+        if nutrients is not None and nutrients < self.nutrient_threshold:
+            self.get_logger().info(
+                f"FERTILIZE {zone_id}: nutrients {nutrients:.1f}% < "
+                f"{self.nutrient_threshold}%.")
+            msg = String()
+            msg.data = json.dumps({"robot": self.robot_id, "zone": zone_id})
+            self.fertilise_pub.publish(msg)
+            self._start_actuation()
+            return
+
+        # IRRIGATE — soil is too dry.
+        if moisture is not None and moisture < self.moisture_threshold:
+            self.get_logger().info(
+                f"IRRIGATE {zone_id}: moisture {moisture:.1f}% < "
+                f"{self.moisture_threshold}%.")
+            msg = String()
+            msg.data = json.dumps({"robot": self.robot_id, "zone": zone_id})
+            self.irrigate_pub.publish(msg)
+            self._start_actuation()
+            return
+
+        # SKIP — nothing needed.
+        self.get_logger().info(
+            f"SKIP {zone_id}: no treatment needed "
+            f"(moisture={moisture}, nutrients={nutrients}).")
+        self._start_cooldown()
+
+    def _publish_intervention(self, zone_id: Optional[str], reason: str) -> None:
+        """Publish an SDG-14 intervention to the audit ledger.
+
+        @param zone_id: The zone where fertilisation was aborted.
+        @param reason: Human-readable justification for the abort.
+        @post A JSON {"robot","zone","reason","vulnerability_score"} message is
+              published on /sdg14_intervention.
+        """
+        risk = self.raw_zones.get(zone_id, {}).get('runoff_risk', 'Low')
+        payload = {
+            "robot": self.robot_id,
+            "zone": zone_id,
+            "reason": reason,
+            "vulnerability_score": self.runoff_score_map.get(risk, 20),
+        }
+        msg = String()
+        msg.data = json.dumps(payload)
+        self.intervention_pub.publish(msg)
+
+    def _start_actuation(self) -> None:
+        """Begin the brief in-place actuation spin for a treatment.
+
+        @post current_phase becomes ACTUATING and the actuation timer runs
+              until _actuation_tick stops it (~2s).
+        """
         self.current_phase = "ACTUATING"
         self._actuation_start_time = self.get_clock().now().nanoseconds / 1e9
         self._cancel_and_destroy('_actuation_timer')
         self._actuation_timer = self.create_timer(0.1, self._actuation_tick)
-        
-        msg = String()
-        msg.data = json.dumps({"robot": self.robot_id, "zone": self.active_zone_id})
-        self.fertilise_pub.publish(msg)
 
     def _actuation_tick(self):
         now = self.get_clock().now().nanoseconds / 1e9
