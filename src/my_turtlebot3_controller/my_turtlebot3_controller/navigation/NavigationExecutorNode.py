@@ -16,7 +16,7 @@ from my_turtlebot3_controller.qos import STATE_QOS
 class NavigationExecutorNode(Node): 
     def __init__(self) -> None:
         super().__init__('navigation_executor_node') 
-        # Use relative topics so this works inside namespaces (/tb2)
+        # Use relative topics so this works inside namespaces
         self._action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose') 
         
         self.goal_handle: Optional[ClientGoalHandle] = None

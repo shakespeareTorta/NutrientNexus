@@ -77,7 +77,7 @@ class RobotResourceNode(Node):
         self.battery_fault: bool = False
         self.battery_fault_clamp: float = 10.0
 
-        # Subscribers (use relative topics so namespace /tb2 applies automatically)
+        # Subscribers (relative topics)
         self.create_subscription(Odometry, 'odom', self.odom_callback, 10)
         self.create_subscription(String, 'fertilise_zone', self.fertilize_callback, 10)
         self.create_subscription(String, 'refill_resources', self.refill_callback, 10)

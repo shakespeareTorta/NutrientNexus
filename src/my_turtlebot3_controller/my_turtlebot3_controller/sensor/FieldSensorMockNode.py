@@ -67,14 +67,10 @@ class FieldSensorMockNode(Node):
         self.growth_pub = self.create_publisher(Float32MultiArray, '/field_growth', STATE_QOS)
         self.vulnerability_pub = self.create_publisher(Float32MultiArray, '/field_vulnerability', STATE_QOS)
 
-        # Subscribers to apply treatment and replenish zone metrics (Robot A)
+        # Subscribers to apply treatment and replenish zone metrics
         self.irrigate_sub = self.create_subscription(String, '/irrigate_zone', self.irrigate_callback, STATE_QOS)
         self.fertilise_sub = self.create_subscription(String, '/fertilise_zone', self.fertilise_callback, STATE_QOS)
-        
-        # Subscribers to apply treatment and replenish zone metrics (Robot B)
-        self.irrigate_sub_b = self.create_subscription(String, '/tb2/irrigate_zone', self.irrigate_callback, STATE_QOS)
-        self.fertilise_sub_b = self.create_subscription(String, '/tb2/fertilise_zone', self.fertilise_callback, STATE_QOS)
-        
+
         self.weather_sub = self.create_subscription(String, '/weather_forecast', self.weather_cb, STATE_QOS)
 
         # Single timer for environment simulation + telemetry publishing

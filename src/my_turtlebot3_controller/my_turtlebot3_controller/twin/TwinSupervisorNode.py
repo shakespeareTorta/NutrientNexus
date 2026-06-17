@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Twin Supervisor Node — Central Orchestrator for Digital Twin (Rubric Aligned)
+Twin Supervisor Node — Central Orchestrator for the Digital Twin.
 
 Responsibilities:
-  - Central Task Dispatch: Maintains the global zone queue [zone_0, zone_1, zone_2, zone_3].
-  - Bidirectional State Sync: Monitors Robot A (Physical) and Robot B (Digital).
+  - Central Task Dispatch: Maintains the global zone patrol queue.
+  - State Sync: Monitors the robot's battery and navigation status.
   - Environmental Interaction: Listens to /weather_forecast and propagates weather
     events (e.g. storms) to halt operations.
-  - Fault Management: If a robot is low on battery or crashes, tasks are reassigned.
+  - Fault Management: If the robot is low on battery or crashes, operations pause.
 """
 import json
 from typing import List
@@ -28,16 +28,13 @@ class TwinSupervisorNode(Node):
         self.declare_parameter('system_mode', 'HYBRID')
         self.system_mode = self.get_parameter('system_mode').get_parameter_value().string_value
 
-        # Global Zone Queue (1 and 2 are East, 0 and 3 are West)
-        # We start with these queues for A and B to minimize travel distance.
-        self.pending_zones_a: List[str] = ['zone_2', 'zone_1']
-        self.pending_zones_b: List[str] = ['zone_3', 'zone_0']
-        
-        self.robot_states = {
-            'A': {'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown', 'faulted': False},
-            'B': {'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown', 'faulted': False}
-        }
-        
+        self.declare_parameter('robot_id', 'A')
+        self.robot_id = self.get_parameter('robot_id').get_parameter_value().string_value
+
+        self.pending_zones: List[str] = ['zone_2', 'zone_1', 'zone_3', 'zone_0']
+
+        self.robot_state = {'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown', 'faulted': False}
+
         self.current_weather = "sunny"
 
         # ── Publishers ──
@@ -47,19 +44,12 @@ class TwinSupervisorNode(Node):
 
         # ── Subscribers ──
         self.create_subscription(String, '/weather_forecast', self._weather_cb, STATE_QOS)
-        
-        # Robot A (Physical/Default Namespace)
-        self.create_subscription(String, '/robot_resources', lambda m: self._resource_cb(m, 'A'), STATE_QOS)
-        self.create_subscription(String, '/navigation_executor_status', lambda m: self._nav_status_cb(m, 'A'), STATE_QOS)
-        self.create_subscription(String, '/supervisor/zone_request', lambda m: self._zone_request_cb(m, 'A'), 10)
-        
-        # Robot B (Digital/tb2 Namespace)
-        self.create_subscription(String, '/tb2/robot_resources', lambda m: self._resource_cb(m, 'B'), STATE_QOS)
-        self.create_subscription(String, '/tb2/navigation_executor_status', lambda m: self._nav_status_cb(m, 'B'), STATE_QOS)
-        self.create_subscription(String, '/tb2/supervisor/zone_request', lambda m: self._zone_request_cb(m, 'B'), 10)
+        self.create_subscription(String, '/robot_resources', self._resource_cb, STATE_QOS)
+        self.create_subscription(String, '/navigation_executor_status', self._nav_status_cb, STATE_QOS)
+        self.create_subscription(String, '/supervisor/zone_request', self._zone_request_cb, 10)
 
         self.get_logger().info("Twin Supervisor Central Orchestrator Initialized.")
-        
+
         self.create_timer(1.0, self._supervisor_tick)
 
     def _weather_cb(self, msg: String) -> None:
@@ -67,103 +57,79 @@ class TwinSupervisorNode(Node):
         if new_weather != self.current_weather:
             self.current_weather = new_weather
             self.get_logger().warn(f"[ENV INTERACTION] Weather changed to: {self.current_weather}")
-            # If storm, instantly broadcast ABORT to both robots
             if self.current_weather == "storm":
                 self._broadcast_abort("STORM_EMERGENCY")
 
-    def _resource_cb(self, msg: String, robot_id: str) -> None:
+    def _resource_cb(self, msg: String) -> None:
         try:
             data = json.loads(msg.data)
-            self.robot_states[robot_id]['battery'] = data.get('battery', 100.0)
+            self.robot_state['battery'] = data.get('battery', 100.0)
             if data.get('battery', 100.0) < 15.0:
-                self.get_logger().error(f"Robot {robot_id} Battery Critical! Reassigning tasks.")
-                self._handle_robot_fault(robot_id)
+                self.get_logger().error("Robot Battery Critical! Pausing operations.")
+                self._handle_robot_fault()
         except json.JSONDecodeError:
             pass
 
-    def _nav_status_cb(self, msg: String, robot_id: str) -> None:
+    def _nav_status_cb(self, msg: String) -> None:
         state = msg.data
 
-        # If the robot's physical safety stop was triggered, it might fail navigation
         if state in ('FAILED_NAVIGATION', 'ABORTED_NAVIGATION') or 'fault' in state.lower():
-            self.get_logger().error(f"[STATE SYNC] Robot {robot_id} reported fault/failure! Pausing Digital Twin.")
-            self._handle_robot_fault(robot_id)
+            self.get_logger().error("[STATE SYNC] Robot reported fault/failure! Pausing Digital Twin.")
+            self._handle_robot_fault()
 
-        self.robot_states[robot_id]['status'] = state
+        self.robot_state['status'] = state
 
-    def _zone_request_cb(self, msg: String, robot_id: str) -> None:
-        """Handles requests from robots for their next task."""
-        self.get_logger().info(f"Received zone request from Robot {robot_id}")
-        
-        # --- Auto-Recovery Mechanism ---
-        if self.robot_states[robot_id].get('faulted', False):
-            # If the robot is now IDLE (navigation cleared) and has sufficient battery, reset the fault
-            if self.robot_states[robot_id]['battery'] >= 20.0 and self.robot_states[robot_id]['status'] == 'IDLE':
-                self.get_logger().info(f"Robot {robot_id} has recovered from its fault. Resetting fault state!")
-                self.robot_states[robot_id]['faulted'] = False
+    def _zone_request_cb(self, msg: String) -> None:
+        """Handles requests from the robot for its next task."""
+        self.get_logger().info("Received zone request from robot")
+
+        if self.robot_state.get('faulted', False):
+            if self.robot_state['battery'] >= 20.0 and self.robot_state['status'] == 'IDLE':
+                self.get_logger().info("Robot has recovered from its fault. Resetting fault state!")
+                self.robot_state['faulted'] = False
             else:
-                self.get_logger().warn(f"Robot {robot_id} is currently FAULTED. Ignoring zone request.")
+                self.get_logger().warn("Robot is currently FAULTED. Ignoring zone request.")
                 return
 
         if self.current_weather == "storm":
-            self._dispatch_zone(robot_id, "BASE")
+            self._dispatch_zone("BASE")
             return
 
-        if self.robot_states[robot_id]['battery'] < 20.0:
-            self._dispatch_zone(robot_id, "BASE")
+        if self.robot_state['battery'] < 20.0:
+            self._dispatch_zone("BASE")
             return
 
-        # Give them their own tasks first
-        my_queue = self.pending_zones_a if robot_id == 'A' else self.pending_zones_b
-        if my_queue:
-            next_zone = my_queue.pop(0)
-            my_queue.append(next_zone)  # Requeue for continuous patrol
-            self._dispatch_zone(robot_id, next_zone)
-            return
-            
-        # Task Stealing (Collaboration) if own queue is empty
-        other_queue = self.pending_zones_b if robot_id == 'A' else self.pending_zones_a
-        if other_queue:
-            stolen_zone = other_queue.pop(0)
-            my_queue.append(stolen_zone)  # Add to own queue for future
-            self.get_logger().info(f"[COLLABORATION] Robot {robot_id} is stealing {stolen_zone} to help out!")
-            self._dispatch_zone(robot_id, stolen_zone)
+        if self.pending_zones:
+            next_zone = self.pending_zones.pop(0)
+            self.pending_zones.append(next_zone)  # Requeue for continuous patrol
+            self._dispatch_zone(next_zone)
             return
 
-        # No zones left
-        self._dispatch_zone(robot_id, "BASE")
+        self._dispatch_zone("BASE")
 
-    def _dispatch_zone(self, robot_id: str, zone: str) -> None:
+    def _dispatch_zone(self, zone: str) -> None:
         assign_msg = String()
-        assign_msg.data = json.dumps({"robot": robot_id, "zone": zone})
+        assign_msg.data = json.dumps({"robot": self.robot_id, "zone": zone})
         self.assignment_pub.publish(assign_msg)
-        self.get_logger().info(f"Dispatched {zone} to Robot {robot_id}")
+        self.get_logger().info(f"Dispatched {zone} to robot")
 
-    def _handle_robot_fault(self, faulted_robot: str) -> None:
-        """If a robot fails, give its tasks to the other robot, and broadcast a global pause/abort."""
-        self.get_logger().warn(f"Handling fault for Robot {faulted_robot}...")
-        self.robot_states[faulted_robot]['faulted'] = True
-
-        if faulted_robot == 'A':
-            self.pending_zones_b.extend(self.pending_zones_a)
-            self.pending_zones_a.clear()
-            self._broadcast_abort("PHYSICAL_ROBOT_FAULT")
-        else:
-            self.pending_zones_a.extend(self.pending_zones_b)
-            self.pending_zones_b.clear()
+    def _handle_robot_fault(self) -> None:
+        """If the robot fails, pause the patrol and broadcast a global abort."""
+        self.get_logger().warn("Handling robot fault...")
+        self.robot_state['faulted'] = True
+        self._broadcast_abort("PHYSICAL_ROBOT_FAULT")
 
     def _broadcast_abort(self, reason: str) -> None:
-        """Broadcasts an immediate abort to both robots (e.g. for storm or physical fault)."""
+        """Broadcasts an immediate abort to the robot (e.g. for storm or physical fault)."""
         msg = String()
         msg.data = json.dumps({"action": "ABORT", "reason": reason})
         self.alert_pub.publish(msg)
 
     def _supervisor_tick(self) -> None:
         sync_data = {
-            "robot_a": self.robot_states['A'],
-            "robot_b": self.robot_states['B'],
+            "robot": self.robot_state,
             "weather": self.current_weather,
-            "tasks_remaining": len(self.pending_zones_a) + len(self.pending_zones_b)
+            "tasks_remaining": len(self.pending_zones)
         }
         msg = String()
         msg.data = json.dumps(sync_data)

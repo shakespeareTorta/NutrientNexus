@@ -25,20 +25,12 @@ class SustainabilityAuditNode(Node):
         self.current_weather = "sunny"
         self.zone_states = {} # Track latest moisture/nutrients per zone
 
-        # Subscribers (Robot A)
+        # Subscribers
         self.create_subscription(String, '/weather_forecast', self.weather_cb, 10)
         self.create_subscription(String, '/fertilise_zone', self.fert_cb, 10)
         self.create_subscription(String, '/irrigate_zone', self.irrig_cb, 10)
         self.create_subscription(String, '/sdg14_intervention', self.intervention_cb, 10)
         self.create_subscription(String, '/generate_report', self.generate_report_cb, 10)
-        
-        # Subscribers (Robot B)
-        self.create_subscription(String, '/tb2/fertilise_zone', self.fert_cb, 10)
-        self.create_subscription(String, '/tb2/irrigate_zone', self.irrig_cb, 10)
-        self.create_subscription(String, '/tb2/sdg14_intervention', self.intervention_cb, 10)
-        
-        # We can also listen to /robot_resources or field telemetry if needed, 
-        # but the decision node's intervention string will be rich enough for now.
 
         self.get_logger().info("Sustainability Audit Node started. Ledger initialized.")
 
