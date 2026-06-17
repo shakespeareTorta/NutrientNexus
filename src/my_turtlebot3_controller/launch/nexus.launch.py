@@ -83,6 +83,7 @@ def generate_launch_description():
         executable="weather_adapter_node",
         name="weather_adapter_node",
         output="screen", emulate_tty=True,
+        parameters=[{'use_sim_time': True}],
     )
 
     # 4. Navigation Executor Node (Nav2 Action Client Relay)
@@ -175,6 +176,7 @@ def generate_launch_description():
         name='rviz2',
         arguments=['-d', os.path.join(get_package_share_directory('nav2_bringup'), 'rviz', 'nav2_default_view.rviz')],
         output='screen',
+        parameters=[{'use_sim_time': True}],
     )
 
     # 12. rosbag2 auto-recording (Lecture Week 6: evidence collection)

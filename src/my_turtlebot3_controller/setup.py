@@ -24,12 +24,10 @@ setup(
     entry_points={
         'console_scripts': [
             'navigation_executor_node = my_turtlebot3_controller.navigation.NavigationExecutorNode:main',
-            'odom_node = my_turtlebot3_controller.navigation.odometry.OdomToGazeboPoseNode:main',
             'field_sensor_mock_node = my_turtlebot3_controller.sensor.FieldSensorMockNode:main',
             'weather_adapter_node = my_turtlebot3_controller.sensor.WeatherAdapterNode:main',
             'crop_decision_node = my_turtlebot3_controller.algorithm.CropDecisionNode:main',
             'safety_stop_node = my_turtlebot3_controller.navigation.SafetyStopNode:main',
-            'twin_safety_node = my_turtlebot3_controller.twin.TwinSafetyNode:main',
             'zone_detector_node = my_turtlebot3_controller.navigation.ZoneDetectorNode:main',
             'robot_resource_node = my_turtlebot3_controller.RobotResourceNode:main',
             'dashboard_node = my_turtlebot3_controller.dashboard.DashboardNode:main',

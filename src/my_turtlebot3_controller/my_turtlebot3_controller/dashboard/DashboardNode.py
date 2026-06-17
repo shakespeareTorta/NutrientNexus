@@ -9,8 +9,8 @@ This Tkinter GUI is the DIGITAL entity of the twin. It:
     injection events that change the robot's behaviour.
 
 Cross-entity contracts (Option B requirements):
-  Req 1 Bidirectional : subscribes telemetry  +  publishes /weather_forecast,
-                        /twin_fault_state, /operator_override_response.
+  Req 1 Bidirectional : subscribes telemetry  +  publishes /weather_forecast
+                        and /twin_fault_state.
   Req 2 State sync    : /system_health + /robot_resources mirrored here;
                         /twin_fault_state injected from here.
   Req 3 Environment   : /obstacle_status reflects what the robot senses.
@@ -33,13 +33,11 @@ class DashboardNode(Node):
         self.weather_pub = self.create_publisher(String, '/weather_forecast', STATE_QOS)
         self.report_pub = self.create_publisher(String, '/generate_report', 10)
         self.fault_pub = self.create_publisher(String, '/twin_fault_state', STATE_QOS)
-        self.override_pub = self.create_publisher(String, '/operator_override_response', STATE_QOS)
 
         # ── Subscribers (Physical → Digital) ─────────────────────────
         self.create_subscription(String, '/robot_resources', self.resource_cb, STATE_QOS)
         self.create_subscription(String, '/current_zone', self.zone_cb, STATE_QOS)
         self.create_subscription(String, '/navigation_executor_status', self.nav_cb, STATE_QOS)
-        self.create_subscription(String, '/operator_override_request', self.override_req_cb, STATE_QOS)
         self.create_subscription(String, '/system_health', self.health_cb, STATE_QOS)
         self.create_subscription(String, '/obstacle_status', self.obstacle_cb, STATE_QOS)
 
@@ -268,45 +266,6 @@ class DashboardNode(Node):
             text = "No obstacle"
         with self.state_lock:
             self.state['obstacle'] = text
-
-    def override_req_cb(self, msg: String) -> None:
-        self.root.after(0, self.show_override_popup, msg.data)
-
-    def show_override_popup(self, data_str: str) -> None:
-        try:
-            data = json.loads(data_str)
-        except json.JSONDecodeError:
-            return
-        zone = data.get("zone", "Unknown")
-        reason = data.get("reason", "Unknown Risk")
-
-        popup = tk.Toplevel(self.root)
-        popup.title("SDG-14 Safety Override Required")
-        popup.geometry("500x300")
-        popup.configure(bg="#E74C3C")
-
-        tk.Label(popup, text="CRITICAL RUNOFF RISK", bg="#E74C3C", fg="#FFF", font=("Helvetica", 16, "bold")).pack(pady=10)
-        tk.Label(popup, text=f"Zone: {zone}", bg="#E74C3C", fg="#FFF", font=("Helvetica", 14)).pack(pady=5)
-
-        msg_text = tk.Text(popup, height=4, width=50, bg="#E74C3C", fg="#FFF", font=("Helvetica", 11), wrap=tk.WORD, bd=0)
-        msg_text.insert(tk.END, reason)
-        msg_text.config(state=tk.DISABLED)
-        msg_text.pack(pady=10)
-
-        bar = tk.Frame(popup, bg="#E74C3C")
-        bar.pack(pady=20)
-
-        def comply():
-            self.override_pub.publish(String(data="comply"))
-            popup.destroy()
-
-        def override():
-            self.override_pub.publish(String(data="override"))
-            popup.destroy()
-
-        tk.Button(bar, text="COMPLY (Abort Spray)", bg="#2ECC71", fg="#FFF", font=("Helvetica", 12, "bold"), command=comply).pack(side=tk.LEFT, padx=10)
-        tk.Button(bar, text="OVERRIDE (Force Spray)", bg="#1E1E1E", fg="#E74C3C", font=("Helvetica", 12, "bold"), command=override).pack(side=tk.RIGHT, padx=10)
-        popup.grab_set()
 
     # ── GUI refresh loop (main thread) ────────────────────────────────
 
