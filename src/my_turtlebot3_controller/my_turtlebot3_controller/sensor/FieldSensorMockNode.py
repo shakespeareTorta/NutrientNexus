@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import rclpy
 import random
+import json
 from rclpy.node import Node
 from std_msgs.msg import String, Float32MultiArray, MultiArrayDimension, MultiArrayLayout
 from typing import Dict, List, Any
@@ -123,8 +124,34 @@ class FieldSensorMockNode(Node):
         msg.data = [float(val) for val in data_list]
         return msg
 
+    def _extract_zone_id(self, raw: str) -> str:
+        """Extract a zone id from a treatment-topic payload.
+
+        Treatment topics standardise on the JSON payload
+        {"robot": "<A|B>", "zone": "<zone_id>"} (Task 1.1). For backward
+        compatibility, a plain zone-id string is also accepted.
+
+        @param raw: The raw `std_msgs/String` data field.
+        @pre raw is a (possibly empty) string.
+        @post Returns the contained zone id; never raises on malformed JSON.
+        @return The extracted zone id string.
+        """
+        try:
+            data = json.loads(raw)
+            return data.get("zone", raw)
+        except json.JSONDecodeError:
+            # Backward compatible: treat the raw string as the zone id.
+            return raw
+
     def irrigate_callback(self, msg: String) -> None:
-        zone_id = msg.data
+        """Replenish a zone's moisture in response to an irrigation command.
+
+        @param msg: JSON {"robot","zone"} (or a plain zone-id string).
+        @pre self.zones is populated from zones.yaml.
+        @post The matching zone's moisture is set to 95.0% and telemetry is
+              re-published so both sides observe the change.
+        """
+        zone_id = self._extract_zone_id(msg.data)
         for zone in self.zones:
             if zone['id'] == zone_id:
                 self.get_logger().info(f"Irrigating {zone_id}. Moisture replenished from {zone['moisture']:.1f}% to 95.0%")
@@ -133,7 +160,14 @@ class FieldSensorMockNode(Node):
         self.publish_telemetry_tick()
 
     def fertilise_callback(self, msg: String) -> None:
-        zone_id = msg.data
+        """Replenish a zone's nutrients in response to a fertilise command.
+
+        @param msg: JSON {"robot","zone"} (or a plain zone-id string).
+        @pre self.zones is populated from zones.yaml.
+        @post The matching zone's nutrients are set to 90.0% and telemetry is
+              re-published so both sides observe the change.
+        """
+        zone_id = self._extract_zone_id(msg.data)
         for zone in self.zones:
             if zone['id'] == zone_id:
                 self.get_logger().info(f"Fertilising {zone_id}. Nutrients replenished from {zone['nutrients']:.1f}% to 90.0%")

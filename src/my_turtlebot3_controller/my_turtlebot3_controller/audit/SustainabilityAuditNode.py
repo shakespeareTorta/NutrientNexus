@@ -40,8 +40,30 @@ class SustainabilityAuditNode(Node):
     def weather_cb(self, msg: String):
         self.current_weather = msg.data
 
+    def _extract_zone_id(self, raw: str) -> str:
+        """Extract a zone id from a treatment-topic payload.
+
+        Treatment topics standardise on JSON {"robot","zone"} (Task 1.1);
+        a plain zone-id string is also accepted for backward compatibility.
+
+        @param raw: The raw `std_msgs/String` data field.
+        @pre raw is a (possibly empty) string.
+        @post Returns the contained zone id; never raises on malformed JSON.
+        @return The extracted zone id string.
+        """
+        try:
+            data = json.loads(raw)
+            return data.get("zone", raw)
+        except json.JSONDecodeError:
+            return raw
+
     def fert_cb(self, msg: String):
-        zone_id = msg.data
+        """Log a fertilisation event to the audit ledger.
+
+        @param msg: JSON {"robot","zone"} (or a plain zone-id string).
+        @post One entry is appended to self.fertilizations.
+        """
+        zone_id = self._extract_zone_id(msg.data)
         self.fertilizations.append({
             "time": datetime.now().strftime("%H:%M:%S"),
             "zone": zone_id,
@@ -50,7 +72,12 @@ class SustainabilityAuditNode(Node):
         self.get_logger().info(f"[AUDIT] Logged fertilisation in {zone_id}.")
 
     def irrig_cb(self, msg: String):
-        zone_id = msg.data
+        """Log an irrigation event to the audit ledger.
+
+        @param msg: JSON {"robot","zone"} (or a plain zone-id string).
+        @post One entry is appended to self.irrigations.
+        """
+        zone_id = self._extract_zone_id(msg.data)
         self.irrigations.append({
             "time": datetime.now().strftime("%H:%M:%S"),
             "zone": zone_id,
@@ -59,14 +86,20 @@ class SustainabilityAuditNode(Node):
         self.get_logger().info(f"[AUDIT] Logged irrigation in {zone_id}.")
 
     def intervention_cb(self, msg: String):
-        """Receives a JSON string detailing an aborted action due to SDG-14 rules."""
+        """Receives a JSON string detailing an aborted action due to SDG-14 rules.
+
+        @param msg: JSON {"robot","zone","reason","vulnerability_score"}.
+        @post On valid JSON, one timestamped entry is appended to
+              self.interventions; malformed payloads are logged and dropped.
+        """
         try:
             data = json.loads(msg.data)
-            data["time"] = datetime.now().strftime("%H:%M:%S")
-            self.interventions.append(data)
-            self.get_logger().info(f"[AUDIT] Logged SDG-14 Intervention in {data.get('zone', 'Unknown')}.")
-        except Exception as e:
+        except json.JSONDecodeError as e:
             self.get_logger().error(f"Failed to parse intervention: {e}")
+            return
+        data["time"] = datetime.now().strftime("%H:%M:%S")
+        self.interventions.append(data)
+        self.get_logger().info(f"[AUDIT] Logged SDG-14 Intervention in {data.get('zone', 'Unknown')}.")
 
     def generate_report_cb(self, msg: String):
         self.get_logger().info("Compiling Sustainability Report...")
