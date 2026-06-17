@@ -93,6 +93,11 @@ class SystemMonitorNode(Node):
 
         self._last_battery_level: str = ''
 
+        # Injected digital-twin faults (Option B Req 2). SystemMonitor stays
+        # the SOLE publisher of /system_health: it fuses these injected
+        # overrides with real telemetry into one authoritative health view.
+        self._faults = {'lidar': 'ok', 'motor': 'ok', 'battery': 'normal'}
+
         # ── QoS — BEST_EFFORT for sensor topics ──────────────────────
         sensor_qos = QoSProfile(
             depth=10,
@@ -115,6 +120,10 @@ class SystemMonitorNode(Node):
 
         # ── Publisher for system health status ────────────────────────
         self.health_pub = self.create_publisher(String, '/system_health', STATE_QOS)
+
+        # ── Injected fault subscription (digital entity → physical) ────
+        self.create_subscription(
+            String, '/twin_fault_state', self._fault_callback, STATE_QOS)
 
         # ── Check timer ───────────────────────────────────────────────
         self.create_timer(1.0 / check_hz, self._check)
@@ -146,6 +155,15 @@ class SystemMonitorNode(Node):
         self._imu_msg = msg
         self._imu_stamp = self.get_clock().now()
 
+    def _fault_callback(self, msg: String) -> None:
+        try:
+            data = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        self._faults['lidar'] = data.get('lidar', 'ok')
+        self._faults['motor'] = data.get('motor', 'ok')
+        self._faults['battery'] = data.get('battery', 'normal')
+
     # ── Master check (called by timer) ────────────────────────────────
 
     def _check(self) -> None:
@@ -154,10 +172,37 @@ class SystemMonitorNode(Node):
         health['lidar'] = self._check_scan()
         health['imu'] = self._check_imu()
 
+        # Fuse injected faults into the authoritative health view. An
+        # injected fault overrides the raw sensor verdict so the digital
+        # twin presents the operator-declared state.
+        health['faults'] = dict(self._faults)
+        if self._faults['lidar'] == 'failed':
+            health['lidar']['status'] = 'FAILED'
+        elif self._faults['lidar'] == 'degraded' and health['lidar'].get('status') == 'OK':
+            health['lidar']['status'] = 'DEGRADED'
+        if self._faults['motor'] == 'stalled':
+            health['motor'] = {'status': 'STALLED'}
+        else:
+            health['motor'] = {'status': 'OK'}
+
+        health['twin_mode'] = self._derive_twin_mode(health)
+
         # Publish combined health status
         msg = String()
         msg.data = json.dumps(health)
         self.health_pub.publish(msg)
+
+    def _derive_twin_mode(self, health: dict) -> str:
+        if (self._faults['motor'] == 'stalled'
+                or self._faults['lidar'] == 'failed'
+                or self._faults['battery'] == 'clamped'
+                or health['battery'].get('status') == 'CRITICAL'):
+            return 'FAULTED'
+        if (self._faults['lidar'] == 'degraded'
+                or health['lidar'].get('status') in ('STALE', 'HIGH_DROPOUT', 'ALL_INVALID')
+                or health['battery'].get('status') == 'WARNING'):
+            return 'DEGRADED'
+        return 'NORMAL'
 
     # ── Battery check ─────────────────────────────────────────────────
 

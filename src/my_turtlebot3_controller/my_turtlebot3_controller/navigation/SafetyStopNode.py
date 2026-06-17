@@ -29,6 +29,7 @@ Topic pipeline (unchanged):
 """
 
 import math
+import json
 from typing import List
 
 import rclpy
@@ -137,11 +138,33 @@ class SafetyStopNode(Node):
             self._weather_callback,
             STATE_QOS)
 
+        # ── Digital-twin fault override contract (Option B Req 1 & 2) ─────
+        # The dashboard (digital entity) injects fault state here; this node
+        # (physical execution layer) reacts. SafetyStop NEVER owns fault
+        # lifecycle — it only reads the latest declared mode and enacts it.
+        self.lidar_fault: str = 'ok'    # ok | degraded | failed
+        self.motor_fault: str = 'ok'    # ok | stalled
+        self.create_subscription(
+            String,
+            '/twin_fault_state',
+            self._fault_callback,
+            STATE_QOS)
+
         self.cmd_pub = self.create_publisher(
             Twist,
             self.output_cmd_topic,
             10
         )
+
+        # ── Obstacle status mirror (Option B Req 3) ───────────────────────
+        # Publishes environment-interaction events so the digital entity
+        # (dashboard) reflects what the physical robot senses in the world.
+        self.obstacle_pub = self.create_publisher(
+            String,
+            '/obstacle_status',
+            STATE_QOS
+        )
+        self._last_obstacle_json: str = ''
 
         self.get_logger().info(
             f'Safety Stop Node started '
@@ -164,6 +187,25 @@ class SafetyStopNode(Node):
         else:
             self.stop_distance = self._base_stop_distance
             self.narrow_dist = self._base_narrow_dist
+
+    def _fault_callback(self, msg: String) -> None:
+        try:
+            data = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        self.lidar_fault = data.get('lidar', 'ok')
+        self.motor_fault = data.get('motor', 'ok')
+
+    def _publish_obstacle(self, blocked: bool, distance: float, sector: str) -> None:
+        payload = json.dumps({
+            'blocked': blocked,
+            'distance': round(distance, 2) if math.isfinite(distance) else -1.0,
+            'sector': sector,
+        })
+        if payload == self._last_obstacle_json:
+            return
+        self._last_obstacle_json = payload
+        self.obstacle_pub.publish(String(data=payload))
 
     # ── Scan callback: 5-sector extraction + narrow object detection ──────
 
@@ -193,14 +235,46 @@ class SafetyStopNode(Node):
 
     def cmd_callback(self, msg: Twist) -> None:
         """Filter velocity commands with multi-sector intelligence."""
+        # ── Motor fault: highest-priority gate, robot is frozen ───────
+        if self.motor_fault == 'stalled':
+            self.cmd_pub.publish(Twist())
+            self._publish_obstacle(True, 0.0, 'MOTOR_FAULT')
+            self.get_logger().error(
+                'MOTOR FAULT injected: holding robot at zero velocity.',
+                throttle_duration_sec=2.0)
+            return
+
         # ── Apply Weather Velocity Scaling ────────────────────────────
         # (Rain -> max_vel scaled by 40% reduction, i.e., 0.6 multiplier)
         if self.weather_status == 'rainy':
             msg.linear.x *= 0.6
         elif self.weather_status == 'storm':
             msg.linear.x *= 0.4
-            
+
         forward_requested: bool = msg.linear.x > 0.0
+
+        # ── LiDAR fault: a failed sensor blinds the robot ─────────────
+        # Treat a 'failed' lidar exactly like missing scan data: forward
+        # motion is unsafe and blocked, rotation in place is still allowed.
+        if self.lidar_fault == 'failed':
+            if forward_requested:
+                safe_cmd = Twist()
+                safe_cmd.angular.z = msg.angular.z
+                self.cmd_pub.publish(safe_cmd)
+                self._publish_obstacle(True, -1.0, 'LIDAR_FAULT')
+                self.get_logger().error(
+                    'LIDAR FAULT injected: sensor blind, blocking forward motion.',
+                    throttle_duration_sec=2.0)
+                return
+            self.cmd_pub.publish(msg)
+            return
+
+        # A degraded lidar drops confidence: halve forward speed and widen
+        # the stop distance so the robot behaves more conservatively.
+        effective_stop_distance = self.stop_distance
+        if self.lidar_fault == 'degraded':
+            msg.linear.x *= 0.5
+            effective_stop_distance = self.stop_distance * 1.5
 
         # ── Staleness check ───────────────────────────────────────────
         if self._last_scan_time is not None:
@@ -214,6 +288,7 @@ class SafetyStopNode(Node):
                     safe_cmd = Twist()
                     safe_cmd.angular.z = msg.angular.z  # still allow rotation
                     self.cmd_pub.publish(safe_cmd)
+                    self._publish_obstacle(True, -1.0, 'SCAN_STALE')
                     return
         elif forward_requested:
             # No scan received yet at all — block forward motion
@@ -224,10 +299,11 @@ class SafetyStopNode(Node):
             safe_cmd = Twist()
             safe_cmd.angular.z = msg.angular.z
             self.cmd_pub.publish(safe_cmd)
+            self._publish_obstacle(True, -1.0, 'SCAN_STALE')
             return
 
         # ── Front obstacle check ──────────────────────────────────────
-        front_blocked = self.d_front < self.stop_distance
+        front_blocked = self.d_front < effective_stop_distance
 
         if front_blocked and forward_requested:
             safe_cmd = Twist()
@@ -236,10 +312,11 @@ class SafetyStopNode(Node):
 
             self.get_logger().warn(
                 f'SAFETY STOP: Obstacle at {self.d_front:.2f}m '
-                f'(threshold: {self.stop_distance}m). '
+                f'(threshold: {effective_stop_distance:.2f}m). '
                 f'Blocking forward motion.',
                 throttle_duration_sec=1.0)
             self.cmd_pub.publish(safe_cmd)
+            self._publish_obstacle(True, self.d_front, 'FRONT')
             return
 
         # ── Pre-steering nudge ────────────────────────────────────────
@@ -255,22 +332,33 @@ class SafetyStopNode(Node):
         safe_cmd.angular.y = msg.angular.y
         safe_cmd.angular.z = msg.angular.z
 
+        nudge_sector = 'NONE'
+        nudge_distance = float('inf')
         if forward_requested and abs(msg.angular.z) < 0.1:
-            nudge_threshold = self.stop_distance * 1.2
+            nudge_threshold = effective_stop_distance * 1.2
 
             if self.d_front_left < nudge_threshold:
                 # Obstacle approaching from left → nudge right
                 safe_cmd.angular.z = -self.nudge_turn_speed * self.nudge_factor
+                nudge_sector = 'FRONT_LEFT'
+                nudge_distance = self.d_front_left
                 self.get_logger().debug(
                     f'Pre-steer nudge RIGHT (front_left={self.d_front_left:.2f}m)')
 
             elif self.d_front_right < nudge_threshold:
                 # Obstacle approaching from right → nudge left
                 safe_cmd.angular.z = self.nudge_turn_speed * self.nudge_factor
+                nudge_sector = 'FRONT_RIGHT'
+                nudge_distance = self.d_front_right
                 self.get_logger().debug(
                     f'Pre-steer nudge LEFT (front_right={self.d_front_right:.2f}m)')
 
         self.cmd_pub.publish(safe_cmd)
+
+        if nudge_sector != 'NONE':
+            self._publish_obstacle(True, nudge_distance, nudge_sector)
+        else:
+            self._publish_obstacle(False, self.d_front, 'CLEAR')
 
 
 def main(args=None) -> None:

@@ -70,10 +70,18 @@ class RobotResourceNode(Node):
         self.last_x: Optional[float] = None
         self.last_y: Optional[float] = None
 
+        # Digital-twin battery fault override (Option B Req 2).
+        # When the dashboard injects a battery fault, normal drain is
+        # suspended and the level is clamped low to force a fault cascade
+        # (RETURNING_TO_BASE in CropDecision, fault in TwinSupervisor).
+        self.battery_fault: bool = False
+        self.battery_fault_clamp: float = 10.0
+
         # Subscribers (use relative topics so namespace /tb2 applies automatically)
         self.create_subscription(Odometry, 'odom', self.odom_callback, 10)
         self.create_subscription(String, 'fertilise_zone', self.fertilize_callback, 10)
         self.create_subscription(String, 'refill_resources', self.refill_callback, 10)
+        self.create_subscription(String, '/twin_fault_state', self.fault_callback, STATE_QOS)
 
         # Publisher
         self.resource_pub = self.create_publisher(String, 'robot_resources', STATE_QOS)
@@ -108,6 +116,12 @@ class RobotResourceNode(Node):
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
 
+        if self.battery_fault:
+            self.battery = min(self.battery, self.battery_fault_clamp)
+            self.last_x = x
+            self.last_y = y
+            return
+
         if self.last_x is not None and self.last_y is not None:
             distance = math.sqrt((x - self.last_x)**2 + (y - self.last_y)**2)
             if distance > 0.001:  # Only drain if actually moving
@@ -116,6 +130,21 @@ class RobotResourceNode(Node):
         
         self.last_x = x
         self.last_y = y
+
+    def fault_callback(self, msg: String) -> None:
+        try:
+            data = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        active = (data.get('battery', 'normal') == 'clamped')
+        if active and not self.battery_fault:
+            self.get_logger().error('BATTERY FAULT injected: clamping battery low.')
+        elif not active and self.battery_fault:
+            self.get_logger().info('Battery fault cleared.')
+        self.battery_fault = active
+        if active:
+            self.battery = min(self.battery, self.battery_fault_clamp)
+            self.publish_resources()
 
     def fertilize_callback(self, msg: String) -> None:
         """
@@ -172,8 +201,13 @@ class RobotResourceNode(Node):
         @return None
         """
         self.get_logger().info("Base Station connected. Refilling battery and fertilizer to 100%.")
-        self.battery = 100.0
-        self.fertilizer = 100.0
+        if self.battery_fault:
+            self.get_logger().warn(
+                "Battery fault active: refilling fertilizer only, battery stays clamped.")
+            self.fertilizer = 100.0
+        else:
+            self.battery = 100.0
+            self.fertilizer = 100.0
         self.publish_resources()
 
     def publish_resources(self) -> None:

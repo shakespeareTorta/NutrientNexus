@@ -188,6 +188,7 @@ def generate_launch_description():
             '/field_moisture', '/field_nutrients', '/field_growth',
             '/robot_resources', '/sdg14_intervention', '/weather_forecast',
             '/sync_status', '/system_alerts',
+            '/system_health', '/twin_fault_state', '/obstacle_status',
         ],
         output='screen',
     )
