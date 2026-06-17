@@ -43,6 +43,7 @@ class CropDecisionNode(Node):
         # Shared/Global Subscribers
         self.moisture_sub = self.create_subscription(Float32MultiArray, '/field_moisture', self.moisture_callback, 10)
         self.nutrients_sub = self.create_subscription(Float32MultiArray, '/field_nutrients', self.nutrients_callback, 10)
+        self.growth_sub = self.create_subscription(Float32MultiArray, '/field_growth', self.growth_callback, 10)
         self.assignment_sub = self.create_subscription(String, '/supervisor/zone_assignment', self.assignment_callback, STATE_QOS)
         self.alerts_sub = self.create_subscription(String, '/system_alerts', self.alerts_callback, STATE_QOS)
 
@@ -51,6 +52,19 @@ class CropDecisionNode(Node):
         zones_file = os.path.join(pkg_dir, 'config', 'zones.yaml')
         with open(zones_file, 'r', encoding='utf-8') as f:
             self.raw_zones = yaml.safe_load(f) or {}
+
+        # Field telemetry arrays are indexed by sorted(zone_keys) excluding
+        # base_station — identical ordering to FieldSensorMockNode
+        # (zone_0=0, zone_1=1, zone_2=2, zone_3=3). Cache that mapping so we
+        # can resolve a zone id to its array slot.
+        self.zone_index = {
+            zid: idx for idx, zid in enumerate(
+                sorted(k for k in self.raw_zones if k != 'base_station')
+            )
+        }
+        self.field_moisture: List[float] = []
+        self.field_nutrients: List[float] = []
+        self.field_growth: List[float] = []
 
         # System state machine
         self.current_phase = "IDLE"
@@ -85,10 +99,45 @@ class CropDecisionNode(Node):
         self.physical_current_zone = msg.data
 
     def moisture_callback(self, msg: Float32MultiArray) -> None:
-        pass # Using raw thresholds for simplicity right now
+        """Cache the latest per-zone soil moisture telemetry.
+
+        @param msg: Float32MultiArray indexed by self.zone_index.
+        @post self.field_moisture holds the most recent moisture readings.
+        """
+        self.field_moisture = list(msg.data)
 
     def nutrients_callback(self, msg: Float32MultiArray) -> None:
-        pass
+        """Cache the latest per-zone soil nutrient telemetry.
+
+        @param msg: Float32MultiArray indexed by self.zone_index.
+        @post self.field_nutrients holds the most recent nutrient readings.
+        """
+        self.field_nutrients = list(msg.data)
+
+    def growth_callback(self, msg: Float32MultiArray) -> None:
+        """Cache the latest per-zone crop growth telemetry.
+
+        @param msg: Float32MultiArray indexed by self.zone_index.
+        @post self.field_growth holds the most recent growth readings.
+        """
+        self.field_growth = list(msg.data)
+
+    def _zone_metric(self, array: List[float], zone_id: Optional[str]) -> Optional[float]:
+        """Resolve a zone id to its current value in a telemetry array.
+
+        @param array: One of self.field_moisture/nutrients/growth.
+        @param zone_id: The zone id whose reading is wanted (e.g. "zone_1").
+        @pre array is indexed by self.zone_index.
+        @post No state is mutated.
+        @return The current reading, or None if the zone or reading is
+                unavailable (e.g. telemetry not yet received).
+        """
+        if zone_id is None:
+            return None
+        idx = self.zone_index.get(zone_id)
+        if idx is None or idx >= len(array):
+            return None
+        return array[idx]
 
     def alerts_callback(self, msg: String) -> None:
         try:
