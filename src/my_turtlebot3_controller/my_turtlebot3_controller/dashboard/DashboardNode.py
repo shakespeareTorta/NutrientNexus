@@ -30,22 +30,13 @@ class DashboardNode(Node):
         self.create_subscription(String, '/current_zone', lambda m: self.zone_cb(m, 'A'), STATE_QOS)
         self.create_subscription(String, '/navigation_executor_status', lambda m: self.nav_cb(m, 'A'), STATE_QOS)
         self.create_subscription(String, '/operator_override_request', lambda m: self.override_req_cb(m, 'A'), STATE_QOS)
-        
-        # Subscribers (Robot B - /tb2 namespace)
-        self.create_subscription(String, '/tb2/robot_resources', lambda m: self.resource_cb(m, 'B'), STATE_QOS)
-        self.create_subscription(String, '/tb2/current_zone', lambda m: self.zone_cb(m, 'B'), STATE_QOS)
-        self.create_subscription(String, '/tb2/navigation_executor_status', lambda m: self.nav_cb(m, 'B'), STATE_QOS)
-        self.create_subscription(String, '/tb2/operator_override_request', lambda m: self.override_req_cb(m, 'B'), STATE_QOS)
 
-        # We need publishers to both namespaces for override responses
         self.override_pub_a = self.create_publisher(String, '/operator_override_response', STATE_QOS)
-        self.override_pub_b = self.create_publisher(String, '/tb2/operator_override_response', STATE_QOS)
 
         # State Variables & Thread Safety Lock (Lecture Week 6 fix)
         self.state_lock = threading.Lock()
         self.robots = {
-            'A': {'battery': 100.0, 'fertilizer': 100.0, 'zone': "Unknown", 'nav': "IDLE"},
-            'B': {'battery': 100.0, 'fertilizer': 100.0, 'zone': "Unknown", 'nav': "IDLE"}
+            'A': {'battery': 100.0, 'fertilizer': 100.0, 'zone': "Unknown", 'nav': "IDLE"}
         }
 
         # Setup GUI
@@ -91,23 +82,6 @@ class DashboardNode(Node):
         self.fert_lbl_a = tk.Label(res_frame, text="100%", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10))
         self.fert_lbl_a.grid(row=2, column=2)
 
-        # Separator column
-        tk.Label(res_frame, text="   |   ", bg="#1E1E1E", fg="#444", font=("Helvetica", 14)).grid(row=0, column=3, rowspan=3)
-
-        # Robot B Resources
-        tk.Label(res_frame, text="Robot B (Sim) - Zones 2,3", bg="#1E1E1E", fg="#E67E22", font=("Helvetica", 11, "bold")).grid(row=0, column=4, columnspan=3, sticky="w", pady=5)
-        tk.Label(res_frame, text="Battery:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=1, column=4, sticky="w", pady=2)
-        self.bat_bar_b = ttk.Progressbar(res_frame, length=200, mode="determinate", style="green.Horizontal.TProgressbar")
-        self.bat_bar_b.grid(row=1, column=5, padx=10)
-        self.bat_lbl_b = tk.Label(res_frame, text="100%", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10))
-        self.bat_lbl_b.grid(row=1, column=6)
-
-        tk.Label(res_frame, text="Fertilizer:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=2, column=4, sticky="w", pady=2)
-        self.fert_bar_b = ttk.Progressbar(res_frame, length=200, mode="determinate", style="green.Horizontal.TProgressbar")
-        self.fert_bar_b.grid(row=2, column=5, padx=10)
-        self.fert_lbl_b = tk.Label(res_frame, text="100%", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10))
-        self.fert_lbl_b.grid(row=2, column=6)
-
         # --- Telemetry Frame ---
         tele_frame = tk.LabelFrame(main_frame, text="Fleet Telemetry", bg="#1E1E1E", fg="#FFFFFF", font=("Helvetica", 12, "bold"))
         tele_frame.pack(fill=tk.X, pady=10, ipadx=10, ipady=10)
@@ -117,15 +91,6 @@ class DashboardNode(Node):
         tk.Label(tele_frame, textvariable=self.zone_var_a, bg="#1E1E1E", fg="#4A90E2", font=("Helvetica", 11, "bold")).grid(row=0, column=0, sticky="w", padx=10, pady=2)
         self.nav_var_a = tk.StringVar(value="Robot A Nav: IDLE")
         tk.Label(tele_frame, textvariable=self.nav_var_a, bg="#1E1E1E", fg="#CCC", font=("Helvetica", 10)).grid(row=1, column=0, sticky="w", padx=10, pady=2)
-
-        # Separator
-        tk.Label(tele_frame, text="      |      ", bg="#1E1E1E", fg="#444", font=("Helvetica", 14)).grid(row=0, column=1, rowspan=2)
-
-        # Robot B Telemetry
-        self.zone_var_b = tk.StringVar(value="Robot B Zone: Unknown")
-        tk.Label(tele_frame, textvariable=self.zone_var_b, bg="#1E1E1E", fg="#E67E22", font=("Helvetica", 11, "bold")).grid(row=0, column=2, sticky="w", padx=10, pady=2)
-        self.nav_var_b = tk.StringVar(value="Robot B Nav: IDLE")
-        tk.Label(tele_frame, textvariable=self.nav_var_b, bg="#1E1E1E", fg="#CCC", font=("Helvetica", 10)).grid(row=1, column=2, sticky="w", padx=10, pady=2)
 
         # --- Weather Injection Frame ---
         weather_frame = tk.LabelFrame(main_frame, text="Real-Time Weather Injection (SDG-14)", bg="#1E1E1E", fg="#FFFFFF", font=("Helvetica", 12, "bold"))
@@ -183,13 +148,11 @@ class DashboardNode(Node):
             btn_frame.pack(pady=20)
 
             def comply():
-                pub = self.override_pub_a if robot == 'A' else self.override_pub_b
-                pub.publish(String(data="comply"))
+                self.override_pub_a.publish(String(data="comply"))
                 popup.destroy()
 
             def override():
-                pub = self.override_pub_a if robot == 'A' else self.override_pub_b
-                pub.publish(String(data="override"))
+                self.override_pub_a.publish(String(data="override"))
                 popup.destroy()
 
             tk.Button(btn_frame, text="🛡️ COMPLY (Abort Spray)", bg="#2ECC71", fg="#FFF", font=("Helvetica", 12, "bold"), command=comply).pack(side=tk.LEFT, padx=10)
@@ -222,11 +185,6 @@ class DashboardNode(Node):
             fert_a = self.robots['A']['fertilizer']
             zone_a = self.robots['A']['zone']
             nav_a = self.robots['A']['nav']
-            
-            bat_b = self.robots['B']['battery']
-            fert_b = self.robots['B']['fertilizer']
-            zone_b = self.robots['B']['zone']
-            nav_b = self.robots['B']['nav']
 
         # Update Robot A
         self.bat_bar_a['value'] = bat_a
@@ -237,16 +195,6 @@ class DashboardNode(Node):
         self.fert_bar_a.configure(style="red.Horizontal.TProgressbar" if fert_a < 20 else "green.Horizontal.TProgressbar")
         self.zone_var_a.set(f"Robot A Zone: {zone_a}")
         self.nav_var_a.set(f"Robot A Nav: {nav_a}")
-
-        # Update Robot B
-        self.bat_bar_b['value'] = bat_b
-        self.bat_lbl_b.config(text=f"{bat_b:.1f}%")
-        self.bat_bar_b.configure(style="red.Horizontal.TProgressbar" if bat_b < 30 else "green.Horizontal.TProgressbar")
-        self.fert_bar_b['value'] = fert_b
-        self.fert_lbl_b.config(text=f"{fert_b:.1f}%")
-        self.fert_bar_b.configure(style="red.Horizontal.TProgressbar" if fert_b < 20 else "green.Horizontal.TProgressbar")
-        self.zone_var_b.set(f"Robot B Zone: {zone_b}")
-        self.nav_var_b.set(f"Robot B Nav: {nav_b}")
 
         # Schedule next update
         self.root.after(100, self.update_gui_loop)
