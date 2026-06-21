@@ -169,6 +169,16 @@ def generate_launch_description():
         parameters=[nexus_params_file, {'use_sim_time': True}],
     )
 
+    # 11b. Zone Visualizer — draws colour-coded zone tiles into Gazebo
+    zone_visualizer = Node(
+        package="my_turtlebot3_controller",
+        executable="zone_visualizer_node",
+        name="zone_visualizer_node",
+        output="screen",
+        emulate_tty=True,
+        parameters=[nexus_params_file, {'use_sim_time': True}, {'world_name': 'default'}],
+    )
+
     # 11. RViz2 (with Nav2 Default View)
     rviz_node = Node(
         package='rviz2',
@@ -211,6 +221,7 @@ def generate_launch_description():
             sustainability_audit,
             twin_supervisor,
             system_monitor,
+            zone_visualizer,
             rosbag_record,
             rviz_node,
         ]

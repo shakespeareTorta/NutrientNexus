@@ -33,6 +33,7 @@ setup(
             'sustainability_audit_node = my_turtlebot3_controller.audit.SustainabilityAuditNode:main',
             'twin_supervisor_node = my_turtlebot3_controller.twin.TwinSupervisorNode:main',
             'system_monitor_node = my_turtlebot3_controller.SystemMonitorNode:main',
+            'zone_visualizer_node = my_turtlebot3_controller.visualization.ZoneVisualizerNode:main',
         ],
     },
 )

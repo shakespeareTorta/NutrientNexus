@@ -31,9 +31,22 @@ class TwinSupervisorNode(Node):
         self.declare_parameter('robot_id', 'A')
         self.robot_id = self.get_parameter('robot_id').get_parameter_value().string_value
 
+        # A single Nav2 abort is a normal, locally-recoverable event: Nav2 runs its own
+        # recovery behaviours and CropDecisionNode retries via cooldown. Only treat the
+        # robot as physically faulted after this many *consecutive* navigation failures
+        # with no successful arrival in between. This stops a transient abort from
+        # triggering a global "return to base" abort storm.
+        self.declare_parameter('nav_fault_threshold', 3)
+        self._nav_fault_threshold = self.get_parameter(
+            'nav_fault_threshold').get_parameter_value().integer_value
+
         self.pending_zones: List[str] = ['zone_2', 'zone_1', 'zone_3', 'zone_0']
 
         self.robot_state = {'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown', 'faulted': False}
+
+        # Navigation-fault de-bounce state.
+        self._last_nav_state = 'IDLE'
+        self._consecutive_nav_failures = 0
 
         self.current_weather = "sunny"
 
@@ -73,9 +86,36 @@ class TwinSupervisorNode(Node):
     def _nav_status_cb(self, msg: String) -> None:
         state = msg.data
 
-        if state in ('FAILED_NAVIGATION', 'ABORTED_NAVIGATION') or 'fault' in state.lower():
-            self.get_logger().error("[STATE SYNC] Robot reported fault/failure! Pausing Digital Twin.")
-            self._handle_robot_fault()
+        # Edge-trigger: NavigationExecutorNode republishes its status at 2 Hz and the
+        # topic is transient-local, so the same value is delivered repeatedly. React
+        # only to an actual *change* of state, otherwise one event is counted many times.
+        if state == self._last_nav_state:
+            self.robot_state['status'] = state
+            return
+        self._last_nav_state = state
+
+        is_failure = (state in ('FAILED_NAVIGATION', 'ABORTED_NAVIGATION')
+                      or 'fault' in state.lower())
+
+        if is_failure:
+            self._consecutive_nav_failures += 1
+            self.get_logger().warn(
+                f"[STATE SYNC] Navigation reported '{state}' "
+                f"({self._consecutive_nav_failures}/{self._nav_fault_threshold} consecutive). "
+                "Letting the robot recover locally.")
+            if self._consecutive_nav_failures >= self._nav_fault_threshold:
+                self.get_logger().error(
+                    "[STATE SYNC] Navigation failed repeatedly with no arrival — "
+                    "declaring physical robot fault and pausing the Digital Twin.")
+                self._handle_robot_fault()
+                self._consecutive_nav_failures = 0
+        elif state == 'SUCCEEDED_AT_POSE':
+            # A genuine arrival proves the robot is healthy; clear the failure streak.
+            if self._consecutive_nav_failures:
+                self.get_logger().info(
+                    "[STATE SYNC] Navigation succeeded — clearing nav-failure streak.")
+            self._consecutive_nav_failures = 0
+        # Other states (IDLE, NAVIGATING, ...) are neutral and leave the streak intact.
 
         self.robot_state['status'] = state
 

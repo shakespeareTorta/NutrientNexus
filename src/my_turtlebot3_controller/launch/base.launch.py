@@ -196,6 +196,17 @@ def generate_launch_description():
     )
 
     # Launch SLAM
+    # Use our own slam params (a copy of slam_toolbox's stock online-async config
+    # with transform_timeout raised to 1.0s) so map->odom stays valid across scan
+    # gaps and map-rebuild stalls — otherwise Nav2's controller aborts with
+    # "Transform data too old when converting from odom to map".
+    slam_params_file = os.path.join(
+        get_package_share_directory("my_turtlebot3_controller"),
+        "config", "slam_params.yaml")
+    slam_launch_args = {"use_sim_time": "True"}
+    if os.path.exists(slam_params_file):
+        slam_launch_args["slam_params_file"] = slam_params_file
+
     slam_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -204,7 +215,7 @@ def generate_launch_description():
                 "online_async_launch.py",
             )
         ),
-        launch_arguments={"use_sim_time": "True"}.items(),
+        launch_arguments=slam_launch_args.items(),
     )
 
     ld = LaunchDescription()
