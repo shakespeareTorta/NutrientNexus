@@ -195,27 +195,19 @@ def generate_launch_description():
         launch_arguments=nav2_launch_args.items(),
     )
 
-    # Launch SLAM
-    # Use our own slam params (a copy of slam_toolbox's stock online-async config
-    # with transform_timeout raised to 1.0s) so map->odom stays valid across scan
-    # gaps and map-rebuild stalls — otherwise Nav2's controller aborts with
-    # "Transform data too old when converting from odom to map".
-    slam_params_file = os.path.join(
-        get_package_share_directory("my_turtlebot3_controller"),
-        "config", "slam_params.yaml")
-    slam_launch_args = {"use_sim_time": "True"}
-    if os.path.exists(slam_params_file):
-        slam_launch_args["slam_params_file"] = slam_params_file
-
-    slam_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("slam_toolbox"),
-                "launch",
-                "online_async_launch.py",
-            )
-        ),
-        launch_arguments=slam_launch_args.items(),
+    # Localization: GROUND TRUTH instead of SLAM.
+    # slam_toolbox drifts badly in this small symmetric room (map rotates ~32deg
+    # off the world, wheel odom slips during recovery spins), so the robot
+    # navigates to the wrong physical places and the zone tiles never line up.
+    # This node reads the robot's true Gazebo pose and publishes map->odom so the
+    # `map` frame == the world frame exactly. The Nav2 global costmap builds
+    # obstacles from /scan (no static-map layer), so dropping SLAM is fine.
+    ground_truth_localization_cmd = Node(
+        package="my_turtlebot3_controller",
+        executable="ground_truth_localization",
+        name="ground_truth_localization",
+        output="screen",
+        parameters=[{"use_sim_time": True}],
     )
 
     ld = LaunchDescription()
@@ -228,7 +220,7 @@ def generate_launch_description():
     ld.add_action(bridge_cmd)
     ld.add_action(robot_state_publisher_cmd)
     ld.add_action(set_env_vars_resources)
-    ld.add_action(slam_cmd)
+    ld.add_action(ground_truth_localization_cmd)
     ld.add_action(nav2_cmd)
 
     return ld

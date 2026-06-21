@@ -3,16 +3,20 @@
 Zone Visualizer Node — paints the field zones into Gazebo, colour-coded by state.
 
 Each zone (from zones.yaml) is drawn as a flat, semi-transparent coloured tile on
-the floor at the zone's bounding box. The colour reflects the live field state
-(moisture / nutrients / vulnerability) using the same thresholds CropDecisionNode
-acts on, so you can watch zones change colour as the robot treats them.
+the floor, ANCHORED at the zone's fixed field coordinates (its navigation
+target). The colour reflects the live field state (moisture / nutrients /
+vulnerability) using the same thresholds CropDecisionNode acts on, so you can
+watch zones change colour as the robot treats them.
+
+This relies on accurate localization: ground_truth_localization makes the `map`
+frame coincide with the Gazebo world frame, so a tile placed at a zone's target
+coordinates is exactly where the robot drives to treat that zone.
 
 Gazebo (gz-sim / Harmonic) has no Python binding here and no reliable way to
 recolour an existing visual, so we drive it through the server-side gz services:
-  * /world/<world>/create  (gz.msgs.EntityFactory)  — spawn a tile
+  * /world/<world>/create  (gz.msgs.EntityFactory)  — spawn a tile (new colour)
   * /world/<world>/remove  (gz.msgs.Entity)         — delete a tile
-A zone is only re-spawned when its colour *category* actually changes (a few
-times per patrol), so there is no continuous churn.
+A zone is only re-spawned when its colour actually changes, so there is no churn.
 
 Legend:
   GREEN  = healthy            BLUE   = needs water (low moisture)
@@ -62,7 +66,7 @@ class ZoneVisualizerNode(Node):
         self.tile_alpha = self.get_parameter('tile_alpha').value
         self.tile_height = self.get_parameter('tile_height').value
 
-        # ── Load zone geometry (bounding boxes) from zones.yaml ──
+        # ── Load zone geometry from zones.yaml ──
         pkg_dir = get_package_share_directory('my_turtlebot3_controller')
         with open(os.path.join(pkg_dir, 'config', 'zones.yaml'), 'r', encoding='utf-8') as f:
             raw = yaml.safe_load(f) or {}
@@ -72,8 +76,10 @@ class ZoneVisualizerNode(Node):
         self.geometry = {}
         for zid in self.zone_ids:
             z = raw[zid]
-            cx = (float(z['min_x']) + float(z['max_x'])) / 2.0
-            cy = (float(z['min_y']) + float(z['max_y'])) / 2.0
+            # Tile is anchored at the navigation TARGET (== where the robot drives
+            # to treat the zone), sized from the zone's bounding box.
+            cx = float(z['target_x'])
+            cy = float(z['target_y'])
             sx = abs(float(z['max_x']) - float(z['min_x']))
             sy = abs(float(z['max_y']) - float(z['min_y']))
             self.geometry[zid] = (cx, cy, sx, sy)
@@ -96,11 +102,11 @@ class ZoneVisualizerNode(Node):
 
         self.get_logger().info(
             f"Zone Visualizer started for world '{self.world}'. "
-            f"Drawing {len(self.zone_ids)} zones. "
+            f"Drawing {len(self.zone_ids)} anchored zones. "
             "Legend: GREEN=healthy, BLUE=needs water, YELLOW=needs fertiliser, "
             "ORANGE=needs both, RED=at risk.")
 
-    # ── Telemetry callbacks (arrays are indexed by self.zone_ids order) ──
+    # ── Telemetry callbacks (arrays indexed by self.zone_ids order) ──
     def _store(self, target: dict, msg: Float32MultiArray) -> None:
         for i, zid in enumerate(self.zone_ids):
             if i < len(msg.data):
@@ -142,9 +148,8 @@ class ZoneVisualizerNode(Node):
         cx, cy, sx, sy = self.geometry[zid]
         r, g, b = COLOURS[category]
         self._write_sdf(name, sx, sy, r, g, b)
-
-        # Remove any existing tile first (ignore failure if it isn't there yet),
-        # then (re)create it with the new colour.
+        # Remove any existing tile first (ignore failure if absent), then
+        # (re)create it with the new colour at its anchored position.
         self._gz_remove(name)
         ok = self._gz_create(name, cx, cy)
         if ok:

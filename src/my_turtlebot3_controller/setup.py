@@ -34,6 +34,7 @@ setup(
             'twin_supervisor_node = my_turtlebot3_controller.twin.TwinSupervisorNode:main',
             'system_monitor_node = my_turtlebot3_controller.SystemMonitorNode:main',
             'zone_visualizer_node = my_turtlebot3_controller.visualization.ZoneVisualizerNode:main',
+            'ground_truth_localization = my_turtlebot3_controller.localization.GroundTruthLocalizationNode:main',
         ],
     },
 )

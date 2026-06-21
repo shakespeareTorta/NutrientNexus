@@ -1,76 +1,74 @@
 # ── Room geometry (from new_world.world) ──
-# Outer walls: X[-1.02, 2.63], Y[-3.86, 1.00]   (a tall rectangle)
-# Room center ≈ (0.8, -1.4)
-# Internal panels to avoid: (0.77,0.67) (-0.75,0.78) (0.69,-1.04) (0.97,-1.37)
-#                           (-0.72,-1.8) (2.31,-0.80) (2.34,-3.62)
+# Outer walls: X[-1.02, 2.63], Y[-3.86, 1.00] (a tall rectangle).
+# With ground-truth localization the robot is perfectly localised, so the four
+# zones sit near the four CORNERS of the room — pulled ~0.5 m off the walls and
+# clear of the internal panels so the robot can still reach each one.
 #
-# Each zone is one of the FOUR CORNERS of the room. For every zone the
-# navigation target (target_x/target_y) is the CENTRE of its bounding box, so
-# the robot drives to exactly where the coloured tile is drawn, and the
-# bounding box is what ZoneDetectorNode / ZoneVisualizerNode use. Boxes are
-# 0.8 x 0.8 m, kept clear of the walls, the internal panels and the
-# base_station box (x[0.3,1.3], y[-1.9,-0.9]).
+# For every zone the navigation target (target_x/target_y) is the CENTRE of its
+# bounding box, and ZoneVisualizerNode anchors the coloured tile at that same
+# target — so the robot drives to exactly where the tile is. Boxes are kept
+# clear of the (small, near-start) base_station box.
 
 base_station:
   target_x: -0.1
   target_y: 0.0
   target_theta: 0.0
   runoff_risk: "Low"
-  min_x: 0.3
-  max_x: 1.3
-  min_y: -1.9
-  max_y: -0.9
+  min_x: -0.40
+  max_x: 0.20
+  min_y: -0.30
+  max_y: 0.30
   baseline_moisture: 50.0
   baseline_nutrients: 50.0
 
 # Top-Left corner
 zone_0:
-  target_x: -0.40
-  target_y: 0.35
+  target_x: -0.50
+  target_y: 0.55
   target_theta: 0.0
   runoff_risk: "Low"
-  min_x: -0.80
-  max_x: 0.00
-  min_y: -0.05
-  max_y: 0.75
+  min_x: -0.85
+  max_x: -0.15
+  min_y: 0.20
+  max_y: 0.90
   baseline_moisture: 50.0
   baseline_nutrients: 20.0
 
 # Top-Right corner
 zone_1:
-  target_x: 2.00
-  target_y: 0.35
+  target_x: 2.05
+  target_y: 0.55
   target_theta: 180.0
   runoff_risk: "High"
-  min_x: 1.60
+  min_x: 1.70
   max_x: 2.40
-  min_y: -0.05
-  max_y: 0.75
+  min_y: 0.20
+  max_y: 0.90
   baseline_moisture: 95.0
   baseline_nutrients: 30.0
 
 # Bottom-Right corner
 zone_2:
-  target_x: 1.95
-  target_y: -3.15
+  target_x: 2.05
+  target_y: -3.10
   target_theta: 180.0
   runoff_risk: "Medium"
-  min_x: 1.55
-  max_x: 2.35
-  min_y: -3.55
+  min_x: 1.70
+  max_x: 2.40
+  min_y: -3.45
   max_y: -2.75
   baseline_moisture: 20.0
   baseline_nutrients: 80.0
 
 # Bottom-Left corner
 zone_3:
-  target_x: -0.40
-  target_y: -3.15
+  target_x: -0.50
+  target_y: -3.10
   target_theta: 0.0
   runoff_risk: "High"
-  min_x: -0.80
-  max_x: 0.00
-  min_y: -3.55
+  min_x: -0.85
+  max_x: -0.15
+  min_y: -3.45
   max_y: -2.75
   baseline_moisture: 50.0
   baseline_nutrients: 45.0

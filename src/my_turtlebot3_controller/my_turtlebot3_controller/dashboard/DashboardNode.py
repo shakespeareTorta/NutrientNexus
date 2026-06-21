@@ -17,11 +17,14 @@ Cross-entity contracts (Option B requirements):
 """
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32MultiArray
 import json
+import os
 import threading
 import tkinter as tk
 from tkinter import ttk
+import yaml
+from ament_index_python.packages import get_package_share_directory
 from my_turtlebot3_controller.qos import STATE_QOS
 
 
@@ -41,6 +44,11 @@ class DashboardNode(Node):
         self.create_subscription(String, '/system_health', self.health_cb, STATE_QOS)
         self.create_subscription(String, '/obstacle_status', self.obstacle_cb, STATE_QOS)
 
+        # ── Field zone telemetry (same data that colours the Gazebo tiles) ──
+        self.create_subscription(Float32MultiArray, '/field_moisture', self._moisture_cb, STATE_QOS)
+        self.create_subscription(Float32MultiArray, '/field_nutrients', self._nutrients_cb, STATE_QOS)
+        self.create_subscription(Float32MultiArray, '/field_vulnerability', self._vulnerability_cb, STATE_QOS)
+
         # ── Mirrored physical state (guarded by lock) ────────────────
         self.state_lock = threading.Lock()
         self.state = {
@@ -51,6 +59,18 @@ class DashboardNode(Node):
             'imu_status': 'NO_DATA',
             'obstacle': 'No obstacle',
         }
+
+        # ── Field zone state (one entry per zone, indexed like the arrays) ──
+        self.zone_ids = self._load_zone_ids()
+        self.field = {
+            'moisture': {z: None for z in self.zone_ids},
+            'nutrients': {z: None for z in self.zone_ids},
+            'vulnerability': {z: None for z in self.zone_ids},
+        }
+        # Thresholds match CropDecisionNode / ZoneVisualizerNode.
+        self.moisture_threshold = 40.0
+        self.nutrient_threshold = 50.0
+        self.vulnerability_halt = 70.0
 
         # ── Injected fault state (the digital override contract) ─────
         self.faults = {'lidar': 'ok', 'motor': 'ok', 'battery': 'normal'}
@@ -63,7 +83,7 @@ class DashboardNode(Node):
     def _build_gui(self) -> None:
         self.root = tk.Tk()
         self.root.title("Nutrient Nexus - Digital Twin Dashboard")
-        self.root.geometry("960x720")
+        self.root.geometry("980x880")
         self.root.configure(bg="#1E1E1E")
 
         self.style = ttk.Style()
@@ -85,6 +105,7 @@ class DashboardNode(Node):
 
         self._build_resources(main)
         self._build_telemetry(main)
+        self._build_zone_status(main)
         self._build_health(main)
         self._build_obstacle(main)
         self._build_weather(main)
@@ -116,6 +137,28 @@ class DashboardNode(Node):
         tk.Label(frame, textvariable=self.zone_var, bg="#1E1E1E", fg="#4A90E2", font=("Helvetica", 11, "bold")).grid(row=0, column=0, sticky="w", padx=10, pady=2)
         self.nav_var = tk.StringVar(value="Nav: IDLE")
         tk.Label(frame, textvariable=self.nav_var, bg="#1E1E1E", fg="#CCC", font=("Helvetica", 10)).grid(row=1, column=0, sticky="w", padx=10, pady=2)
+
+    def _build_zone_status(self, parent: tk.Widget) -> None:
+        frame = tk.LabelFrame(parent, text="Field Zone Status (live moisture / nutrients)",
+                              bg="#1E1E1E", fg="#FFFFFF", font=("Helvetica", 12, "bold"))
+        frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
+
+        for col, h in enumerate(("Zone", "Moisture", "Nutrients", "Status")):
+            tk.Label(frame, text=h, bg="#1E1E1E", fg="#4A90E2",
+                     font=("Helvetica", 10, "bold")).grid(row=0, column=col, sticky="w", padx=18, pady=(2, 4))
+
+        self.zone_widgets = {}
+        for r, z in enumerate(self.zone_ids, start=1):
+            tk.Label(frame, text=self._zone_label(z), bg="#1E1E1E", fg="#FFF",
+                     font=("Helvetica", 10, "bold")).grid(row=r, column=0, sticky="w", padx=18, pady=2)
+            moist = tk.Label(frame, text="--", bg="#1E1E1E", fg="#CCC", font=("Helvetica", 10))
+            moist.grid(row=r, column=1, sticky="w", padx=18, pady=2)
+            nutri = tk.Label(frame, text="--", bg="#1E1E1E", fg="#CCC", font=("Helvetica", 10))
+            nutri.grid(row=r, column=2, sticky="w", padx=18, pady=2)
+            status = tk.Label(frame, text="NO DATA", bg="#1E1E1E", fg="#888",
+                              font=("Helvetica", 10, "bold"))
+            status.grid(row=r, column=3, sticky="w", padx=18, pady=2)
+            self.zone_widgets[z] = (moist, nutri, status)
 
     def _build_health(self, parent: tk.Widget) -> None:
         frame = tk.LabelFrame(parent, text="System Health (/system_health)", bg="#1E1E1E",
@@ -267,11 +310,55 @@ class DashboardNode(Node):
         with self.state_lock:
             self.state['obstacle'] = text
 
+    # ── Field zone telemetry (arrays indexed by self.zone_ids order) ──
+    def _store_field(self, key: str, msg: Float32MultiArray) -> None:
+        with self.state_lock:
+            for i, z in enumerate(self.zone_ids):
+                if i < len(msg.data):
+                    self.field[key][z] = float(msg.data[i])
+
+    def _moisture_cb(self, msg): self._store_field('moisture', msg)
+    def _nutrients_cb(self, msg): self._store_field('nutrients', msg)
+    def _vulnerability_cb(self, msg): self._store_field('vulnerability', msg)
+
+    def _load_zone_ids(self) -> list:
+        try:
+            pkg = get_package_share_directory('my_turtlebot3_controller')
+            with open(os.path.join(pkg, 'config', 'zones.yaml'), encoding='utf-8') as f:
+                raw = yaml.safe_load(f) or {}
+            ids = sorted([z for z in raw.keys() if z != 'base_station'])
+            return ids or ['zone_0', 'zone_1', 'zone_2', 'zone_3']
+        except Exception:
+            return ['zone_0', 'zone_1', 'zone_2', 'zone_3']
+
+    @staticmethod
+    def _zone_label(zid: str) -> str:
+        return zid.replace('_', ' ').title()
+
+    def _zone_category(self, m, n, v):
+        """Same classification the Gazebo tiles use -> (label, colour)."""
+        if m is None or n is None or v is None:
+            return ("NO DATA", "#888888")
+        if v > self.vulnerability_halt:
+            return ("AT RISK", "#E74C3C")
+        low_w = m < self.moisture_threshold
+        low_n = n < self.nutrient_threshold
+        if low_w and low_n:
+            return ("NEEDS WATER + FERT", "#E67E22")
+        if low_n:
+            return ("NEEDS FERTILISER", "#F1C40F")
+        if low_w:
+            return ("NEEDS WATER", "#3498DB")
+        return ("HEALTHY", "#2ECC71")
+
     # ── GUI refresh loop (main thread) ────────────────────────────────
 
     def update_gui_loop(self) -> None:
         with self.state_lock:
             s = dict(self.state)
+            moisture = dict(self.field['moisture'])
+            nutrients = dict(self.field['nutrients'])
+            vulnerability = dict(self.field['vulnerability'])
 
         self.bat_bar['value'] = s['battery']
         self.bat_lbl.config(text=f"{s['battery']:.1f}%")
@@ -294,6 +381,19 @@ class DashboardNode(Node):
         mode = s['twin_mode']
         self.mode_var.set(f"TWIN MODE: {mode}")
         self.mode_lbl.config(bg="#2ECC71" if mode == 'NORMAL' else "#F39C12" if mode == 'DEGRADED' else "#E74C3C")
+
+        # ── Field zone status table ──
+        for z in self.zone_ids:
+            m, n, v = moisture.get(z), nutrients.get(z), vulnerability.get(z)
+            moist_lbl, nutri_lbl, status_lbl = self.zone_widgets[z]
+            moist_lbl.config(
+                text=f"{m:.0f}%" if m is not None else "--",
+                fg="#F39C12" if (m is not None and m < self.moisture_threshold) else "#FFF")
+            nutri_lbl.config(
+                text=f"{n:.0f}%" if n is not None else "--",
+                fg="#F39C12" if (n is not None and n < self.nutrient_threshold) else "#FFF")
+            text, color = self._zone_category(m, n, v)
+            status_lbl.config(text=text, fg=color)
 
         self.root.after(100, self.update_gui_loop)
 
