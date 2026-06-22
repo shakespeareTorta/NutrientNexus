@@ -87,9 +87,9 @@ class ZoneDetectorNode(Node):
         try:
             with open(zones_file, 'r', encoding='utf-8') as f:
                 self.zones: Dict[str, Any] = yaml.safe_load(f) or {}
-                self.get_logger().info(f"Loaded {len(self.zones)} zones from config.")
+                self.get_logger().info(f'Loaded {len(self.zones)} zones from config.')
         except FileNotFoundError:
-            self.get_logger().error(f"Could not find zones.yaml at {zones_file}")
+            self.get_logger().error(f'Could not find zones.yaml at {zones_file}')
             self.zones = {}
 
         self.current_x: float = 0.0
@@ -217,9 +217,9 @@ class ZoneDetectorNode(Node):
             target_y = zone.get('target_y', 0.0)
             
             cube = Marker()
-            cube.header.frame_id = "map"
+            cube.header.frame_id = 'map'
             cube.header.stamp = self.get_clock().now().to_msg()
-            cube.ns = "zone_boxes"
+            cube.ns = 'zone_boxes'
             cube.id = idx
             cube.type = Marker.CUBE
             cube.action = Marker.ADD
@@ -244,9 +244,9 @@ class ZoneDetectorNode(Node):
             marker_array.markers.append(cube)
 
             target = Marker()
-            target.header.frame_id = "map"
+            target.header.frame_id = 'map'
             target.header.stamp = self.get_clock().now().to_msg()
-            target.ns = "zone_targets"
+            target.ns = 'zone_targets'
             target.id = idx + 100
             target.type = Marker.SPHERE
             target.action = Marker.ADD

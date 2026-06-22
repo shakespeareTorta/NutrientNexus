@@ -75,8 +75,8 @@ class CropDecisionNode(Node):
         self.latest_vulnerability = {}
 
         # System state machine
-        self.current_phase = "IDLE"
-        self.physical_current_zone = "no_zone"
+        self.current_phase = 'IDLE'
+        self.physical_current_zone = 'no_zone'
         self.active_zone_id = None
         self.sub_targets = []
         
@@ -126,7 +126,7 @@ class CropDecisionNode(Node):
         self._zone_request_time = 0.0
 
         self.create_timer(1.0, self.state_machine_tick)
-        self.get_logger().info(f"CropDecisionNode for Robot {self.robot_id} started. Operating as twin client.")
+        self.get_logger().info(f'CropDecisionNode for Robot {self.robot_id} started. Operating as twin client.')
 
     def _cancel_and_destroy(self, timer_attr: str) -> None:
         """Cancel and tear down the one-shot timer named by `timer_attr` (if any),
@@ -179,7 +179,7 @@ class CropDecisionNode(Node):
         home (env/fault event propagating from the digital side to the robot)."""
         try:
             data = json.loads(msg.data)
-            if isinstance(data, dict) and data.get("action") == "ABORT":
+            if isinstance(data, dict) and data.get('action') == 'ABORT':
                 self.get_logger().error(f"SUPERVISOR ABORT RECEIVED: {data.get('reason')}. Returning to BASE.")
                 self.sub_targets.clear()
                 self._dispatch_to_base()
@@ -201,15 +201,15 @@ class CropDecisionNode(Node):
         @return None.
         @throws (none) malformed JSON is caught and ignored.
         """
-        if self.current_phase != "WAITING_FOR_ASSIGNMENT":
+        if self.current_phase != 'WAITING_FOR_ASSIGNMENT':
             return
             
         try:
             data = json.loads(msg.data)
             if data.get('robot') == self.robot_id:
                 zone_id = data.get('zone')
-                if zone_id == "BASE":
-                    self.get_logger().info("Supervisor requested return to base.")
+                if zone_id == 'BASE':
+                    self.get_logger().info('Supervisor requested return to base.')
                     self._dispatch_to_base()
                 else:
                     # ── Predictive battery check ──────────────────────────
@@ -217,12 +217,12 @@ class CropDecisionNode(Node):
                     base = self.raw_zones.get('base_station', {})
                     if not self._can_afford_trip(z, base):
                         self.get_logger().warn(
-                            f"Rejecting {zone_id}: insufficient battery for round-trip. "
-                            f"Returning to base to recharge.")
+                            f'Rejecting {zone_id}: insufficient battery for round-trip. '
+                            f'Returning to base to recharge.')
                         self._dispatch_to_base()
                         return
 
-                    self.get_logger().info(f"Supervisor assigned {zone_id}. Generating sub-targets...")
+                    self.get_logger().info(f'Supervisor assigned {zone_id}. Generating sub-targets...')
                     self.active_zone_id = zone_id
                     # Generate 1 sub-target for the zone center
                     self.sub_targets = [
@@ -247,23 +247,23 @@ class CropDecisionNode(Node):
         @return None.
         """
         status = msg.data
-        if status == "IDLE" and not self.nav2_ready:
+        if status == 'IDLE' and not self.nav2_ready:
             self.nav2_ready = True
             
-        if self.current_phase == "NAVIGATING":
-            if status == "SUCCEEDED_AT_POSE":
-                self.current_phase = "VERIFYING_ZONE"
-            elif status in ["FAILED_NAVIGATION", "ABORTED_NAVIGATION", "CANCELED_NAVIGATION", "REJECTED", "IDLE_SERVER_UNAVAILABLE"]:
-                self.get_logger().warn(f"Navigation failed with status {status}. Skipping sub-target.")
+        if self.current_phase == 'NAVIGATING':
+            if status == 'SUCCEEDED_AT_POSE':
+                self.current_phase = 'VERIFYING_ZONE'
+            elif status in ['FAILED_NAVIGATION', 'ABORTED_NAVIGATION', 'CANCELED_NAVIGATION', 'REJECTED', 'IDLE_SERVER_UNAVAILABLE']:
+                self.get_logger().warn(f'Navigation failed with status {status}. Skipping sub-target.')
                 self._start_cooldown()
                 
-        elif self.current_phase == "RETURNING_TO_BASE":
-            if status == "SUCCEEDED_AT_POSE":
-                self.get_logger().info("Arrived at Base Station. Refilling...")
+        elif self.current_phase == 'RETURNING_TO_BASE':
+            if status == 'SUCCEEDED_AT_POSE':
+                self.get_logger().info('Arrived at Base Station. Refilling...')
                 msg_refill = String()
-                msg_refill.data = "refill"
+                msg_refill.data = 'refill'
                 self.refill_pub.publish(msg_refill)
-                self.current_phase = "IDLE"
+                self.current_phase = 'IDLE'
 
     # ── Battery estimation ──
     def _can_afford_trip(self, zone: dict, base: dict) -> bool:
@@ -292,8 +292,8 @@ class CropDecisionNode(Node):
         estimated_drain = total_dist * self.battery_drain_per_meter * self.battery_safety_margin
 
         self.get_logger().info(
-            f"Battery check: {self.battery_level:.1f}% available, "
-            f"trip ≈ {total_dist:.2f}m → estimated drain ≈ {estimated_drain:.1f}%")
+            f'Battery check: {self.battery_level:.1f}% available, '
+            f'trip ≈ {total_dist:.2f}m → estimated drain ≈ {estimated_drain:.1f}%')
 
         return self.battery_level > estimated_drain
 
@@ -302,12 +302,12 @@ class CropDecisionNode(Node):
         """Pop the next (x, y, yaw) sub-target and send it to Nav2 as a map-frame
         goal; if the list is empty the zone is done and we return to IDLE."""
         if not self.sub_targets:
-            self.get_logger().info(f"Finished all sub-targets for {self.active_zone_id}.")
-            self.current_phase = "IDLE"
+            self.get_logger().info(f'Finished all sub-targets for {self.active_zone_id}.')
+            self.current_phase = 'IDLE'
             return
             
         x, y, yaw_deg = self.sub_targets.pop(0)
-        self.get_logger().info(f"Navigating to sub-target at ({x:.2f}, {y:.2f})")
+        self.get_logger().info(f'Navigating to sub-target at ({x:.2f}, {y:.2f})')
         
         goal = PoseStamped()
         goal.header.stamp = self.get_clock().now().to_msg()
@@ -319,7 +319,7 @@ class CropDecisionNode(Node):
         goal.pose.orientation.w = math.cos(yaw_rad / 2.0)
         
         self.goal_pub.publish(goal)
-        self.current_phase = "NAVIGATING"
+        self.current_phase = 'NAVIGATING'
 
     def _dispatch_to_base(self):
         """Send the robot to the base station (with a per-robot parking offset)
@@ -340,7 +340,7 @@ class CropDecisionNode(Node):
         goal.pose.orientation.z = math.sin(yaw_rad / 2.0)
         goal.pose.orientation.w = math.cos(yaw_rad / 2.0)
         self.goal_pub.publish(goal)
-        self.current_phase = "RETURNING_TO_BASE"
+        self.current_phase = 'RETURNING_TO_BASE'
 
     # ── State Machine ──
     def state_machine_tick(self) -> None:
@@ -351,20 +351,20 @@ class CropDecisionNode(Node):
             return
 
         # ── Resource check: abort mission and return to base if low ────
-        if self.current_phase not in ("RETURNING_TO_BASE", "IDLE"):
+        if self.current_phase not in ('RETURNING_TO_BASE', 'IDLE'):
             needs_refill = False
-            reason = ""
+            reason = ''
 
             if self.battery_level <= self.low_battery_threshold:
                 needs_refill = True
-                reason = f"Battery critically low ({self.battery_level:.1f}% ≤ {self.low_battery_threshold:.0f}%)"
+                reason = f'Battery critically low ({self.battery_level:.1f}% ≤ {self.low_battery_threshold:.0f}%)'
             elif self.fertilizer_level <= self.low_fertilizer_threshold:
                 needs_refill = True
-                reason = f"Fertilizer critically low ({self.fertilizer_level:.1f}% ≤ {self.low_fertilizer_threshold:.0f}%)"
+                reason = f'Fertilizer critically low ({self.fertilizer_level:.1f}% ≤ {self.low_fertilizer_threshold:.0f}%)'
 
             if needs_refill:
                 self.get_logger().warn(
-                    f"LOW RESOURCES: {reason}. Aborting mission, returning to base.")
+                    f'LOW RESOURCES: {reason}. Aborting mission, returning to base.')
                 # Cancel any in-progress timers
                 self._cancel_and_destroy('_scan_timer')
                 self._cancel_and_destroy('_actuation_timer')
@@ -377,27 +377,27 @@ class CropDecisionNode(Node):
                 self._dispatch_to_base()
                 return
 
-        if self.current_phase == "IDLE":
-            self.get_logger().info("Requesting zone from Supervisor...")
+        if self.current_phase == 'IDLE':
+            self.get_logger().info('Requesting zone from Supervisor...')
             req = String()
-            req.data = json.dumps({"robot": self.robot_id})
+            req.data = json.dumps({'robot': self.robot_id})
             self.zone_request_pub.publish(req)
             self._zone_request_time = self.get_clock().now().nanoseconds / 1e9
-            self.current_phase = "WAITING_FOR_ASSIGNMENT"
+            self.current_phase = 'WAITING_FOR_ASSIGNMENT'
 
-        elif self.current_phase == "WAITING_FOR_ASSIGNMENT":
+        elif self.current_phase == 'WAITING_FOR_ASSIGNMENT':
             elapsed = self.get_clock().now().nanoseconds / 1e9 - self._zone_request_time
             if elapsed > 5.0:
-                self.get_logger().warn("No zone assignment received after 5s, retrying...")
-                self.current_phase = "IDLE"
+                self.get_logger().warn('No zone assignment received after 5s, retrying...')
+                self.current_phase = 'IDLE'
 
-        elif self.current_phase == "VERIFYING_ZONE":
+        elif self.current_phase == 'VERIFYING_ZONE':
             if self.physical_current_zone == self.active_zone_id:
-                self.current_phase = "SCANNING"
+                self.current_phase = 'SCANNING'
                 self._cancel_and_destroy('_scan_timer')
                 self._scan_timer = self.create_timer(self.scan_duration, self._on_scan_complete)
             else:
-                self.get_logger().warn(f"Not in {self.active_zone_id} yet. Moving to next sub-target.")
+                self.get_logger().warn(f'Not in {self.active_zone_id} yet. Moving to next sub-target.')
                 self._start_cooldown()
 
     def _on_scan_complete(self):
@@ -416,7 +416,7 @@ class CropDecisionNode(Node):
         @return None.
         """
         self._cancel_and_destroy('_scan_timer')
-        self.current_phase = "DECIDING"
+        self.current_phase = 'DECIDING'
         
         # Read from field sensors for the active zone
         moist = self.latest_moisture.get(self.active_zone_id, 100.0)
@@ -424,44 +424,44 @@ class CropDecisionNode(Node):
         vuln = self.latest_vulnerability.get(self.active_zone_id, 0.0)
         
         # Hard constraint: Never actuate in the base station
-        if self.active_zone_id == "base_station" or self.physical_current_zone == "base_station":
-            self.get_logger().info("Zone is base station. Treatment is strictly forbidden here. Returning to IDLE.")
+        if self.active_zone_id == 'base_station' or self.physical_current_zone == 'base_station':
+            self.get_logger().info('Zone is base station. Treatment is strictly forbidden here. Returning to IDLE.')
             self._start_cooldown()
             return
 
-        self.get_logger().info(f"[{self.active_zone_id}] Stats - Moisture: {moist:.1f}%, Nutrients: {nutri:.1f}%, Vulnerability: {vuln:.1f}%")
+        self.get_logger().info(f'[{self.active_zone_id}] Stats - Moisture: {moist:.1f}%, Nutrients: {nutri:.1f}%, Vulnerability: {vuln:.1f}%')
 
         action_taken = False
 
         if vuln > self.vulnerability_halt:
-            self.get_logger().warn(f"[{self.active_zone_id}] High vulnerability ({vuln:.1f}% > {self.vulnerability_halt:.0f}%). Halting fertilization to prevent runoff! (SDG-14)")
+            self.get_logger().warn(f'[{self.active_zone_id}] High vulnerability ({vuln:.1f}% > {self.vulnerability_halt:.0f}%). Halting fertilization to prevent runoff! (SDG-14)')
             intervention_msg = String()
             intervention_msg.data = json.dumps({
-                "robot": self.robot_id,
-                "zone": self.active_zone_id,
-                "action": "HALT_FERTILIZER",
-                "reason": "High runoff risk"
+                'robot': self.robot_id,
+                'zone': self.active_zone_id,
+                'action': 'HALT_FERTILIZER',
+                'reason': 'High runoff risk'
             })
             self.intervention_pub.publish(intervention_msg)
         elif nutri < self.nutrient_threshold:
-            self.get_logger().info(f"[{self.active_zone_id}] Nutrients low ({nutri:.1f}% < {self.nutrient_threshold}%). Fertilizing.")
+            self.get_logger().info(f'[{self.active_zone_id}] Nutrients low ({nutri:.1f}% < {self.nutrient_threshold}%). Fertilizing.')
             msg = String()
-            msg.data = json.dumps({"robot": self.robot_id, "zone": self.active_zone_id})
+            msg.data = json.dumps({'robot': self.robot_id, 'zone': self.active_zone_id})
             self.fertilise_pub.publish(msg)
             action_taken = True
 
         if moist < self.moisture_threshold:
-            self.get_logger().info(f"[{self.active_zone_id}] Moisture low ({moist:.1f}% < {self.moisture_threshold}%). Irrigating.")
+            self.get_logger().info(f'[{self.active_zone_id}] Moisture low ({moist:.1f}% < {self.moisture_threshold}%). Irrigating.')
             irr_msg = String()
-            irr_msg.data = json.dumps({"robot": self.robot_id, "zone": self.active_zone_id})
+            irr_msg.data = json.dumps({'robot': self.robot_id, 'zone': self.active_zone_id})
             self.irrigate_pub.publish(irr_msg)
             action_taken = True
             
         if not action_taken and vuln <= self.vulnerability_halt:
-            self.get_logger().info(f"[{self.active_zone_id}] Zone is healthy. No treatment needed.")
+            self.get_logger().info(f'[{self.active_zone_id}] Zone is healthy. No treatment needed.')
 
         if action_taken:
-            self.current_phase = "ACTUATING"
+            self.current_phase = 'ACTUATING'
             self._actuation_start_time = self.get_clock().now().nanoseconds / 1e9
             self._cancel_and_destroy('_actuation_timer')
             self._actuation_timer = self.create_timer(0.1, self._actuation_tick)
@@ -486,7 +486,7 @@ class CropDecisionNode(Node):
     def _start_cooldown(self):
         """Enter a short COOLDOWN before the next sub-target, so consecutive
         Nav2 goals don't stomp on each other."""
-        self.current_phase = "COOLDOWN"
+        self.current_phase = 'COOLDOWN'
         self._cancel_and_destroy('_cooldown_timer')
         self._cooldown_timer = self.create_timer(self.cooldown_duration, self._on_cooldown_complete)
 
@@ -497,7 +497,7 @@ class CropDecisionNode(Node):
         if self.sub_targets:
             self._dispatch_next_subtarget()
         else:
-            self.current_phase = "IDLE"
+            self.current_phase = 'IDLE'
 
 def main(args=None):
     rclpy.init(args=args)

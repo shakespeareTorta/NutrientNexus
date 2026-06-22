@@ -50,7 +50,7 @@ class TwinSupervisorNode(Node):
         self._last_nav_state = 'IDLE'
         self._consecutive_nav_failures = 0
 
-        self.current_weather = "sunny"
+        self.current_weather = 'sunny'
 
         # ── Publishers ──
         self.assignment_pub = self.create_publisher(String, '/supervisor/zone_assignment', STATE_QOS)
@@ -63,7 +63,7 @@ class TwinSupervisorNode(Node):
         self.create_subscription(String, '/navigation_executor_status', self._nav_status_cb, STATE_QOS)
         self.create_subscription(String, '/supervisor/zone_request', self._zone_request_cb, 10)
 
-        self.get_logger().info("Twin Supervisor Central Orchestrator Initialized.")
+        self.get_logger().info('Twin Supervisor Central Orchestrator Initialized.')
 
         self.create_timer(1.0, self._supervisor_tick)
 
@@ -73,9 +73,9 @@ class TwinSupervisorNode(Node):
         new_weather = msg.data.lower()
         if new_weather != self.current_weather:
             self.current_weather = new_weather
-            self.get_logger().warn(f"[ENV INTERACTION] Weather changed to: {self.current_weather}")
-            if self.current_weather == "storm":
-                self._broadcast_abort("STORM_EMERGENCY")
+            self.get_logger().warn(f'[ENV INTERACTION] Weather changed to: {self.current_weather}')
+            if self.current_weather == 'storm':
+                self._broadcast_abort('STORM_EMERGENCY')
 
     def _resource_cb(self, msg: String) -> None:
         """Mirror the robot's battery level; below 15% pause the patrol (state
@@ -84,7 +84,7 @@ class TwinSupervisorNode(Node):
             data = json.loads(msg.data)
             self.robot_state['battery'] = data.get('battery', 100.0)
             if data.get('battery', 100.0) < 15.0:
-                self.get_logger().error("Robot Battery Critical! Pausing operations.")
+                self.get_logger().error('Robot Battery Critical! Pausing operations.')
                 self._handle_robot_fault()
         except json.JSONDecodeError:
             pass
@@ -122,19 +122,19 @@ class TwinSupervisorNode(Node):
             self._consecutive_nav_failures += 1
             self.get_logger().warn(
                 f"[STATE SYNC] Navigation reported '{state}' "
-                f"({self._consecutive_nav_failures}/{self._nav_fault_threshold} consecutive). "
-                "Letting the robot recover locally.")
+                f'({self._consecutive_nav_failures}/{self._nav_fault_threshold} consecutive). '
+                'Letting the robot recover locally.')
             if self._consecutive_nav_failures >= self._nav_fault_threshold:
                 self.get_logger().error(
-                    "[STATE SYNC] Navigation failed repeatedly with no arrival — "
-                    "declaring physical robot fault and pausing the Digital Twin.")
+                    '[STATE SYNC] Navigation failed repeatedly with no arrival — '
+                    'declaring physical robot fault and pausing the Digital Twin.')
                 self._handle_robot_fault()
                 self._consecutive_nav_failures = 0
         elif state == 'SUCCEEDED_AT_POSE':
             # A genuine arrival proves the robot is healthy; clear the failure streak.
             if self._consecutive_nav_failures:
                 self.get_logger().info(
-                    "[STATE SYNC] Navigation succeeded — clearing nav-failure streak.")
+                    '[STATE SYNC] Navigation succeeded — clearing nav-failure streak.')
             self._consecutive_nav_failures = 0
         # Other states (IDLE, NAVIGATING, ...) are neutral and leave the streak intact.
 
@@ -154,22 +154,22 @@ class TwinSupervisorNode(Node):
               without dispatching if the robot is still faulted.
         @return None.
         """
-        self.get_logger().info("Received zone request from robot")
+        self.get_logger().info('Received zone request from robot')
 
         if self.robot_state.get('faulted', False):
             if self.robot_state['battery'] >= 20.0 and self.robot_state['status'] == 'IDLE':
-                self.get_logger().info("Robot has recovered from its fault. Resetting fault state!")
+                self.get_logger().info('Robot has recovered from its fault. Resetting fault state!')
                 self.robot_state['faulted'] = False
             else:
-                self.get_logger().warn("Robot is currently FAULTED. Ignoring zone request.")
+                self.get_logger().warn('Robot is currently FAULTED. Ignoring zone request.')
                 return
 
-        if self.current_weather == "storm":
-            self._dispatch_zone("BASE")
+        if self.current_weather == 'storm':
+            self._dispatch_zone('BASE')
             return
 
         if self.robot_state['battery'] < 20.0:
-            self._dispatch_zone("BASE")
+            self._dispatch_zone('BASE')
             return
 
         if self.pending_zones:
@@ -178,34 +178,34 @@ class TwinSupervisorNode(Node):
             self._dispatch_zone(next_zone)
             return
 
-        self._dispatch_zone("BASE")
+        self._dispatch_zone('BASE')
 
     def _dispatch_zone(self, zone: str) -> None:
         """Publish a {robot, zone} assignment on /supervisor/zone_assignment."""
         assign_msg = String()
-        assign_msg.data = json.dumps({"robot": self.robot_id, "zone": zone})
+        assign_msg.data = json.dumps({'robot': self.robot_id, 'zone': zone})
         self.assignment_pub.publish(assign_msg)
-        self.get_logger().info(f"Dispatched {zone} to robot")
+        self.get_logger().info(f'Dispatched {zone} to robot')
 
     def _handle_robot_fault(self) -> None:
         """If the robot fails, pause the patrol and broadcast a global abort."""
-        self.get_logger().warn("Handling robot fault...")
+        self.get_logger().warn('Handling robot fault...')
         self.robot_state['faulted'] = True
-        self._broadcast_abort("PHYSICAL_ROBOT_FAULT")
+        self._broadcast_abort('PHYSICAL_ROBOT_FAULT')
 
     def _broadcast_abort(self, reason: str) -> None:
         """Broadcasts an immediate abort to the robot (e.g. for storm or physical fault)."""
         msg = String()
-        msg.data = json.dumps({"action": "ABORT", "reason": reason})
+        msg.data = json.dumps({'action': 'ABORT', 'reason': reason})
         self.alert_pub.publish(msg)
 
     def _supervisor_tick(self) -> None:
         """1 Hz heartbeat: publish the fused robot/weather/queue snapshot on
         /sync_status so the rest of the twin shares one consistent world view."""
         sync_data = {
-            "robot": self.robot_state,
-            "weather": self.current_weather,
-            "tasks_remaining": len(self.pending_zones)
+            'robot': self.robot_state,
+            'weather': self.current_weather,
+            'tasks_remaining': len(self.pending_zones)
         }
         msg = String()
         msg.data = json.dumps(sync_data)

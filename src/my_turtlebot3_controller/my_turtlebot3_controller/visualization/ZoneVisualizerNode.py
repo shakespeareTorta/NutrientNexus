@@ -102,9 +102,9 @@ class ZoneVisualizerNode(Node):
 
         self.get_logger().info(
             f"Zone Visualizer started for world '{self.world}'. "
-            f"Drawing {len(self.zone_ids)} anchored zones. "
-            "Legend: GREEN=healthy, BLUE=needs water, YELLOW=needs fertiliser, "
-            "ORANGE=needs both, RED=at risk.")
+            f'Drawing {len(self.zone_ids)} anchored zones. '
+            'Legend: GREEN=healthy, BLUE=needs water, YELLOW=needs fertiliser, '
+            'ORANGE=needs both, RED=at risk.')
 
     # ── Telemetry callbacks (arrays indexed by self.zone_ids order) ──
     def _store(self, target: dict, msg: Float32MultiArray) -> None:
@@ -165,7 +165,7 @@ class ZoneVisualizerNode(Node):
               zone's anchored position in the new colour.
         @return True if the create call succeeded.
         """
-        name = f"{zid}_viz"
+        name = f'{zid}_viz'
         cx, cy, sx, sy = self.geometry[zid]
         r, g, b = COLOURS[category]
         self._write_sdf(name, sx, sy, r, g, b)
@@ -174,7 +174,7 @@ class ZoneVisualizerNode(Node):
         self._gz_remove(name)
         ok = self._gz_create(name, cx, cy)
         if ok:
-            self.get_logger().info(f"{zid}: {category.upper()}")
+            self.get_logger().info(f'{zid}: {category.upper()}')
         return ok
 
     def _write_sdf(self, name, sx, sy, r, g, b) -> None:
@@ -199,11 +199,11 @@ class ZoneVisualizerNode(Node):
   </model>
 </sdf>
 """
-        with open(os.path.join(self.sdf_dir, f"{name}.sdf"), 'w', encoding='utf-8') as f:
+        with open(os.path.join(self.sdf_dir, f'{name}.sdf'), 'w', encoding='utf-8') as f:
             f.write(sdf)
 
     def _gz_create(self, name, cx, cy) -> bool:
-        path = os.path.join(self.sdf_dir, f"{name}.sdf")
+        path = os.path.join(self.sdf_dir, f'{name}.sdf')
         req = (f'sdf_filename: "{path}", name: "{name}", '
                f'pose: {{position: {{x: {cx:.3f}, y: {cy:.3f}, z: 0.01}}}}')
         return self._gz_call(f'/world/{self.world}/create', 'gz.msgs.EntityFactory', req)
@@ -226,12 +226,12 @@ class ZoneVisualizerNode(Node):
             self._gz_ok = False
             return False
         except subprocess.TimeoutExpired:
-            self.get_logger().warn(f"gz service call timed out: {service}")
+            self.get_logger().warn(f'gz service call timed out: {service}')
             return False
 
     def remove_all(self) -> None:
         for zid in self.zone_ids:
-            self._gz_remove(f"{zid}_viz")
+            self._gz_remove(f'{zid}_viz')
 
 
 def main(args=None) -> None:

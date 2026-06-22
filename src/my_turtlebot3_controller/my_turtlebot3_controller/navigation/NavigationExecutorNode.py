@@ -26,7 +26,7 @@ class NavigationExecutorNode(Node):
         self._action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose') 
         
         self.goal_handle: Optional[ClientGoalHandle] = None
-        self.current_nav_status: str = "IDLE"
+        self.current_nav_status: str = 'IDLE'
         self.active_goal_pose_for_logging: Optional[PoseStamped] = None
         self._idle_timer = None
 
@@ -40,8 +40,8 @@ class NavigationExecutorNode(Node):
         # Publisher - navigation status
         self.status_publisher = self.create_publisher(String, 'navigation_executor_status', STATE_QOS)
 
-        self.get_logger().info("Navigation Executor Node Initialized. Waiting for goals on dispatch_nav_goal.")
-        self._publish_status("IDLE")
+        self.get_logger().info('Navigation Executor Node Initialized. Waiting for goals on dispatch_nav_goal.')
+        self._publish_status('IDLE')
         self.create_timer(0.5, self._republish_status)
 
     def _republish_status(self) -> None:
@@ -57,7 +57,7 @@ class NavigationExecutorNode(Node):
         msg.data = status_str
         self.status_publisher.publish(msg)
         if status_str != self.current_nav_status:
-            self.get_logger().info(f"Status: {self.current_nav_status} -> {status_str}")
+            self.get_logger().info(f'Status: {self.current_nav_status} -> {status_str}')
         self.current_nav_status = status_str
 
     def dispatch_goal_callback(self, msg: PoseStamped) -> None:
@@ -73,8 +73,8 @@ class NavigationExecutorNode(Node):
               reflects the failure (e.g. IDLE_SERVER_UNAVAILABLE).
         @return None.
         """
-        if self.current_nav_status == "NAVIGATING":
-            self.get_logger().warn("Navigation already in progress. Preempting current goal with new goal!")
+        if self.current_nav_status == 'NAVIGATING':
+            self.get_logger().warn('Navigation already in progress. Preempting current goal with new goal!')
 
         if self._idle_timer is not None:
             self._idle_timer.cancel()
@@ -82,10 +82,10 @@ class NavigationExecutorNode(Node):
             self._idle_timer = None
 
         self.active_goal_pose_for_logging = msg
-        self.get_logger().info(f"Received dispatch goal: X={msg.pose.position.x:.2f}, Y={msg.pose.position.y:.2f}")
+        self.get_logger().info(f'Received dispatch goal: X={msg.pose.position.x:.2f}, Y={msg.pose.position.y:.2f}')
 
         if self.send_nav2_goal(msg):
-            self._publish_status("NAVIGATING")
+            self._publish_status('NAVIGATING')
 
 
     def wait_for_action_server(self, timeout_sec: float = 2.0) -> bool:
@@ -95,7 +95,7 @@ class NavigationExecutorNode(Node):
 
         if not self._action_client.wait_for_server(timeout_sec=timeout_sec):
             self.get_logger().error('/navigate_to_pose action server not available after waiting.')
-            self._publish_status("IDLE_SERVER_UNAVAILABLE") 
+            self._publish_status('IDLE_SERVER_UNAVAILABLE') 
             return False
 
         self.get_logger().info('/navigate_to_pose action server is available.')
@@ -110,7 +110,7 @@ class NavigationExecutorNode(Node):
         goal_msg = NavigateToPose.Goal()
         goal_msg.pose = target_pose_stamped 
 
-        self.get_logger().info(f"Sending goal to Nav2: Pos(X:{target_pose_stamped.pose.position.x:.2f}, Y:{target_pose_stamped.pose.position.y:.2f})")
+        self.get_logger().info(f'Sending goal to Nav2: Pos(X:{target_pose_stamped.pose.position.x:.2f}, Y:{target_pose_stamped.pose.position.y:.2f})')
         
         send_goal_future = self._action_client.send_goal_async(
             goal_msg,
@@ -134,7 +134,7 @@ class NavigationExecutorNode(Node):
             self._idle_timer.cancel()
             self.destroy_timer(self._idle_timer)
             self._idle_timer = None
-        self._publish_status("IDLE")
+        self._publish_status('IDLE')
 
     def goal_response_callback(self, future) -> None:
         """Handle Nav2's accept/reject: on reject publish REJECTED and go idle;
@@ -143,7 +143,7 @@ class NavigationExecutorNode(Node):
 
         if not self.goal_handle.accepted:
             self.get_logger().error('Goal rejected by Nav2 server.')
-            self._publish_status("REJECTED")
+            self._publish_status('REJECTED')
             self.active_goal_pose_for_logging = None
             self._schedule_idle()
             return
@@ -165,17 +165,17 @@ class NavigationExecutorNode(Node):
         @return None.
         """
         status_code = future.result().status
-        final_status_str = "UNKNOWN_FAILURE"
+        final_status_str = 'UNKNOWN_FAILURE'
 
         if status_code == ActionGoalStatus.STATUS_SUCCEEDED:
             self.get_logger().info('Navigation Succeeded!')
-            final_status_str = "SUCCEEDED_AT_POSE"
+            final_status_str = 'SUCCEEDED_AT_POSE'
         elif status_code == ActionGoalStatus.STATUS_ABORTED:
             self.get_logger().error(f'Navigation Aborted by Nav2. Status Code: {status_code}')
-            final_status_str = "ABORTED_NAVIGATION"
+            final_status_str = 'ABORTED_NAVIGATION'
         elif status_code == ActionGoalStatus.STATUS_CANCELED:
             self.get_logger().warn(f'Navigation Canceled. Status Code: {status_code}')
-            final_status_str = "CANCELED_NAVIGATION"
+            final_status_str = 'CANCELED_NAVIGATION'
         else:
             self.get_logger().info(f'Navigation finished with status code: {status_code}')
 
@@ -186,7 +186,7 @@ class NavigationExecutorNode(Node):
     def feedback_callback(self, feedback_msg) -> None:
         """Log remaining distance from Nav2 feedback (debug level)."""
         feedback = feedback_msg.feedback
-        self.get_logger().debug(f"Navigating to goal, Dist_rem: {feedback.distance_remaining:.2f} m")
+        self.get_logger().debug(f'Navigating to goal, Dist_rem: {feedback.distance_remaining:.2f} m')
 
 def main(args=None) -> None:
     rclpy.init(args=args)
@@ -195,9 +195,9 @@ def main(args=None) -> None:
     try:
         rclpy.spin(executor_node) 
     except KeyboardInterrupt:
-        executor_node.get_logger().info("Navigation Executor Node shutting down.")
+        executor_node.get_logger().info('Navigation Executor Node shutting down.')
     finally:
-        executor_node.get_logger().info("Destroying Navigation Executor Node.")
+        executor_node.get_logger().info('Destroying Navigation Executor Node.')
         executor_node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()

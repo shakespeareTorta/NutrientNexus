@@ -87,7 +87,7 @@ class RobotResourceNode(Node):
         self.resource_pub = self.create_publisher(String, 'robot_resources', STATE_QOS)
         self.timer = self.create_timer(1.0, self.publish_resources)
 
-        self.get_logger().info("Robot Resource Node started.")
+        self.get_logger().info('Robot Resource Node started.')
 
     def odom_callback(self, msg: Odometry) -> None:
         """
@@ -172,7 +172,7 @@ class RobotResourceNode(Node):
         """
         try:
             data = json.loads(msg.data)
-            robot_id = data.get("robot")
+            robot_id = data.get('robot')
             # If the payload specifies a robot, only drain if it matches our namespace
             my_id = self.get_parameter('robot_id').get_parameter_value().string_value
             if robot_id and robot_id != my_id:
@@ -180,7 +180,7 @@ class RobotResourceNode(Node):
         except json.JSONDecodeError:
             pass  # A bare (non-JSON) string is accepted as a spray for this robot
 
-        self.get_logger().info("Fertilizer sprayed. Draining tank.")
+        self.get_logger().info('Fertilizer sprayed. Draining tank.')
         self.fertilizer = max(0.0, self.fertilizer - self.fertilizer_drain_per_spray)
         self.publish_resources()
 
@@ -200,10 +200,10 @@ class RobotResourceNode(Node):
                trivially holds), and the new state is published immediately.
         @return None
         """
-        self.get_logger().info("Base Station connected. Refilling battery and fertilizer to 100%.")
+        self.get_logger().info('Base Station connected. Refilling battery and fertilizer to 100%.')
         if self.battery_fault:
             self.get_logger().warn(
-                "Battery fault active: refilling fertilizer only, battery stays clamped.")
+                'Battery fault active: refilling fertilizer only, battery stays clamped.')
             self.fertilizer = 100.0
         else:
             self.battery = 100.0
@@ -228,8 +228,8 @@ class RobotResourceNode(Node):
         @return None
         """
         state = {
-            "battery": round(self.battery, 1),
-            "fertilizer": round(self.fertilizer, 1)
+            'battery': round(self.battery, 1),
+            'fertilizer': round(self.fertilizer, 1)
         }
         msg = String()
         msg.data = json.dumps(state)

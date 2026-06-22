@@ -59,7 +59,7 @@ class WeatherAdapterNode(Node):
               nothing is published and the error is logged (never raised).
         @return None.
         """
-        url = f"https://api.open-meteo.com/v1/forecast?latitude={self.lat}&longitude={self.lon}&current_weather=true"
+        url = f'https://api.open-meteo.com/v1/forecast?latitude={self.lat}&longitude={self.lon}&current_weather=true'
         
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'NutrientNexus-DigitalTwin/1.0'})
@@ -85,16 +85,16 @@ class WeatherAdapterNode(Node):
                     msg = String()
                     msg.data = weather
                     self.weather_pub.publish(msg)
-                    self.get_logger().info(f"Published live weather update: {weather} (WMO code: {code})")
+                    self.get_logger().info(f'Published live weather update: {weather} (WMO code: {code})')
                 else:
-                    self.get_logger().warning("Unexpected JSON format from weather API.")
+                    self.get_logger().warning('Unexpected JSON format from weather API.')
 
         except urllib.error.URLError as e:
-            self.get_logger().error(f"Failed to fetch weather data: {e.reason}")
+            self.get_logger().error(f'Failed to fetch weather data: {e.reason}')
         except TimeoutError as e:
-            self.get_logger().error(f"Weather request timed out: {e}")
+            self.get_logger().error(f'Weather request timed out: {e}')
         except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
-            self.get_logger().error(f"Error processing weather update: {e}")
+            self.get_logger().error(f'Error processing weather update: {e}')
 
 def main(args=None):
     rclpy.init(args=args)

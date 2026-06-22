@@ -29,7 +29,7 @@ class FieldSensorMockNode(Node):
             with open(zones_file, 'r', encoding='utf-8') as f:
                 raw_zones = yaml.safe_load(f) or {}
         except FileNotFoundError:
-            self.get_logger().error(f"Could not find zones.yaml at {zones_file}")
+            self.get_logger().error(f'Could not find zones.yaml at {zones_file}')
             raw_zones = {}
 
         self.zones: List[Dict[str, Any]] = []
@@ -51,7 +51,7 @@ class FieldSensorMockNode(Node):
             })
             
         self.num_zones = len(self.zones)
-        self.weather = "sunny"
+        self.weather = 'sunny'
 
         # Externalised parameters (configurable via nexus_params.yaml)
         self.declare_parameter('sim_tick_interval', 2.0)
@@ -81,8 +81,8 @@ class FieldSensorMockNode(Node):
         # (merged to avoid race conditions between depletion and publishing)
         self.sim_timer = self.create_timer(self.sim_tick_interval, self.simulation_tick)
 
-        self.get_logger().info("Field Sensor Mock Node Initialized for Nutrient Nexus.")
-        self.log_zone_states("Initial")
+        self.get_logger().info('Field Sensor Mock Node Initialized for Nutrient Nexus.')
+        self.log_zone_states('Initial')
 
     def simulation_tick(self) -> None:
         """Combined tick: deplete/grow environment, then publish updated telemetry."""
@@ -109,16 +109,16 @@ class FieldSensorMockNode(Node):
         """
         for zone in self.zones:
             # Weather-driven moisture adaptation and nutrient leaching
-            if self.weather == "rainy":
+            if self.weather == 'rainy':
                 zone['moisture'] += random.uniform(1.0, 3.0)
                 zone['nutrients'] -= random.uniform(0.3, 0.8)  # Rain leaches nutrients
-            elif self.weather == "storm":
+            elif self.weather == 'storm':
                 zone['moisture'] += random.uniform(3.0, 6.0)
                 zone['nutrients'] -= random.uniform(1.0, 2.5)  # Severe leaching
-            elif self.weather == "sunny":
+            elif self.weather == 'sunny':
                 zone['moisture'] -= random.uniform(0.5, 1.5)
                 zone['nutrients'] -= random.uniform(0.1, 0.4)  # Normal absorption
-            elif self.weather == "overcast":
+            elif self.weather == 'overcast':
                 zone['moisture'] -= random.uniform(0.1, 0.4)
                 zone['nutrients'] -= random.uniform(0.1, 0.4)  # Normal absorption
                 
@@ -152,14 +152,14 @@ class FieldSensorMockNode(Node):
         self.growth_pub.publish(growth_msg)
         self.vulnerability_pub.publish(vulnerability_msg)
 
-        self.get_logger().debug("Published environment telemetry updates.")
+        self.get_logger().debug('Published environment telemetry updates.')
 
     def make_float_array(self, data_list: List[float]) -> Float32MultiArray:
         """Wrap a per-zone value list in a Float32MultiArray with a 'zones' dim."""
         msg = Float32MultiArray()
         msg.layout = MultiArrayLayout()
         msg.layout.dim = [MultiArrayDimension()]
-        msg.layout.dim[0].label = "zones"
+        msg.layout.dim[0].label = 'zones'
         msg.layout.dim[0].size = self.num_zones
         msg.layout.dim[0].stride = self.num_zones
         msg.layout.data_offset = 0
@@ -212,12 +212,12 @@ class FieldSensorMockNode(Node):
                 break
         self.publish_telemetry_tick()
 
-    def log_zone_states(self, prefix: str = "Current") -> None:
+    def log_zone_states(self, prefix: str = 'Current') -> None:
         """Log a one-line summary of every zone's moisture/nutrients/growth."""
         states = []
         for z in self.zones:
             states.append(f"{z['id']}: Moisture={z['moisture']:.1f}%, Nutrients={z['nutrients']:.1f}%, Growth={z['growth']:.1f}%")
-        self.get_logger().info(f"{prefix} Zone States: [ " + " | ".join(states) + " ]")
+        self.get_logger().info(f'{prefix} Zone States: [ ' + ' | '.join(states) + ' ]')
 
 def main(args=None) -> None:
     rclpy.init(args=args)
@@ -225,7 +225,7 @@ def main(args=None) -> None:
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        node.get_logger().info("Field Sensor Mock Node shutting down.")
+        node.get_logger().info('Field Sensor Mock Node shutting down.')
     finally:
         node.destroy_node()
         if rclpy.ok():

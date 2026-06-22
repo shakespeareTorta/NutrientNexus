@@ -126,7 +126,7 @@ class GroundTruthLocalizationNode(Node):
                     self.true_pose = (px, py, yaw)   # atomic tuple assignment
                     if not self._got_pose:
                         self._got_pose = True
-                        self.get_logger().info("Locked onto robot ground-truth pose.")
+                        self.get_logger().info('Locked onto robot ground-truth pose.')
                     is_robot = False
                 in_pos = in_orient = False
 
