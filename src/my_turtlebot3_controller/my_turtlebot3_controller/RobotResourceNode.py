@@ -70,7 +70,7 @@ class RobotResourceNode(Node):
         self.last_x: Optional[float] = None
         self.last_y: Optional[float] = None
 
-        # Digital-twin battery fault override (Option B Req 2).
+        # Digital-twin battery fault override.
         # When the dashboard injects a battery fault, normal drain is
         # suspended and the level is clamped low to force a fault cascade
         # (RETURNING_TO_BASE in CropDecision, fault in TwinSupervisor).
@@ -178,7 +178,7 @@ class RobotResourceNode(Node):
             if robot_id and robot_id != my_id:
                 return
         except json.JSONDecodeError:
-            pass # Fallback to old behavior if just a string is sent
+            pass  # A bare (non-JSON) string is accepted as a spray for this robot
 
         self.get_logger().info("Fertilizer sprayed. Draining tank.")
         self.fertilizer = max(0.0, self.fertilizer - self.fertilizer_drain_per_spray)

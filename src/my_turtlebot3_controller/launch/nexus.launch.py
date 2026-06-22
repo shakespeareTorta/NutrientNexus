@@ -4,7 +4,7 @@ Unified Nutrient Nexus Launch File.
 
 Starts the entire agricultural digital twin simulation pipeline with
 a single command:
-  1. base.launch.py  — Gazebo + SLAM + Nav2
+  1. base.launch.py  — Gazebo + Nav2 + ground-truth localization
   2. SafetyStopNode  — LiDAR collision guard (defence-in-depth)
   3. FieldSensorMock  — Soil telemetry simulation
   4. NavigationExecutor — Nav2 action client relay
@@ -38,7 +38,7 @@ def generate_launch_description():
     )
     gui = LaunchConfiguration("gui")
 
-    # 1. Include base.launch.py (starts Gazebo, SLAM, and Nav2)
+    # 1. Include base.launch.py (starts Gazebo, Nav2, and localization)
     base_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(my_controller_share, "launch", "base.launch.py")
@@ -146,7 +146,7 @@ def generate_launch_description():
         parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
-    # 10. Twin Supervisor Node (Lecture Week 6)
+    # 10. Twin Supervisor Node
     twin_supervisor = Node(
         package="my_turtlebot3_controller",
         executable="twin_supervisor_node",
@@ -189,7 +189,7 @@ def generate_launch_description():
         parameters=[{'use_sim_time': True}],
     )
 
-    # 12. rosbag2 auto-recording (Lecture Week 6: evidence collection)
+    # 12. rosbag2 auto-recording
     bag_output = '/tmp/nexus_recording_' + datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     rosbag_record = ExecuteProcess(
         cmd=[

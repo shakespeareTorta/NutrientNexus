@@ -98,9 +98,9 @@ class SystemMonitorNode(Node):
 
         self._last_battery_level: str = ''
 
-        # Injected digital-twin faults (Option B Req 2). SystemMonitor stays
-        # the SOLE publisher of /system_health: it fuses these injected
-        # overrides with real telemetry into one authoritative health view.
+        # Injected digital-twin faults. SystemMonitor stays the SOLE publisher
+        # of /system_health: it fuses these injected overrides with real
+        # telemetry into one authoritative health view.
         self._faults = {'lidar': 'ok', 'motor': 'ok', 'battery': 'normal'}
 
         # ── QoS — BEST_EFFORT for sensor topics ──────────────────────

@@ -195,13 +195,11 @@ def generate_launch_description():
         launch_arguments=nav2_launch_args.items(),
     )
 
-    # Localization: GROUND TRUTH instead of SLAM.
-    # slam_toolbox drifts badly in this small symmetric room (map rotates ~32deg
-    # off the world, wheel odom slips during recovery spins), so the robot
-    # navigates to the wrong physical places and the zone tiles never line up.
+    # Ground-truth localization (not SLAM): slam_toolbox drifts badly in this
+    # small, symmetric room, so the robot would navigate to the wrong places.
     # This node reads the robot's true Gazebo pose and publishes map->odom so the
-    # `map` frame == the world frame exactly. The Nav2 global costmap builds
-    # obstacles from /scan (no static-map layer), so dropping SLAM is fine.
+    # `map` frame coincides with the world frame. The Nav2 global costmap builds
+    # its obstacles from /scan, so no static map is needed.
     ground_truth_localization_cmd = Node(
         package="my_turtlebot3_controller",
         executable="ground_truth_localization",

@@ -11,8 +11,6 @@ from ament_index_python.packages import get_package_share_directory
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from my_turtlebot3_controller.qos import STATE_QOS
 
-# ── QoS profiles (Lecture Week 6) ────────────────────────────────────
-
 
 class FieldSensorMockNode(Node):
     """Simulates the field environment: each zone's moisture/nutrients/growth/

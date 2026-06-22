@@ -29,7 +29,6 @@ def sector_min(
     [angle_low_deg, angle_high_deg] (both in degrees, signed).
 
     Uses the same angle normalisation as get_front_arc_distances().
-    Adapted from OceanDeepSeek's RobotController._sector_min.
     """
     low = math.radians(angle_low_deg)
     high = math.radians(angle_high_deg)
@@ -59,8 +58,6 @@ def narrow_object_in_sector(
     Catches thin objects (water bottles, chair legs) that only occupy
     1-3 scan rays and might be missed by a sector-minimum approach with
     a wider threshold.
-
-    Adapted from OceanDeepSeek's RobotController._narrow_object_in_sector.
     """
     low = math.radians(angle_low_deg)
     high = math.radians(angle_high_deg)

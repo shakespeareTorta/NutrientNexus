@@ -2,10 +2,10 @@
 """
 Ground-Truth Localization (simulation only).
 
-slam_toolbox drifts badly in this small, symmetric room — we measured the `map`
-frame rotating ~32 degrees off the world and the wheel `odom` slipping metres
-during recovery spins. That makes the robot navigate to the wrong physical
-places and pulls the Gazebo zone tiles away from where the robot actually goes.
+slam_toolbox drifts badly in this small, symmetric room: the `map` frame rotates
+off the world and the wheel `odom` slips during recovery spins, so the robot
+navigates to the wrong physical places and the Gazebo zone tiles no longer line
+up with where the robot actually goes.
 
 Because this is a SIM with a fully known world, we localise from ground truth:
 we read the robot's TRUE pose straight from Gazebo (by streaming the gz

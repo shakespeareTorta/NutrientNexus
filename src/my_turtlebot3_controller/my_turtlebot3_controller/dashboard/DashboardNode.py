@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Nutrient Nexus Digital Twin Dashboard (Option B digital entity).
+Nutrient Nexus Digital Twin Dashboard (digital entity).
 
 This Tkinter GUI is the DIGITAL entity of the twin. It:
   - mirrors physical-robot state published by the Gazebo robot
@@ -8,12 +8,11 @@ This Tkinter GUI is the DIGITAL entity of the twin. It:
   - controls the physical robot by publishing weather and fault
     injection events that change the robot's behaviour.
 
-Cross-entity contracts (Option B requirements):
-  Req 1 Bidirectional : subscribes telemetry  +  publishes /weather_forecast
-                        and /twin_fault_state.
-  Req 2 State sync    : /system_health + /robot_resources mirrored here;
-                        /twin_fault_state injected from here.
-  Req 3 Environment   : /obstacle_status reflects what the robot senses.
+Cross-entity topics:
+  - subscribes to robot telemetry; publishes /weather_forecast and
+    /twin_fault_state back to the robot;
+  - mirrors /system_health and /robot_resources, and injects /twin_fault_state;
+  - /obstacle_status reflects what the robot senses in its environment.
 """
 import rclpy
 from rclpy.node import Node
@@ -75,7 +74,7 @@ class DashboardNode(Node):
         self.nutrient_threshold = 50.0
         self.vulnerability_halt = 70.0
 
-        # ── Injected fault state (the digital override contract) ─────
+        # Injected fault state — the dashboard's override of the robot.
         self.faults = {'lidar': 'ok', 'motor': 'ok', 'battery': 'normal'}
 
         self._build_gui()

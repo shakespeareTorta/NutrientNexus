@@ -3,8 +3,7 @@
 Safety Stop Node — Multi-sector LiDAR collision guard for Nutrient Nexus.
 
 Sits between velocity command sources and the actual robot /cmd_vel topic.
-Uses 5-sector LiDAR scanning (adapted from OceanDeepSeek's obstacle avoider)
-to provide intelligent safety filtering:
+Uses 5-sector LiDAR scanning to provide intelligent safety filtering:
 
   FRONT        : ±front_angle_deg      hard-stop trigger
   FRONT_LEFT   : +front..+side deg     early warning left
@@ -12,7 +11,7 @@ to provide intelligent safety filtering:
   LEFT         : +side..+rear deg      open-side assessment
   RIGHT        : -rear..-side deg      open-side assessment
 
-Improvements over the original binary stop/go:
+Features:
   - 5-sector scanning for full forward-hemisphere awareness
   - Pre-steering nudge: gentle angular correction when diagonal sectors
     close in, before a hard stop is needed
@@ -22,7 +21,7 @@ Improvements over the original binary stop/go:
     is stale (cable disconnected, Gazebo crash, etc.)
   - All parameters externalised via declare_parameter()
 
-Topic pipeline (unchanged):
+Topic pipeline:
     /cmd_vel_nav (Nav2)  ─┐
                           ├─→ /cmd_vel_raw (mux) ──→ SafetyStopNode ──→ /cmd_vel (robot)
     /cmd_vel_treatment ──┘
@@ -145,10 +144,9 @@ class SafetyStopNode(Node):
             self._weather_callback,
             STATE_QOS)
 
-        # ── Digital-twin fault override contract (Option B Req 1 & 2) ─────
-        # The dashboard (digital entity) injects fault state here; this node
-        # (physical execution layer) reacts. SafetyStop NEVER owns fault
-        # lifecycle — it only reads the latest declared mode and enacts it.
+        # Digital-twin fault override: the dashboard injects fault state here and
+        # this node reacts. SafetyStop never owns the fault lifecycle — it only
+        # reads the latest declared mode and enacts it.
         self.lidar_fault: str = 'ok'    # ok | degraded | failed
         self.motor_fault: str = 'ok'    # ok | stalled
         self.create_subscription(
@@ -163,9 +161,8 @@ class SafetyStopNode(Node):
             10
         )
 
-        # ── Obstacle status mirror (Option B Req 3) ───────────────────────
-        # Publishes environment-interaction events so the digital entity
-        # (dashboard) reflects what the physical robot senses in the world.
+        # Obstacle status mirror: publishes environment-interaction events so the
+        # dashboard reflects what the physical robot senses in the world.
         self.obstacle_pub = self.create_publisher(
             String,
             '/obstacle_status',

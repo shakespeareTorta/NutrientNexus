@@ -1,12 +1,4 @@
 # Nav2 parameter file for Nutrient Nexus simulation (ROS 2 Jazzy compatible)
-# Based on the official turtlebot3_navigation2 burger.yaml reference params.
-# Key differences from the old file:
-#   - recoveries_server -> behavior_server (renamed in Humble+)
-#   - nav2_recoveries/ -> nav2_behaviors:: (plugin namespace updated)
-#   - recovery_plugins -> behavior_plugins
-#   - Added controller_plugins, planner_plugins, progress_checker, goal_checker lists
-#   - robot_base_frame: base_link (not base_footprint — matches TF tree from turtlebot3_gazebo)
-#   - Removed deprecated bt_xml_filename, replaced with default_nav_to_pose_bt_xml
 
 amcl:
   ros__parameters:

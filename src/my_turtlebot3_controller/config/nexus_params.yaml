@@ -1,10 +1,7 @@
 # ── Nutrient Nexus — Centralised Node Parameters ──────────────────────
 #
 # All tunable parameters for the Nexus application nodes.
-# Loaded by nexus.launch.py.
-#
-# Inspired by OceanDeepSeek's parameter externalisation pattern:
-# every magic number lives here, not in Python source code.
+# Loaded by nexus.launch.py. Every tunable value lives here, not in source.
 
 # ── Safety Stop Node ──────────────────────────────────────────────────
 /**:
