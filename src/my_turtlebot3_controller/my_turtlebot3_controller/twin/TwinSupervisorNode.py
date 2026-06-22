@@ -23,6 +23,8 @@ from my_turtlebot3_controller.qos import STATE_QOS
 
 class TwinSupervisorNode(Node):
     def __init__(self) -> None:
+        """Set up the patrol queue, fault de-bounce state, and the publishers/
+        subscribers that link the supervisor to the robot and the dashboard."""
         super().__init__('twin_supervisor_node')
 
         self.declare_parameter('system_mode', 'HYBRID')
@@ -66,6 +68,8 @@ class TwinSupervisorNode(Node):
         self.create_timer(1.0, self._supervisor_tick)
 
     def _weather_cb(self, msg: String) -> None:
+        """React to a weather change from the dashboard; a 'storm' triggers an
+        immediate global abort so the robot returns to base (env interaction)."""
         new_weather = msg.data.lower()
         if new_weather != self.current_weather:
             self.current_weather = new_weather
@@ -74,6 +78,8 @@ class TwinSupervisorNode(Node):
                 self._broadcast_abort("STORM_EMERGENCY")
 
     def _resource_cb(self, msg: String) -> None:
+        """Mirror the robot's battery level; below 15% pause the patrol (state
+        sync: an internal robot state changing the supervisor's behaviour)."""
         try:
             data = json.loads(msg.data)
             self.robot_state['battery'] = data.get('battery', 100.0)
@@ -84,6 +90,9 @@ class TwinSupervisorNode(Node):
             pass
 
     def _nav_status_cb(self, msg: String) -> None:
+        """Track navigation status and declare a physical-robot fault only after
+        `nav_fault_threshold` consecutive failures (edge-triggered + de-bounced)
+        so a single transient Nav2 abort can't trigger an abort storm."""
         state = msg.data
 
         # Edge-trigger: NavigationExecutorNode republishes its status at 2 Hz and the
@@ -148,6 +157,7 @@ class TwinSupervisorNode(Node):
         self._dispatch_zone("BASE")
 
     def _dispatch_zone(self, zone: str) -> None:
+        """Publish a {robot, zone} assignment on /supervisor/zone_assignment."""
         assign_msg = String()
         assign_msg.data = json.dumps({"robot": self.robot_id, "zone": zone})
         self.assignment_pub.publish(assign_msg)
@@ -166,6 +176,8 @@ class TwinSupervisorNode(Node):
         self.alert_pub.publish(msg)
 
     def _supervisor_tick(self) -> None:
+        """1 Hz heartbeat: publish the fused robot/weather/queue snapshot on
+        /sync_status so the rest of the twin shares one consistent world view."""
         sync_data = {
             "robot": self.robot_state,
             "weather": self.current_weather,

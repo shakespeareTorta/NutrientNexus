@@ -19,7 +19,12 @@ from my_turtlebot3_controller.qos import STATE_QOS
 
 
 class WeatherAdapterNode(Node):
+    """Bridges a real weather API into the twin: periodically fetches live
+    conditions and republishes them as a system weather state."""
+
     def __init__(self):
+        """Read location/interval params, create the /weather_forecast publisher,
+        and schedule (and immediately run) the first fetch."""
         super().__init__('weather_adapter_node')
 
         # Parameters for location and update frequency
@@ -45,6 +50,8 @@ class WeatherAdapterNode(Node):
         )
 
     def fetch_weather(self):
+        """Query Open-Meteo, map the WMO code to sunny/overcast/rainy/storm, and
+        publish it on /weather_forecast (errors are logged, not raised)."""
         url = f"https://api.open-meteo.com/v1/forecast?latitude={self.lat}&longitude={self.lon}&current_weather=true"
         
         try:

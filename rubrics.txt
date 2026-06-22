@@ -1,0 +1,82 @@
+Your implementation must demonstrate:
+
+Bidirectional Communication (publish/subscribe)
+Show two-way data flow between the two entities using ROS 2 topics (and optionally services/actions). Each side must publish at least one stream that the other subscribes to.
+
+State Synchronization (not just motion commands)
+Mirror meaningful states across entities (e.g., sensor status, battery/power state, actuator/motor status, errors/warnings, localization quality, operating mode) with real-time/near-real-time responsiveness.
+
+Environmental & Object Interaction
+Demonstrate an environment-driven behavior that propagates through the twin system (e.g., obstacle detection/avoidance, dynamic obstacle response, object pushing/transport). The key requirement is that environment-related events do not remain local to only one side.
+
+Implementation of PoC
+Criteria	Ratings	Points
+Bidirectional Communication
+view longer description
+
+Redlining
+Robust two-way pub/sub with consistent update rate. No noticeable dropouts during the demo. At least one meaningful topic each direction (preferably more), e.g., /scan --> twin and /cmd_vel --> robot, plus an internal status topic.
+4 pts
+
+Autobahn
+Two-way communication works end-to-end, but occasional lag or packet drops are visible. At least one topic each direction is demonstrated clearly and repeatably. (Max score for Option B.)
+3 pts
+
+Cruising
+Two-way communication exists but is fragile/low-rate or requires manual restarts. Still demonstrates A publishes something B uses AND B publishes something A uses.
+2 pts
+
+Warming Up (Virtual Only)
+Communication exists only inside the virtual model, or only one-way between entities. No demonstrated two-way entity communication.
+1 pts
+
+Non-Starter
+No observable communication between entities.
+0 pts
+/4 pts
+Synchronization of States
+view longer description
+
+Redlining
+Near-real-time mirroring of multiple states, including at least one internal state (battery/health/fault/mode) that affects behavior or display. State changes propagate reliably and the mirror stays consistent throughout the demo.
+4 pts
+
+Autobahn
+Movement/pose is mirrored plus at least one additional state (e.g., battery or sensor health). Minor mismatches or small delays are acceptable, but mirroring is mostly consistent.
+3 pts
+
+Cruising
+Basic state synchronization is shown (pose + one simple status), but delays/inconsistencies occur. Must show at least one non-motion state mirrored. (Max score for Option B.)
+2 pts
+
+Warming Up (Virtual Only)
+Only command following or pose mirroring without meaningful internal state synchronization. Faults/health/mode are not mirrored.
+1 pts
+
+Non-Starter
+No observable synchronization. The entities do not reflect each other’s state.
+0 pts
+/4 pts
+Environmental & Object Interaction
+view longer description
+
+Redlining
+Obstacle avoidance and/or object interaction is functional and mirrored across entities in near-real-time. Introduce at least one environment change during the demo and show consistent mirrored response.
+4 pts
+
+Autobahn
+Environment/object interaction works and is mostly mirrored, but may be simplified or show minor mismatch/delay. Still clearly demonstrates propagation across entities.
+3 pts
+
+Cruising
+A basic interaction is shown (avoid obstacle OR push/track object), but mirroring is partial or delayed. (Max score for Option B.)
+2 pts
+
+Warming Up (Virtual Only)
+Interaction is implemented only in the virtual model with no propagation to the other entity.
+1 pts
+
+Non-Starter
+No implementation. The robot does not respond to or affect its environment.
+0 pts
+/4 pts

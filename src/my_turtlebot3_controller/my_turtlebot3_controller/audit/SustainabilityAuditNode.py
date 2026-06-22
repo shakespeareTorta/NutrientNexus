@@ -13,7 +13,13 @@ import os
 from datetime import datetime
 
 class SustainabilityAuditNode(Node):
+    """Independent ledger of farm operations. Logs every fertilise/irrigate/
+    SDG-14 intervention and, on request, writes a Markdown sustainability
+    report estimating prevented runoff."""
+
     def __init__(self) -> None:
+        """Initialise the ledgers and subscribe to the operation and report
+        topics."""
         super().__init__('sustainability_audit_node')
 
         # Ledgers
@@ -35,9 +41,11 @@ class SustainabilityAuditNode(Node):
         self.get_logger().info("Sustainability Audit Node started. Ledger initialized.")
 
     def weather_cb(self, msg: String):
+        """Track current weather so each logged action records its conditions."""
         self.current_weather = msg.data
 
     def fert_cb(self, msg: String):
+        """Log a fertilisation event (time, zone, robot, weather) to the ledger."""
         try:
             data = json.loads(msg.data)
             zone_id = data.get('zone', msg.data)
@@ -55,6 +63,7 @@ class SustainabilityAuditNode(Node):
         self.get_logger().info(f"[AUDIT] Logged fertilisation by Robot {robot_id} in {zone_id}.")
 
     def irrig_cb(self, msg: String):
+        """Log an irrigation event (time, zone, robot, weather) to the ledger."""
         try:
             data = json.loads(msg.data)
             zone_id = data.get('zone', msg.data)
@@ -82,6 +91,8 @@ class SustainabilityAuditNode(Node):
             self.get_logger().error(f"Failed to parse intervention: {e}")
 
     def generate_report_cb(self, msg: String):
+        """Compile the ledgers into a Markdown report (SDG-14 impact, operations,
+        recommendations) and write it to nexus_farm_report.md."""
         self.get_logger().info("Compiling Sustainability Report...")
         
         # Estimate savings: Assume each aborted fertilizer spray saves 1.5kg of nitrogen

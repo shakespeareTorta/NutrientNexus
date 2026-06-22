@@ -17,7 +17,15 @@ from my_turtlebot3_controller.qos import STATE_QOS
 
 
 class CropDecisionNode(Node):
+    """Per-robot decision brain. Asks the supervisor for a zone, drives Nav2 to
+    it, reads the field telemetry, and issues irrigate / fertilise / SDG-14-halt
+    actions, all governed by a phase state machine (IDLE -> WAITING_FOR_
+    ASSIGNMENT -> NAVIGATING -> VERIFYING_ZONE -> SCANNING -> DECIDING ->
+    ACTUATING -> COOLDOWN, with RETURNING_TO_BASE for low resources)."""
+
     def __init__(self) -> None:
+        """Wire up publishers/subscribers, load zones.yaml, read the tunable
+        thresholds, and start the 1 Hz state-machine tick."""
         super().__init__('crop_decision_node')
 
         # Identify robot (A or B)
@@ -114,6 +122,8 @@ class CropDecisionNode(Node):
         self.get_logger().info(f"CropDecisionNode for Robot {self.robot_id} started. Operating as twin client.")
 
     def _cancel_and_destroy(self, timer_attr: str) -> None:
+        """Cancel and tear down the one-shot timer named by `timer_attr` (if any),
+        then clear the attribute, so phases never leave a stale timer running."""
         timer = getattr(self, timer_attr, None)
         if timer is not None:
             timer.cancel()
@@ -122,19 +132,23 @@ class CropDecisionNode(Node):
 
     # ── Callbacks ──
     def current_zone_callback(self, msg: String) -> None:
+        """Record which zone the robot is physically inside (from ZoneDetector)."""
         self.physical_current_zone = msg.data
 
     def moisture_callback(self, msg: Float32MultiArray) -> None:
+        """Cache per-zone moisture (array indexed by self.ordered_zones order)."""
         for i, val in enumerate(msg.data):
             if i < len(self.ordered_zones):
                 self.latest_moisture[self.ordered_zones[i]] = val
 
     def nutrients_callback(self, msg: Float32MultiArray) -> None:
+        """Cache per-zone nutrient levels (same indexing as moisture)."""
         for i, val in enumerate(msg.data):
             if i < len(self.ordered_zones):
                 self.latest_nutrients[self.ordered_zones[i]] = val
 
     def vulnerability_callback(self, msg: Float32MultiArray) -> None:
+        """Cache per-zone runoff vulnerability (drives the SDG-14 halt)."""
         for i, val in enumerate(msg.data):
             if i < len(self.ordered_zones):
                 self.latest_vulnerability[self.ordered_zones[i]] = val
@@ -154,6 +168,8 @@ class CropDecisionNode(Node):
             pass
 
     def alerts_callback(self, msg: String) -> None:
+        """Honour a supervisor ABORT (storm / fault): drop the queue and head
+        home (env/fault event propagating from the digital side to the robot)."""
         try:
             data = json.loads(msg.data)
             if isinstance(data, dict) and data.get("action") == "ABORT":
@@ -164,6 +180,8 @@ class CropDecisionNode(Node):
             pass
 
     def assignment_callback(self, msg: String) -> None:
+        """Accept a zone assignment addressed to this robot: run the predictive
+        battery check, then either generate the zone sub-target or divert home."""
         if self.current_phase != "WAITING_FOR_ASSIGNMENT":
             return
             
@@ -196,6 +214,8 @@ class CropDecisionNode(Node):
             pass
 
     def nav_status_callback(self, msg: String) -> None:
+        """Advance the state machine on Nav2 outcomes: arrival -> verify the zone,
+        failure -> cooldown and skip, base arrival -> refill and go IDLE."""
         status = msg.data
         if status == "IDLE" and not self.nav2_ready:
             self.nav2_ready = True
@@ -244,6 +264,8 @@ class CropDecisionNode(Node):
 
     # ── Dispatchers ──
     def _dispatch_next_subtarget(self):
+        """Pop the next (x, y, yaw) sub-target and send it to Nav2 as a map-frame
+        goal; if the list is empty the zone is done and we return to IDLE."""
         if not self.sub_targets:
             self.get_logger().info(f"Finished all sub-targets for {self.active_zone_id}.")
             self.current_phase = "IDLE"
@@ -265,6 +287,8 @@ class CropDecisionNode(Node):
         self.current_phase = "NAVIGATING"
 
     def _dispatch_to_base(self):
+        """Send the robot to the base station (with a per-robot parking offset)
+        and enter RETURNING_TO_BASE so arrival triggers a refill."""
         z = self.raw_zones.get('base_station')
         if not z:
             return
@@ -285,6 +309,9 @@ class CropDecisionNode(Node):
 
     # ── State Machine ──
     def state_machine_tick(self) -> None:
+        """1 Hz driver: enforce the low-resource return-to-base guard, then step
+        the phase machine (request a zone when IDLE, time out a stuck assignment,
+        confirm arrival before scanning)."""
         if not self.nav2_ready:
             return
 
@@ -339,6 +366,9 @@ class CropDecisionNode(Node):
                 self._start_cooldown()
 
     def _on_scan_complete(self):
+        """Core agronomy decision: if vulnerability is high, halt fertiliser and
+        log an SDG-14 intervention; otherwise fertilise low-nutrient and irrigate
+        low-moisture zones, then actuate (or cool down if nothing was needed)."""
         self._cancel_and_destroy('_scan_timer')
         self.current_phase = "DECIDING"
         
@@ -393,6 +423,8 @@ class CropDecisionNode(Node):
             self._start_cooldown()
 
     def _actuation_tick(self):
+        """Spin in place to mime spraying for `actuation_duration`, then stop the
+        robot and start the cooldown — the visible 'treatment' behaviour."""
         now = self.get_clock().now().nanoseconds / 1e9
         if now - self._actuation_start_time < self.actuation_duration:
             cmd = Twist()
@@ -406,11 +438,14 @@ class CropDecisionNode(Node):
             self._start_cooldown()
 
     def _start_cooldown(self):
+        """Enter a short COOLDOWN before the next sub-target, so consecutive
+        Nav2 goals don't stomp on each other."""
         self.current_phase = "COOLDOWN"
         self._cancel_and_destroy('_cooldown_timer')
         self._cooldown_timer = self.create_timer(self.cooldown_duration, self._on_cooldown_complete)
 
     def _on_cooldown_complete(self):
+        """End of cooldown: go to the next sub-target, or back to IDLE if none."""
         self._cancel_and_destroy('_cooldown_timer')
         # If there are more subtargets, go to them!
         if self.sub_targets:

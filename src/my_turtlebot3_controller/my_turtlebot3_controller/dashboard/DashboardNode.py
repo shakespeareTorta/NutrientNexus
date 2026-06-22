@@ -30,6 +30,9 @@ from my_turtlebot3_controller.qos import STATE_QOS
 
 class DashboardNode(Node):
     def __init__(self) -> None:
+        """Create the publishers (digital -> physical: weather, faults, report),
+        the subscribers that mirror physical state, the field-zone caches, then
+        build the Tk window and start the refresh loop."""
         super().__init__('nexus_dashboard_node')
 
         # ── Publishers (Digital → Physical) ──────────────────────────
@@ -81,6 +84,8 @@ class DashboardNode(Node):
     # ── GUI construction ──────────────────────────────────────────────
 
     def _build_gui(self) -> None:
+        """Build the dark-themed window and lay out every panel (resources,
+        telemetry, zone status, health, obstacle, weather, faults, audit)."""
         self.root = tk.Tk()
         self.root.title("Nutrient Nexus - Digital Twin Dashboard")
         self.root.geometry("980x880")
@@ -113,6 +118,7 @@ class DashboardNode(Node):
         self._build_audit(main)
 
     def _build_resources(self, parent: tk.Widget) -> None:
+        """Battery and fertilizer progress bars (mirror of /robot_resources)."""
         frame = tk.LabelFrame(parent, text="Physical Robot Resources (Gazebo)", bg="#1E1E1E",
                               fg="#FFFFFF", font=("Helvetica", 12, "bold"))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
@@ -130,6 +136,7 @@ class DashboardNode(Node):
         self.fert_lbl.grid(row=1, column=2)
 
     def _build_telemetry(self, parent: tk.Widget) -> None:
+        """Current-zone and navigation-status labels for the robot."""
         frame = tk.LabelFrame(parent, text="Telemetry", bg="#1E1E1E", fg="#FFFFFF",
                               font=("Helvetica", 12, "bold"))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
@@ -139,6 +146,8 @@ class DashboardNode(Node):
         tk.Label(frame, textvariable=self.nav_var, bg="#1E1E1E", fg="#CCC", font=("Helvetica", 10)).grid(row=1, column=0, sticky="w", padx=10, pady=2)
 
     def _build_zone_status(self, parent: tk.Widget) -> None:
+        """One live row per field zone (moisture / nutrients / colour-coded
+        status), kept in self.zone_widgets for update_gui_loop to refresh."""
         frame = tk.LabelFrame(parent, text="Field Zone Status (live moisture / nutrients)",
                               bg="#1E1E1E", fg="#FFFFFF", font=("Helvetica", 12, "bold"))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
@@ -161,6 +170,7 @@ class DashboardNode(Node):
             self.zone_widgets[z] = (moist, nutri, status)
 
     def _build_health(self, parent: tk.Widget) -> None:
+        """Battery / LiDAR / IMU status labels (mirror of /system_health)."""
         frame = tk.LabelFrame(parent, text="System Health (/system_health)", bg="#1E1E1E",
                               fg="#FFFFFF", font=("Helvetica", 12, "bold"))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
@@ -175,6 +185,7 @@ class DashboardNode(Node):
         self.health_imu_lbl.grid(row=0, column=2, sticky="w", padx=10, pady=2)
 
     def _build_obstacle(self, parent: tk.Widget) -> None:
+        """Live obstacle readout (mirror of /obstacle_status from SafetyStop)."""
         frame = tk.LabelFrame(parent, text="Environment / Obstacle (/obstacle_status)", bg="#1E1E1E",
                               fg="#FFFFFF", font=("Helvetica", 12, "bold"))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
@@ -183,6 +194,7 @@ class DashboardNode(Node):
         self.obstacle_lbl.pack(anchor="w", padx=10, pady=2)
 
     def _build_weather(self, parent: tk.Widget) -> None:
+        """Buttons that inject a weather state down to the physical robot."""
         frame = tk.LabelFrame(parent, text="Weather Injection (SDG-14)", bg="#1E1E1E",
                               fg="#FFFFFF", font=("Helvetica", 12, "bold"))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
@@ -194,6 +206,7 @@ class DashboardNode(Node):
         tk.Button(bar, text="Storm", bg="#8E44AD", fg="#FFF", font=("Helvetica", 10, "bold"), command=lambda: self.set_weather("storm")).grid(row=0, column=3, padx=8)
 
     def _build_faults(self, parent: tk.Widget) -> None:
+        """Buttons that inject LiDAR / motor faults onto the physical robot."""
         frame = tk.LabelFrame(parent, text="Fault Injection (Digital → Physical)", bg="#1E1E1E",
                               fg="#FFFFFF", font=("Helvetica", 12, "bold"))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
@@ -219,6 +232,7 @@ class DashboardNode(Node):
                   font=("Helvetica", 10, "bold"), command=self.clear_faults).grid(row=0, column=6, padx=12)
 
     def _build_audit(self, parent: tk.Widget) -> None:
+        """Button that asks SustainabilityAuditNode to write its report."""
         frame = tk.LabelFrame(parent, text="Sustainability Audit", bg="#1E1E1E", fg="#FFFFFF",
                               font=("Helvetica", 12, "bold"))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
@@ -228,19 +242,24 @@ class DashboardNode(Node):
     # ── Publishers (Digital → Physical actions) ───────────────────────
 
     def set_weather(self, weather: str) -> None:
+        """Publish a weather state on /weather_forecast (digital -> physical)."""
         self.weather_pub.publish(String(data=weather))
         self.get_logger().info(f"Injected weather: {weather}")
 
     def generate_report(self) -> None:
+        """Trigger the sustainability report via /generate_report."""
         self.report_pub.publish(String(data="generate"))
 
     def _publish_faults(self) -> None:
+        """Publish the current injected fault set (plus an `active` flag) on
+        /twin_fault_state for the physical-side nodes to enact."""
         payload = dict(self.faults)
         payload['active'] = any(v not in ('ok', 'normal') for v in self.faults.values())
         self.fault_pub.publish(String(data=json.dumps(payload)))
         self.get_logger().info(f"Injected fault state: {payload}")
 
     def cycle_lidar(self) -> None:
+        """Cycle the LiDAR fault ok -> degraded -> failed and republish faults."""
         order = ['ok', 'degraded', 'failed']
         self.faults['lidar'] = order[(order.index(self.faults['lidar']) + 1) % len(order)]
         colors = {'ok': '#2ECC71', 'degraded': '#F39C12', 'failed': '#E74C3C'}
@@ -248,18 +267,22 @@ class DashboardNode(Node):
         self._publish_faults()
 
     def toggle_motor(self) -> None:
+        """Toggle the motor fault ok <-> stalled and republish faults."""
         self.faults['motor'] = 'stalled' if self.faults['motor'] == 'ok' else 'ok'
         ok = self.faults['motor'] == 'ok'
         self.motor_btn.config(text=self.faults['motor'].upper(), bg='#2ECC71' if ok else '#E74C3C')
         self._publish_faults()
 
     def toggle_battery(self) -> None:
+        """Toggle the battery fault normal <-> clamped and republish faults
+        (button currently hidden; kept for the battery-fault cascade demo)."""
         self.faults['battery'] = 'clamped' if self.faults['battery'] == 'normal' else 'normal'
         ok = self.faults['battery'] == 'normal'
         self.battery_btn.config(text=self.faults['battery'].upper(), bg='#2ECC71' if ok else '#E74C3C')
         self._publish_faults()
 
     def clear_faults(self) -> None:
+        """Reset every injected fault to healthy and republish."""
         self.faults = {'lidar': 'ok', 'motor': 'ok', 'battery': 'normal'}
         self.lidar_btn.config(text='OK', bg='#2ECC71')
         self.motor_btn.config(text='OK', bg='#2ECC71')
@@ -269,6 +292,7 @@ class DashboardNode(Node):
     # ── Subscribers (Physical → Digital state mirroring) ──────────────
 
     def resource_cb(self, msg: String) -> None:
+        """Mirror battery/fertilizer from /robot_resources into self.state."""
         try:
             data = json.loads(msg.data)
         except json.JSONDecodeError:
@@ -278,14 +302,17 @@ class DashboardNode(Node):
             self.state['fertilizer'] = data.get("fertilizer", 100.0)
 
     def zone_cb(self, msg: String) -> None:
+        """Mirror the robot's current zone from /current_zone."""
         with self.state_lock:
             self.state['zone'] = msg.data
 
     def nav_cb(self, msg: String) -> None:
+        """Mirror navigation status from /navigation_executor_status."""
         with self.state_lock:
             self.state['nav'] = msg.data
 
     def health_cb(self, msg: String) -> None:
+        """Mirror twin mode and battery/LiDAR/IMU status from /system_health."""
         try:
             data = json.loads(msg.data)
         except json.JSONDecodeError:
@@ -297,6 +324,8 @@ class DashboardNode(Node):
             self.state['imu_status'] = data.get('imu', {}).get('status', 'NO_DATA')
 
     def obstacle_cb(self, msg: String) -> None:
+        """Mirror what the robot senses from /obstacle_status into a readable
+        line (environment interaction reflected on the digital side)."""
         try:
             data = json.loads(msg.data)
         except json.JSONDecodeError:
@@ -312,6 +341,8 @@ class DashboardNode(Node):
 
     # ── Field zone telemetry (arrays indexed by self.zone_ids order) ──
     def _store_field(self, key: str, msg: Float32MultiArray) -> None:
+        """Cache a field-telemetry array (moisture/nutrients/vulnerability) into
+        self.field[key], indexed by zone in self.zone_ids order, under the lock."""
         with self.state_lock:
             for i, z in enumerate(self.zone_ids):
                 if i < len(msg.data):
@@ -322,6 +353,8 @@ class DashboardNode(Node):
     def _vulnerability_cb(self, msg): self._store_field('vulnerability', msg)
 
     def _load_zone_ids(self) -> list:
+        """Return the sorted zone ids from zones.yaml (so the table matches the
+        array ordering), falling back to zone_0..zone_3 if it can't be read."""
         try:
             pkg = get_package_share_directory('my_turtlebot3_controller')
             with open(os.path.join(pkg, 'config', 'zones.yaml'), encoding='utf-8') as f:
@@ -333,6 +366,7 @@ class DashboardNode(Node):
 
     @staticmethod
     def _zone_label(zid: str) -> str:
+        """Pretty-print a zone id, e.g. 'zone_0' -> 'Zone 0'."""
         return zid.replace('_', ' ').title()
 
     def _zone_category(self, m, n, v):
@@ -354,6 +388,9 @@ class DashboardNode(Node):
     # ── GUI refresh loop (main thread) ────────────────────────────────
 
     def update_gui_loop(self) -> None:
+        """Main-thread refresh (every 100 ms): snapshot the mirrored state under
+        the lock and repaint every widget, including the live zone table. Tk is
+        only ever touched here, never from the ROS spin thread."""
         with self.state_lock:
             s = dict(self.state)
             moisture = dict(self.field['moisture'])
@@ -398,6 +435,7 @@ class DashboardNode(Node):
         self.root.after(100, self.update_gui_loop)
 
     def run_gui(self) -> None:
+        """Hand control to the Tk event loop (blocks on the main thread)."""
         self.root.mainloop()
 
 

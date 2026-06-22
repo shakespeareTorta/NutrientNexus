@@ -38,8 +38,13 @@ from my_turtlebot3_controller.qos import STATE_QOS
 
 
 class SystemMonitorNode(Node):
+    """Sole publisher of /system_health. Subscribes to the raw sensor topics
+    (battery/scan/imu), fuses them with any dashboard-injected faults, and
+    publishes one authoritative health view plus a derived twin_mode."""
 
     def __init__(self):
+        """Declare thresholds/topics, subscribe to the sensors and the injected
+        /twin_fault_state, and start the periodic health check."""
         super().__init__('system_monitor_node')
 
         # ── Parameters ────────────────────────────────────────────────
@@ -144,18 +149,22 @@ class SystemMonitorNode(Node):
     # ── Callbacks: store message and wall-clock timestamp ─────────────
 
     def _battery_callback(self, msg: BatteryState) -> None:
+        """Store the latest battery message and its arrival time."""
         self._battery_msg = msg
         self._battery_stamp = self.get_clock().now()
 
     def _scan_callback(self, msg: LaserScan) -> None:
+        """Store the latest LiDAR scan and its arrival time."""
         self._scan_msg = msg
         self._scan_stamp = self.get_clock().now()
 
     def _imu_callback(self, msg: Imu) -> None:
+        """Store the latest IMU message and its arrival time."""
         self._imu_msg = msg
         self._imu_stamp = self.get_clock().now()
 
     def _fault_callback(self, msg: String) -> None:
+        """Record the dashboard-injected fault overrides (lidar/motor/battery)."""
         try:
             data = json.loads(msg.data)
         except json.JSONDecodeError:
@@ -167,6 +176,8 @@ class SystemMonitorNode(Node):
     # ── Master check (called by timer) ────────────────────────────────
 
     def _check(self) -> None:
+        """Timer: assemble the battery/lidar/imu verdicts, overlay injected
+        faults, derive twin_mode, and publish the fused /system_health JSON."""
         health = {}
         health['battery'] = self._check_battery()
         health['lidar'] = self._check_scan()
@@ -193,6 +204,8 @@ class SystemMonitorNode(Node):
         self.health_pub.publish(msg)
 
     def _derive_twin_mode(self, health: dict) -> str:
+        """Reduce the fused health to one of NORMAL / DEGRADED / FAULTED, the
+        single mode the dashboard banner reflects."""
         if (self._faults['motor'] == 'stalled'
                 or self._faults['lidar'] == 'failed'
                 or self._faults['battery'] == 'clamped'
@@ -207,6 +220,8 @@ class SystemMonitorNode(Node):
     # ── Battery check ─────────────────────────────────────────────────
 
     def _check_battery(self) -> dict:
+        """Classify battery as OK/WARNING/CRITICAL by voltage/percent (or NO_DATA
+        in sim), logging only on level changes. Returns a status dict."""
         if self._battery_msg is None:
             if self._battery_stamp is None:
                 self.get_logger().info(
@@ -256,6 +271,8 @@ class SystemMonitorNode(Node):
     # ── LiDAR check ───────────────────────────────────────────────────
 
     def _check_scan(self) -> dict:
+        """Classify the LiDAR as OK/STALE/HIGH_DROPOUT/ALL_INVALID from scan age
+        and the fraction of invalid rays. Returns a status dict."""
         now = self.get_clock().now()
 
         # Staleness
@@ -327,6 +344,8 @@ class SystemMonitorNode(Node):
     # ── IMU check ─────────────────────────────────────────────────────
 
     def _check_imu(self) -> dict:
+        """Classify the IMU (or NO_DATA in sim), warning on excessive linear
+        acceleration or angular velocity. Returns a status dict."""
         now = self.get_clock().now()
 
         # No data received yet

@@ -15,7 +15,13 @@ from my_turtlebot3_controller.qos import STATE_QOS
 
 
 class FieldSensorMockNode(Node):
+    """Simulates the field environment: each zone's moisture/nutrients/growth/
+    vulnerability evolve with the weather and are restored by irrigate/fertilise
+    treatments. Publishes the four telemetry arrays the rest of the twin reads."""
+
     def __init__(self) -> None:
+        """Load zone baselines from zones.yaml, set up the telemetry publishers
+        and treatment subscribers, and start the simulation tick."""
         super().__init__('field_sensor_mock_node')
 
         pkg_dir = get_package_share_directory('my_turtlebot3_controller')
@@ -86,6 +92,7 @@ class FieldSensorMockNode(Node):
         self.publish_telemetry_tick()
 
     def weather_cb(self, msg: String) -> None:
+        """Track the active weather, which drives moisture gain/loss and runoff."""
         self.weather = msg.data.lower()
 
     def deplete_and_grow_tick(self) -> None:
@@ -138,6 +145,7 @@ class FieldSensorMockNode(Node):
         self.get_logger().debug("Published environment telemetry updates.")
 
     def make_float_array(self, data_list: List[float]) -> Float32MultiArray:
+        """Wrap a per-zone value list in a Float32MultiArray with a 'zones' dim."""
         msg = Float32MultiArray()
         msg.layout = MultiArrayLayout()
         msg.layout.dim = [MultiArrayDimension()]
@@ -149,6 +157,7 @@ class FieldSensorMockNode(Node):
         return msg
 
     def irrigate_callback(self, msg: String) -> None:
+        """Apply an irrigation: restore the named zone's moisture and republish."""
         try:
             data = json.loads(msg.data)
             zone_id = data.get('zone', msg.data)
@@ -163,6 +172,7 @@ class FieldSensorMockNode(Node):
         self.publish_telemetry_tick()
 
     def fertilise_callback(self, msg: String) -> None:
+        """Apply a fertilisation: restore the named zone's nutrients and republish."""
         try:
             data = json.loads(msg.data)
             zone_id = data.get('zone', msg.data)
@@ -177,6 +187,7 @@ class FieldSensorMockNode(Node):
         self.publish_telemetry_tick()
 
     def log_zone_states(self, prefix: str = "Current") -> None:
+        """Log a one-line summary of every zone's moisture/nutrients/growth."""
         states = []
         for z in self.zones:
             states.append(f"{z['id']}: Moisture={z['moisture']:.1f}%, Nutrients={z['nutrients']:.1f}%, Growth={z['growth']:.1f}%")

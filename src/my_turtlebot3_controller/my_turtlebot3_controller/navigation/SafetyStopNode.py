@@ -45,7 +45,14 @@ from my_turtlebot3_controller.lidar_utils import sector_min, narrow_object_in_se
 
 
 class SafetyStopNode(Node):
+    """Last-line safety filter between the command mux and the robot. Reads the
+    LiDAR into 5 sectors, gates /cmd_vel for obstacles / stale scans / injected
+    faults / weather, and mirrors what it senses on /obstacle_status."""
+
     def __init__(self) -> None:
+        """Declare distance/angle/weather params, subscribe to scan, the input
+        cmd, weather and injected faults, and create the gated cmd + obstacle
+        publishers."""
         super().__init__('safety_stop_node')
 
         # ── Topic parameters ──────────────────────────────────────────────
@@ -177,6 +184,7 @@ class SafetyStopNode(Node):
             f'nudge_factor={self.nudge_factor}')
 
     def _weather_callback(self, msg: String) -> None:
+        """Widen stop/narrow distances in rain/storm so the robot is more cautious."""
         self.weather_status = msg.data
         if msg.data == 'rainy':
             self.stop_distance = self._base_stop_distance * 1.6
@@ -189,6 +197,7 @@ class SafetyStopNode(Node):
             self.narrow_dist = self._base_narrow_dist
 
     def _fault_callback(self, msg: String) -> None:
+        """Latch the latest injected lidar/motor fault mode for cmd_callback to enact."""
         try:
             data = json.loads(msg.data)
         except json.JSONDecodeError:
@@ -197,6 +206,7 @@ class SafetyStopNode(Node):
         self.motor_fault = data.get('motor', 'ok')
 
     def _publish_obstacle(self, blocked: bool, distance: float, sector: str) -> None:
+        """Publish an /obstacle_status update, but only when it actually changes."""
         payload = json.dumps({
             'blocked': blocked,
             'distance': round(distance, 2) if math.isfinite(distance) else -1.0,

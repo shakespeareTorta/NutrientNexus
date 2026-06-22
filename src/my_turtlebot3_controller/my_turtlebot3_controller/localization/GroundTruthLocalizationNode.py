@@ -38,6 +38,8 @@ from geometry_msgs.msg import TransformStamped
 
 class GroundTruthLocalizationNode(Node):
     def __init__(self) -> None:
+        """Set up the TF buffer/broadcaster, start the background thread that
+        reads the robot's true Gazebo pose, and start the map->odom timer."""
         super().__init__('ground_truth_localization')
 
         self.declare_parameter('robot_model_name', 'burger')
@@ -77,6 +79,8 @@ class GroundTruthLocalizationNode(Node):
     # tiles) — important, because parsing the full set starves Nav2's planner of
     # CPU and makes it time out on long paths to the corners.
     def _stream_true_pose(self) -> None:
+        """Background thread: stream `gz topic -e` for dynamic_pose/info, parse
+        the robot entity's position/orientation, and cache it as self.true_pose."""
         topic = f'/world/{self.world}/dynamic_pose/info'
         try:
             self._proc = subprocess.Popen(
@@ -117,6 +121,9 @@ class GroundTruthLocalizationNode(Node):
                 in_pos = in_orient = False
 
     def _publish_map_to_odom(self) -> None:
+        """Timer: broadcast map->odom so that map->base equals the true pose
+        (i.e. map coincides with the Gazebo world); identity until the first
+        ground-truth pose arrives."""
         try:
             ob = self.tf_buffer.lookup_transform(self.odom_frame, self.base_frame, Time())
         except (LookupException, ConnectivityException, ExtrapolationException):
@@ -148,6 +155,7 @@ class GroundTruthLocalizationNode(Node):
         self.br.sendTransform(out)
 
     def destroy_node(self):
+        """Terminate the gz streaming subprocess before tearing down the node."""
         if self._proc is not None:
             try:
                 self._proc.terminate()
