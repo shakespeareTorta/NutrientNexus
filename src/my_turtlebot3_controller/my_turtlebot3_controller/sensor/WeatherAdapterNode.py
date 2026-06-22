@@ -50,8 +50,15 @@ class WeatherAdapterNode(Node):
         )
 
     def fetch_weather(self):
-        """Query Open-Meteo, map the WMO code to sunny/overcast/rainy/storm, and
-        publish it on /weather_forecast (errors are logged, not raised)."""
+        """
+        Fetch live weather and publish it as a system weather state.
+
+        @pre  Network access to the Open-Meteo API (degrades gracefully if not).
+        @post On success, the WMO code is mapped to sunny/overcast/rainy/storm
+              and published on /weather_forecast; on any network or parse error
+              nothing is published and the error is logged (never raised).
+        @return None.
+        """
         url = f"https://api.open-meteo.com/v1/forecast?latitude={self.lat}&longitude={self.lon}&current_weather=true"
         
         try:

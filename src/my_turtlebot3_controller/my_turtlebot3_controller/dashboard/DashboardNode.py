@@ -241,7 +241,14 @@ class DashboardNode(Node):
     # ── Publishers (Digital → Physical actions) ───────────────────────
 
     def set_weather(self, weather: str) -> None:
-        """Publish a weather state on /weather_forecast (digital -> physical)."""
+        """
+        Publish a weather state down to the physical robot.
+
+        @param weather: one of 'sunny' | 'rainy' | 'overcast' | 'storm'.
+        @pre  self.weather_pub is created (true after __init__).
+        @post A std_msgs/String is published on /weather_forecast.
+        @return None.
+        """
         self.weather_pub.publish(String(data=weather))
         self.get_logger().info(f"Injected weather: {weather}")
 
@@ -250,8 +257,15 @@ class DashboardNode(Node):
         self.report_pub.publish(String(data="generate"))
 
     def _publish_faults(self) -> None:
-        """Publish the current injected fault set (plus an `active` flag) on
-        /twin_fault_state for the physical-side nodes to enact."""
+        """
+        Publish the current injected fault set to the physical side.
+
+        @pre  self.faults holds the lidar/motor/battery modes.
+        @post A JSON std_msgs/String (the fault set plus a boolean 'active'
+              flag) is published on /twin_fault_state for SystemMonitor,
+              SafetyStop and RobotResource to enact.
+        @return None.
+        """
         payload = dict(self.faults)
         payload['active'] = any(v not in ('ok', 'normal') for v in self.faults.values())
         self.fault_pub.publish(String(data=json.dumps(payload)))
@@ -291,7 +305,16 @@ class DashboardNode(Node):
     # ── Subscribers (Physical → Digital state mirroring) ──────────────
 
     def resource_cb(self, msg: String) -> None:
-        """Mirror battery/fertilizer from /robot_resources into self.state."""
+        """
+        Mirror battery and fertilizer levels from the physical robot.
+
+        @param msg: std_msgs/String holding JSON from /robot_resources.
+        @pre  (none).
+        @post Under self.state_lock, self.state['battery'/'fertilizer'] are
+              updated for the GUI loop to read.
+        @return None.
+        @throws (none) malformed JSON is caught and the message is dropped.
+        """
         try:
             data = json.loads(msg.data)
         except json.JSONDecodeError:
@@ -311,7 +334,16 @@ class DashboardNode(Node):
             self.state['nav'] = msg.data
 
     def health_cb(self, msg: String) -> None:
-        """Mirror twin mode and battery/LiDAR/IMU status from /system_health."""
+        """
+        Mirror the fused system health from the physical robot.
+
+        @param msg: std_msgs/String holding JSON from /system_health.
+        @pre  (none).
+        @post Under self.state_lock, self.state['twin_mode'] and the per-sensor
+              status fields are updated for the GUI loop to read.
+        @return None.
+        @throws (none) malformed JSON is caught and the message is dropped.
+        """
         try:
             data = json.loads(msg.data)
         except json.JSONDecodeError:
@@ -323,8 +355,16 @@ class DashboardNode(Node):
             self.state['imu_status'] = data.get('imu', {}).get('status', 'NO_DATA')
 
     def obstacle_cb(self, msg: String) -> None:
-        """Mirror what the robot senses from /obstacle_status into a readable
-        line (environment interaction reflected on the digital side)."""
+        """
+        Mirror what the robot senses in its environment.
+
+        @param msg: std_msgs/String holding JSON from /obstacle_status.
+        @pre  (none).
+        @post Under self.state_lock, self.state['obstacle'] becomes a readable
+              line such as 'OBSTACLE: FRONT @ 0.28m' or 'No obstacle'.
+        @return None.
+        @throws (none) malformed JSON is caught and the message is dropped.
+        """
         try:
             data = json.loads(msg.data)
         except json.JSONDecodeError:

@@ -194,7 +194,17 @@ class SafetyStopNode(Node):
             self.narrow_dist = self._base_narrow_dist
 
     def _fault_callback(self, msg: String) -> None:
-        """Latch the latest injected lidar/motor fault mode for cmd_callback to enact."""
+        """
+        Latch the latest injected lidar/motor fault mode.
+
+        @param msg: std_msgs/String holding the JSON fault state from the
+            dashboard, e.g. {"lidar": "failed", "motor": "ok"}.
+        @pre  (none).
+        @post self.lidar_fault and self.motor_fault hold the new modes, which
+              cmd_callback reads on the next command (defaults 'ok' if absent).
+        @return None.
+        @throws (none) malformed JSON is caught and the message is dropped.
+        """
         try:
             data = json.loads(msg.data)
         except json.JSONDecodeError:
@@ -203,7 +213,17 @@ class SafetyStopNode(Node):
         self.motor_fault = data.get('motor', 'ok')
 
     def _publish_obstacle(self, blocked: bool, distance: float, sector: str) -> None:
-        """Publish an /obstacle_status update, but only when it actually changes."""
+        """
+        Publish an /obstacle_status update, de-duplicated.
+
+        @param blocked: True if forward motion is currently being blocked.
+        @param distance: range to the obstacle in metres, or -1.0 if not finite.
+        @param sector: which sector/condition triggered it (e.g. 'FRONT').
+        @pre  (none).
+        @post Publishes the JSON payload only if it differs from the last one
+              sent, and updates self._last_obstacle_json.
+        @return None.
+        """
         payload = json.dumps({
             'blocked': blocked,
             'distance': round(distance, 2) if math.isfinite(distance) else -1.0,
@@ -217,7 +237,16 @@ class SafetyStopNode(Node):
     # ── Scan callback: 5-sector extraction + narrow object detection ──────
 
     def scan_callback(self, msg: LaserScan) -> None:
-        """Update all 5 sector distances from the latest LiDAR frame."""
+        """
+        Update all five sector distances from the latest LiDAR frame.
+
+        @param msg: sensor_msgs/LaserScan, the latest scan.
+        @pre  (none).
+        @post d_front / d_front_left / d_front_right / d_left / d_right hold the
+              sector minima; a detected narrow object pulls d_front down so
+              cmd_callback reacts; self._last_scan_time records arrival.
+        @return None.
+        """
         fa = self.front_deg
         sa = self.side_deg
         ra = self.rear_deg

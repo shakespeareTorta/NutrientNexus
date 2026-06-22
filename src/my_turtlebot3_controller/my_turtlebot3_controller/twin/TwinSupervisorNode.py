@@ -90,9 +90,21 @@ class TwinSupervisorNode(Node):
             pass
 
     def _nav_status_cb(self, msg: String) -> None:
-        """Track navigation status and declare a physical-robot fault only after
-        `nav_fault_threshold` consecutive failures (edge-triggered + de-bounced)
-        so a single transient Nav2 abort can't trigger an abort storm."""
+        """
+        Track navigation status and de-bounce physical-robot faults.
+
+        Reacts only to an actual change of state (the topic is transient-local
+        and republished). A physical-robot fault is declared only after
+        `nav_fault_threshold` consecutive failures with no arrival between them,
+        so a single transient Nav2 abort cannot trigger an abort storm; a
+        genuine arrival clears the streak.
+
+        @param msg: std_msgs/String navigation status from the robot.
+        @pre  (none).
+        @post Updates the failure streak and robot_state['status']; may call
+              _handle_robot_fault() when the threshold is reached.
+        @return None.
+        """
         state = msg.data
 
         # Edge-trigger: NavigationExecutorNode republishes its status at 2 Hz and the
@@ -129,7 +141,19 @@ class TwinSupervisorNode(Node):
         self.robot_state['status'] = state
 
     def _zone_request_cb(self, msg: String) -> None:
-        """Handles requests from the robot for its next task."""
+        """
+        Dispatch the robot's next task in response to a zone request.
+
+        A faulted robot is ignored until it has recovered (battery >= 20% and
+        IDLE). A storm or low battery sends it to BASE; otherwise the next zone
+        is popped from the patrol queue and re-queued for continuous patrol.
+
+        @param msg: std_msgs/String zone request from the robot.
+        @pre  (none).
+        @post Publishes one zone assignment (a zone id or BASE), or returns
+              without dispatching if the robot is still faulted.
+        @return None.
+        """
         self.get_logger().info("Received zone request from robot")
 
         if self.robot_state.get('faulted', False):

@@ -17,11 +17,18 @@ from my_turtlebot3_controller.qos import STATE_QOS
 
 
 class CropDecisionNode(Node):
-    """Per-robot decision brain. Asks the supervisor for a zone, drives Nav2 to
-    it, reads the field telemetry, and issues irrigate / fertilise / SDG-14-halt
-    actions, all governed by a phase state machine (IDLE -> WAITING_FOR_
-    ASSIGNMENT -> NAVIGATING -> VERIFYING_ZONE -> SCANNING -> DECIDING ->
-    ACTUATING -> COOLDOWN, with RETURNING_TO_BASE for low resources)."""
+    """
+    Per-robot decision brain for one field robot.
+
+    Asks the supervisor for a zone, drives Nav2 to it, reads the field
+    telemetry, and issues irrigate / fertilise / SDG-14-halt actions. All work
+    is governed by a phase state machine: IDLE -> WAITING_FOR_ASSIGNMENT ->
+    NAVIGATING -> VERIFYING_ZONE -> SCANNING -> DECIDING -> ACTUATING ->
+    COOLDOWN, with RETURNING_TO_BASE for low resources.
+
+    Invariant: at most one of the scan / actuation / cooldown timers is active
+    at any time; each is cancelled before the next phase's timer is created.
+    """
 
     def __init__(self) -> None:
         """Wire up publishers/subscribers, load zones.yaml, read the tunable
@@ -180,8 +187,20 @@ class CropDecisionNode(Node):
             pass
 
     def assignment_callback(self, msg: String) -> None:
-        """Accept a zone assignment addressed to this robot: run the predictive
-        battery check, then either generate the zone sub-target or divert home."""
+        """
+        Accept a zone assignment addressed to this robot.
+
+        Ignored unless the phase is WAITING_FOR_ASSIGNMENT. A "BASE" zone or a
+        failed predictive battery check diverts the robot home; otherwise the
+        zone's target becomes the next navigation sub-target.
+
+        @param msg: std_msgs/String holding JSON {"robot": id, "zone": zone_id}.
+        @pre  self.raw_zones contains zone_id when it is not "BASE".
+        @post On a match, either RETURNING_TO_BASE is entered or active_zone_id
+              and sub_targets are set and the first sub-target is dispatched.
+        @return None.
+        @throws (none) malformed JSON is caught and ignored.
+        """
         if self.current_phase != "WAITING_FOR_ASSIGNMENT":
             return
             
@@ -214,8 +233,19 @@ class CropDecisionNode(Node):
             pass
 
     def nav_status_callback(self, msg: String) -> None:
-        """Advance the state machine on Nav2 outcomes: arrival -> verify the zone,
-        failure -> cooldown and skip, base arrival -> refill and go IDLE."""
+        """
+        Advance the state machine on a navigation outcome.
+
+        Arrival while NAVIGATING moves to VERIFYING_ZONE; a navigation failure
+        starts a cooldown and skips the sub-target; arrival while
+        RETURNING_TO_BASE publishes a refill and returns to IDLE. The first IDLE
+        seen latches nav2_ready.
+
+        @param msg: std_msgs/String navigation status from NavigationExecutor.
+        @pre  (none).
+        @post self.current_phase and self.nav2_ready reflect the new status.
+        @return None.
+        """
         status = msg.data
         if status == "IDLE" and not self.nav2_ready:
             self.nav2_ready = True
@@ -238,12 +268,17 @@ class CropDecisionNode(Node):
     # ── Battery estimation ──
     def _can_afford_trip(self, zone: dict, base: dict) -> bool:
         """
-        Estimate whether current battery can cover the round-trip:
-          current position → zone target → base station.
+        Estimate whether the battery can cover the round-trip to a zone.
 
-        Uses Euclidean distance × battery_drain_per_meter × safety_margin.
-        The safety margin (default 1.5×) accounts for Nav2 paths being
-        longer than straight-line distance.
+        Distance is current_position -> zone target -> base station, costed as
+        Euclidean distance x battery_drain_per_meter x safety_margin. The margin
+        (default 1.5x) accounts for Nav2 paths being longer than straight lines.
+
+        @param zone: zone definition with numeric 'target_x' / 'target_y'.
+        @param base: base-station definition (defaults to the origin if absent).
+        @pre  self.current_x / self.current_y hold the latest odometry position.
+        @post No state is mutated (read-only estimate).
+        @return True if self.battery_level exceeds the estimated drain.
         """
         zx, zy = float(zone['target_x']), float(zone['target_y'])
         bx, by = float(base.get('target_x', 0.0)), float(base.get('target_y', 0.0))
@@ -366,9 +401,20 @@ class CropDecisionNode(Node):
                 self._start_cooldown()
 
     def _on_scan_complete(self):
-        """Core agronomy decision: if vulnerability is high, halt fertiliser and
-        log an SDG-14 intervention; otherwise fertilise low-nutrient and irrigate
-        low-moisture zones, then actuate (or cool down if nothing was needed)."""
+        """
+        Decide and apply the treatment for the active zone after a scan.
+
+        High runoff vulnerability halts fertilising and logs an SDG-14
+        intervention; otherwise a low nutrient level triggers fertilising and a
+        low moisture level triggers irrigation. Treatment in the base station is
+        forbidden. Actuation runs only when an action was taken, else cooldown.
+
+        @pre  self.active_zone_id names the zone just scanned; the latest field
+              telemetry for it is available (defaults assumed healthy if not).
+        @post Publishes the relevant treatment / intervention message and sets
+              the phase to ACTUATING or COOLDOWN.
+        @return None.
+        """
         self._cancel_and_destroy('_scan_timer')
         self.current_phase = "DECIDING"
         

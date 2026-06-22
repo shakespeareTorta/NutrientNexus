@@ -94,7 +94,19 @@ class FieldSensorMockNode(Node):
         self.weather = msg.data.lower()
 
     def deplete_and_grow_tick(self) -> None:
-        """Simulates natural environment processes adapting to live weather."""
+        """
+        Step the environment one tick under the current weather.
+
+        Moisture and nutrients drift with the weather (rain adds water but
+        leaches nutrients, sun dries the soil), crops grow when both are
+        adequate, and each zone's runoff vulnerability is recomputed as
+        base_risk x weather_factor x moisture_factor (clamped to 0..100).
+
+        @pre  self.weather holds the latest weather state.
+        @post Every zone's moisture, nutrients, growth and vulnerability are
+              updated in place and kept within their valid ranges.
+        @return None.
+        """
         for zone in self.zones:
             # Weather-driven moisture adaptation and nutrient leaching
             if self.weather == "rainy":
@@ -155,7 +167,15 @@ class FieldSensorMockNode(Node):
         return msg
 
     def irrigate_callback(self, msg: String) -> None:
-        """Apply an irrigation: restore the named zone's moisture and republish."""
+        """
+        Apply an irrigation treatment to a zone.
+
+        @param msg: std_msgs/String, JSON {"zone": zone_id} or a bare zone id.
+        @pre  (none).
+        @post The matching zone's moisture is set to irrigate_replenish and the
+              updated telemetry is published; an unknown zone id is a no-op.
+        @return None.
+        """
         try:
             data = json.loads(msg.data)
             zone_id = data.get('zone', msg.data)
@@ -170,7 +190,15 @@ class FieldSensorMockNode(Node):
         self.publish_telemetry_tick()
 
     def fertilise_callback(self, msg: String) -> None:
-        """Apply a fertilisation: restore the named zone's nutrients and republish."""
+        """
+        Apply a fertilisation treatment to a zone.
+
+        @param msg: std_msgs/String, JSON {"zone": zone_id} or a bare zone id.
+        @pre  (none).
+        @post The matching zone's nutrients are set to fertilise_replenish and
+              the updated telemetry is published; an unknown zone id is a no-op.
+        @return None.
+        """
         try:
             data = json.loads(msg.data)
             zone_id = data.get('zone', msg.data)

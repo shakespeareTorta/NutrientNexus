@@ -79,8 +79,18 @@ class GroundTruthLocalizationNode(Node):
     # tiles) — important, because parsing the full set starves Nav2's planner of
     # CPU and makes it time out on long paths to the corners.
     def _stream_true_pose(self) -> None:
-        """Background thread: stream `gz topic -e` for dynamic_pose/info, parse
-        the robot entity's position/orientation, and cache it as self.true_pose."""
+        """
+        Stream and parse the robot's true Gazebo pose (background thread).
+
+        Runs `gz topic -e` on dynamic_pose/info and parses the named robot
+        entity's position and yaw, caching it as the (x, y, yaw) tuple
+        self.true_pose for the publish timer to read.
+
+        @pre  The 'gz' CLI is available and the Gazebo server is running.
+        @post self.true_pose is updated on every frame; self._got_pose latches
+              True after the first successful parse. Loops until the process ends.
+        @return None.
+        """
         topic = f'/world/{self.world}/dynamic_pose/info'
         try:
             self._proc = subprocess.Popen(
@@ -121,9 +131,17 @@ class GroundTruthLocalizationNode(Node):
                 in_pos = in_orient = False
 
     def _publish_map_to_odom(self) -> None:
-        """Timer: broadcast map->odom so that map->base equals the true pose
-        (i.e. map coincides with the Gazebo world); identity until the first
-        ground-truth pose arrives."""
+        """
+        Broadcast the map->odom transform from ground truth.
+
+        Computes map->odom so that map->base_footprint equals the robot's true
+        pose, making the map frame coincide with the Gazebo world frame.
+
+        @pre  An odom->base_footprint transform is available in TF.
+        @post One map->odom transform is broadcast; identity is used until the
+              first ground-truth pose arrives (correct at spawn).
+        @return None.
+        """
         try:
             ob = self.tf_buffer.lookup_transform(self.odom_frame, self.base_frame, Time())
         except (LookupException, ConnectivityException, ExtrapolationException):

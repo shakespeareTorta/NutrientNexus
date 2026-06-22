@@ -176,8 +176,18 @@ class SystemMonitorNode(Node):
     # ── Master check (called by timer) ────────────────────────────────
 
     def _check(self) -> None:
-        """Timer: assemble the battery/lidar/imu verdicts, overlay injected
-        faults, derive twin_mode, and publish the fused /system_health JSON."""
+        """
+        Assemble and publish the fused system-health view.
+
+        Runs the per-sensor checks, overlays any dashboard-injected faults so an
+        operator override wins over the raw verdict, derives the single
+        twin_mode, and publishes the whole thing as JSON.
+
+        @pre  Called by the check timer; latest sensor messages may be absent
+              (handled as NO_DATA in simulation).
+        @post One std_msgs/String is published on /system_health.
+        @return None.
+        """
         health = {}
         health['battery'] = self._check_battery()
         health['lidar'] = self._check_scan()
@@ -271,8 +281,14 @@ class SystemMonitorNode(Node):
     # ── LiDAR check ───────────────────────────────────────────────────
 
     def _check_scan(self) -> dict:
-        """Classify the LiDAR as OK/STALE/HIGH_DROPOUT/ALL_INVALID from scan age
-        and the fraction of invalid rays. Returns a status dict."""
+        """
+        Classify LiDAR health from scan age and ray quality.
+
+        @pre  self._scan_msg / self._scan_stamp hold the latest scan, if any.
+        @post No state is mutated (read-only verdict).
+        @return A status dict whose 'status' is one of STALE, EMPTY,
+                ALL_INVALID, HIGH_DROPOUT or OK, with supporting ray counts.
+        """
         now = self.get_clock().now()
 
         # Staleness

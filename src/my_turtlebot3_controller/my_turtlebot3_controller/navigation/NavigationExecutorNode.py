@@ -61,8 +61,18 @@ class NavigationExecutorNode(Node):
         self.current_nav_status = status_str
 
     def dispatch_goal_callback(self, msg: PoseStamped) -> None:
-        """Receive a goal pose on /dispatch_nav_goal, send it to Nav2 (preempting
-        any goal in progress), and switch the status to NAVIGATING."""
+        """
+        Send an incoming goal pose to Nav2.
+
+        Any goal already in progress is preempted and a pending idle transition
+        is cancelled.
+
+        @param msg: geometry_msgs/PoseStamped goal in the map frame.
+        @pre  The Nav2 action server is expected to be available shortly.
+        @post On a successful send the status becomes NAVIGATING; otherwise it
+              reflects the failure (e.g. IDLE_SERVER_UNAVAILABLE).
+        @return None.
+        """
         if self.current_nav_status == "NAVIGATING":
             self.get_logger().warn("Navigation already in progress. Preempting current goal with new goal!")
 
@@ -144,9 +154,16 @@ class NavigationExecutorNode(Node):
         result_future.add_done_callback(self.get_result_callback)
 
     def get_result_callback(self, future) -> None:
-        """Map the Nav2 result code to a status string (SUCCEEDED_AT_POSE /
-        ABORTED_NAVIGATION / CANCELED_NAVIGATION), publish it, then schedule
-        the return to IDLE."""
+        """
+        Publish the final navigation status from the Nav2 result.
+
+        @param future: the action result future from Nav2.
+        @pre  The goal was accepted and has completed.
+        @post The result code is mapped to SUCCEEDED_AT_POSE /
+              ABORTED_NAVIGATION / CANCELED_NAVIGATION and published, and a
+              return to IDLE is scheduled.
+        @return None.
+        """
         status_code = future.result().status
         final_status_str = "UNKNOWN_FAILURE"
 

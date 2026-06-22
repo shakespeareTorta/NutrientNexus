@@ -118,6 +118,17 @@ class ZoneVisualizerNode(Node):
 
     # ── Map a zone's state to a colour category ──
     def _category(self, zid: str) -> str:
+        """
+        Classify a zone's state into a colour category.
+
+        Uses the same thresholds CropDecisionNode acts on, so a tile's colour
+        matches the action the robot would take.
+
+        @param zid: the zone id to classify.
+        @pre  self.moisture/nutrients/vulnerability hold the latest telemetry.
+        @post No state is mutated.
+        @return One of 'unknown', 'risk', 'both', 'nutrient', 'water', 'healthy'.
+        """
         m, n, v = self.moisture[zid], self.nutrients[zid], self.vulnerability[zid]
         if m is None or n is None or v is None:
             return 'unknown'
@@ -144,6 +155,16 @@ class ZoneVisualizerNode(Node):
 
     # ── Gazebo entity management ──
     def _redraw(self, zid: str, category: str) -> bool:
+        """
+        Re-spawn a zone's tile in the colour for the given category.
+
+        @param zid: the zone id whose tile is being drawn.
+        @param category: the colour category from _category().
+        @pre  The 'gz' CLI and the Gazebo server are available.
+        @post The old tile (if any) is removed and a new one is created at the
+              zone's anchored position in the new colour.
+        @return True if the create call succeeded.
+        """
         name = f"{zid}_viz"
         cx, cy, sx, sy = self.geometry[zid]
         r, g, b = COLOURS[category]
