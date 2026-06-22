@@ -28,18 +28,22 @@ import math
 import subprocess
 import threading
 
+from geometry_msgs.msg import TransformStamped
 import rclpy
 from rclpy.node import Node
 from rclpy.time import Time
-from tf2_ros import (Buffer, TransformListener, TransformBroadcaster,
-                     LookupException, ConnectivityException, ExtrapolationException)
-from geometry_msgs.msg import TransformStamped
+from tf2_ros import (Buffer, ConnectivityException, ExtrapolationException,
+                     LookupException, TransformBroadcaster, TransformListener)
 
 
 class GroundTruthLocalizationNode(Node):
     def __init__(self) -> None:
-        """Set up the TF buffer/broadcaster, start the background thread that
-        reads the robot's true Gazebo pose, and start the map->odom timer."""
+        """
+        Set up TF, the pose-reader thread and the map->odom timer.
+
+        Creates the TF buffer/broadcaster, starts the background thread that
+        reads the robot's true Gazebo pose, and starts the map->odom timer.
+        """
         super().__init__('ground_truth_localization')
 
         self.declare_parameter('robot_model_name', 'burger')

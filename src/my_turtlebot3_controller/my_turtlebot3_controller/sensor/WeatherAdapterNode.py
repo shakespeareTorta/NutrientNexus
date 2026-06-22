@@ -8,23 +8,30 @@ states ('sunny', 'overcast', 'rainy', 'storm') published to /weather_forecast.
 """
 
 import json
-import urllib.request
 import urllib.error
+import urllib.request
 
+from my_turtlebot3_controller.qos import STATE_QOS
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-from my_turtlebot3_controller.qos import STATE_QOS
-
 
 class WeatherAdapterNode(Node):
-    """Bridges a real weather API into the twin: periodically fetches live
-    conditions and republishes them as a system weather state."""
+    """
+    Bridge between a real weather API and the digital twin.
+
+    Periodically fetches live conditions and republishes them as a system
+    weather state.
+    """
 
     def __init__(self):
-        """Read location/interval params, create the /weather_forecast publisher,
-        and schedule (and immediately run) the first fetch."""
+        """
+        Read parameters, create the publisher and start the fetch timer.
+
+        Reads the location/interval parameters, creates the /weather_forecast
+        publisher, and schedules (and immediately runs) the first fetch.
+        """
         super().__init__('weather_adapter_node')
 
         # Parameters for location and update frequency
@@ -34,7 +41,8 @@ class WeatherAdapterNode(Node):
 
         self.lat = self.get_parameter('latitude').get_parameter_value().double_value
         self.lon = self.get_parameter('longitude').get_parameter_value().double_value
-        self.interval = self.get_parameter('update_interval_sec').get_parameter_value().double_value
+        self.interval = self.get_parameter(
+            'update_interval_sec').get_parameter_value().double_value
 
         self.weather_pub = self.create_publisher(String, '/weather_forecast', STATE_QOS)
 
@@ -59,10 +67,13 @@ class WeatherAdapterNode(Node):
               nothing is published and the error is logged (never raised).
         @return None.
         """
-        url = f'https://api.open-meteo.com/v1/forecast?latitude={self.lat}&longitude={self.lon}&current_weather=true'
+        url = (
+            f'https://api.open-meteo.com/v1/forecast?'
+            f'latitude={self.lat}&longitude={self.lon}&current_weather=true')
 
         try:
-            req = urllib.request.Request(url, headers={'User-Agent': 'NutrientNexus-DigitalTwin/1.0'})
+            req = urllib.request.Request(
+                url, headers={'User-Agent': 'NutrientNexus-DigitalTwin/1.0'})
             with urllib.request.urlopen(req, timeout=10.0) as response:
                 data = json.loads(response.read().decode())
 
@@ -85,7 +96,8 @@ class WeatherAdapterNode(Node):
                     msg = String()
                     msg.data = weather
                     self.weather_pub.publish(msg)
-                    self.get_logger().info(f'Published live weather update: {weather} (WMO code: {code})')
+                    self.get_logger().info(
+                        f'Published live weather update: {weather} (WMO code: {code})')
                 else:
                     self.get_logger().warning('Unexpected JSON format from weather API.')
 

@@ -24,27 +24,33 @@ Monitored topics:
 All thresholds are configurable via nexus_params.yaml.
 """
 
-import math
 import json
+import math
 
+from my_turtlebot3_controller.qos import STATE_QOS
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
-
-from sensor_msgs.msg import BatteryState, LaserScan, Imu
+from sensor_msgs.msg import BatteryState, Imu, LaserScan
 from std_msgs.msg import String
-
-from my_turtlebot3_controller.qos import STATE_QOS
 
 
 class SystemMonitorNode(Node):
-    """Sole publisher of /system_health. Subscribes to the raw sensor topics
-    (battery/scan/imu), fuses them with any dashboard-injected faults, and
-    publishes one authoritative health view plus a derived twin_mode."""
+    """
+    Sole publisher of /system_health.
+
+    Subscribes to the raw sensor topics (battery/scan/imu), fuses them with any
+    dashboard-injected faults, and publishes one authoritative health view plus
+    a derived twin_mode.
+    """
 
     def __init__(self):
-        """Declare thresholds/topics, subscribe to the sensors and the injected
-        /twin_fault_state, and start the periodic health check."""
+        """
+        Declare parameters, subscribe to sensors and start the check timer.
+
+        Subscribes to the sensors and the injected /twin_fault_state, and starts
+        the periodic health check.
+        """
         super().__init__('system_monitor_node')
 
         # ── Parameters ────────────────────────────────────────────────
@@ -84,7 +90,8 @@ class SystemMonitorNode(Node):
         self.scan_stale = self.get_parameter('scan_stale_sec').get_parameter_value().double_value
         self.dropout_pct = self.get_parameter('dropout_pct').get_parameter_value().double_value
         self.imu_stale = self.get_parameter('imu_stale_sec').get_parameter_value().double_value
-        self.accel_limit = self.get_parameter('accel_warn_g').get_parameter_value().double_value * 9.81
+        self.accel_limit = (
+            self.get_parameter('accel_warn_g').get_parameter_value().double_value * 9.81)
         self.gyro_limit = self.get_parameter('gyro_warn_rps').get_parameter_value().double_value
 
         # ── State: last received messages and timestamps ──────────────
@@ -214,8 +221,11 @@ class SystemMonitorNode(Node):
         self.health_pub.publish(msg)
 
     def _derive_twin_mode(self, health: dict) -> str:
-        """Reduce the fused health to one of NORMAL / DEGRADED / FAULTED, the
-        single mode the dashboard banner reflects."""
+        """
+        Reduce the fused health to one of NORMAL / DEGRADED / FAULTED.
+
+        This is the single mode the dashboard banner reflects.
+        """
         if (self._faults['motor'] == 'stalled'
                 or self._faults['lidar'] == 'failed'
                 or self._faults['battery'] == 'clamped'
@@ -230,8 +240,12 @@ class SystemMonitorNode(Node):
     # ── Battery check ─────────────────────────────────────────────────
 
     def _check_battery(self) -> dict:
-        """Classify battery as OK/WARNING/CRITICAL by voltage/percent (or NO_DATA
-        in sim), logging only on level changes. Returns a status dict."""
+        """
+        Classify the battery as OK/WARNING/CRITICAL (or NO_DATA in sim).
+
+        Classifies by voltage/percent, logging only on level changes. Returns a
+        status dict.
+        """
         if self._battery_msg is None:
             if self._battery_stamp is None:
                 self.get_logger().info(
@@ -360,8 +374,12 @@ class SystemMonitorNode(Node):
     # ── IMU check ─────────────────────────────────────────────────────
 
     def _check_imu(self) -> dict:
-        """Classify the IMU (or NO_DATA in sim), warning on excessive linear
-        acceleration or angular velocity. Returns a status dict."""
+        """
+        Classify the IMU health (or NO_DATA in sim).
+
+        Warns on excessive linear acceleration or angular velocity. Returns a
+        status dict.
+        """
         now = self.get_clock().now()
 
         # No data received yet

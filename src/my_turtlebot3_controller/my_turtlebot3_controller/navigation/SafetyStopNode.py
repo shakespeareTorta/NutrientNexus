@@ -27,30 +27,36 @@ Topic pipeline:
     /cmd_vel_treatment ──┘
 """
 
-import math
 import json
+import math
 
+from geometry_msgs.msg import Twist
+from my_turtlebot3_controller.lidar_utils import narrow_object_in_sector, sector_min
+from my_turtlebot3_controller.qos import STATE_QOS
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
-
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
-from geometry_msgs.msg import Twist
-
-from my_turtlebot3_controller.qos import STATE_QOS
-from my_turtlebot3_controller.lidar_utils import sector_min, narrow_object_in_sector
 
 
 class SafetyStopNode(Node):
-    """Last-line safety filter between the command mux and the robot. Reads the
-    LiDAR into 5 sectors, gates /cmd_vel for obstacles / stale scans / injected
-    faults / weather, and mirrors what it senses on /obstacle_status."""
+    """
+    Last-line safety filter between the command mux and the robot.
+
+    Reads the LiDAR into 5 sectors, gates /cmd_vel for obstacles, stale scans,
+    injected faults and weather, and mirrors what it senses on
+    /obstacle_status.
+    """
 
     def __init__(self) -> None:
-        """Declare distance/angle/weather params, subscribe to scan, the input
-        cmd, weather and injected faults, and create the gated cmd + obstacle
-        publishers."""
+        """
+        Declare parameters and create the node's subscribers and publishers.
+
+        Declares the distance/angle/weather parameters, subscribes to the scan,
+        the input command, weather and injected faults, and creates the gated
+        command and obstacle publishers.
+        """
         super().__init__('safety_stop_node')
 
         # ── Topic parameters ──────────────────────────────────────────────

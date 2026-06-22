@@ -1,4 +1,4 @@
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 
 STATE_QOS = QoSProfile(
     depth=10,

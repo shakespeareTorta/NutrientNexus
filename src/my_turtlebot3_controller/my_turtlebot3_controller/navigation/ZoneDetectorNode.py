@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Zone Detector Node
+Zone Detector Node — report the robot's current field zone and draw markers.
 
 Determines which agricultural zone the robot is currently in (by looking up its
 map-frame pose via TF and testing it against the zone bounding boxes from
@@ -8,17 +8,17 @@ config/zones.yaml), publishes that zone name on /current_zone, and publishes
 RViz markers (/zone_markers) visualising the zone boxes and their target points.
 """
 import os
-import yaml
-from typing import Dict, Any
+from typing import Any, Dict
 
+from ament_index_python.packages import get_package_share_directory, PackageNotFoundError
+from my_turtlebot3_controller.qos import STATE_QOS
 import rclpy
 from rclpy.node import Node
-from ament_index_python.packages import get_package_share_directory, PackageNotFoundError
 from std_msgs.msg import String
+from tf2_ros import (Buffer, ConnectivityException, ExtrapolationException,
+                     LookupException, TransformListener)
 from visualization_msgs.msg import Marker, MarkerArray
-from tf2_ros import Buffer, TransformListener, LookupException, ConnectivityException, ExtrapolationException
-
-from my_turtlebot3_controller.qos import STATE_QOS
+import yaml
 
 
 def _package_share_or_source_dir() -> str:
@@ -56,11 +56,14 @@ class ZoneDetectorNode(Node):
           for which a zone was resolved; it is (0.0, 0.0) until the first
           successful TF lookup.
     """
+
     def __init__(self) -> None:
         """
-        Construct the node: load the zone definitions from zones.yaml, set up the
-        TF listener, the two publishers (/current_zone, /zone_markers) and the
-        two periodic timers.
+        Construct the node and bring up its ROS interfaces.
+
+        Loads the zone definitions from zones.yaml, sets up the TF listener, the
+        two publishers (/current_zone, /zone_markers) and the two periodic
+        timers.
 
         @param  (none besides self)
         @pre    rclpy.init() has been called (a ROS 2 context exists) before this
@@ -107,8 +110,7 @@ class ZoneDetectorNode(Node):
 
     def update_and_publish_zone(self) -> None:
         """
-        Look up the robot's pose in the map frame, resolve which zone it is in,
-        and publish that zone name on /current_zone.
+        Look up the robot's pose, resolve its zone, and publish on /current_zone.
 
         Client: the ROS 2 executor, via the 0.5 s timer.
 
@@ -145,8 +147,7 @@ class ZoneDetectorNode(Node):
 
     def get_zone(self, x: float, y: float) -> str:
         """
-        Map a map-frame (x, y) position to the name of the zone whose
-        axis-aligned bounding box contains it.
+        Map a map-frame (x, y) position to the containing zone's name.
 
         @param x  float - x coordinate in the 'map' frame (metres).
         @param y  float - y coordinate in the 'map' frame (metres).
@@ -176,8 +177,10 @@ class ZoneDetectorNode(Node):
 
     def publish_markers(self) -> None:
         """
-        Build and publish the RViz visualisation of all zones: one translucent
-        CUBE per zone box and one white SPHERE per zone target point.
+        Build and publish the RViz visualisation of all zones.
+
+        Draws one translucent CUBE per zone box and one white SPHERE per zone
+        target point.
 
         Client: the ROS 2 executor, via the 1.0 s timer.
 
@@ -270,8 +273,10 @@ class ZoneDetectorNode(Node):
 
 def main(args=None) -> None:
     """
-    ROS 2 entry point: initialise the context, spin the node until interrupted,
-    then shut down cleanly.
+    Run the ROS 2 entry point for the zone detector node.
+
+    Initialises the context, spins the node until interrupted, then shuts down
+    cleanly.
 
     @param args  Optional command-line arguments forwarded to rclpy.init().
                  Defaults to None.

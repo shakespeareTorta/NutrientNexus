@@ -1,5 +1,6 @@
 import math
 from typing import List
+
 from sensor_msgs.msg import LaserScan
 
 
@@ -25,9 +26,9 @@ def sector_min(
     msg: LaserScan, angle_low_deg: float, angle_high_deg: float
 ) -> float:
     """
-    Return the minimum valid range reading in the angular sector
-    [angle_low_deg, angle_high_deg] (both in degrees, signed).
+    Return the minimum valid range reading in the given angular sector.
 
+    The sector is [angle_low_deg, angle_high_deg] (both in degrees, signed).
     Uses the same angle normalisation as get_front_arc_distances().
     """
     low = math.radians(angle_low_deg)

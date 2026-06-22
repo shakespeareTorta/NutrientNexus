@@ -14,24 +14,29 @@ Cross-entity topics:
   - mirrors /system_health and /robot_resources, and injects /twin_fault_state;
   - /obstacle_status reflects what the robot senses in its environment.
 """
-import rclpy
-from rclpy.node import Node
-from std_msgs.msg import String, Float32MultiArray
 import json
 import os
 import threading
 import tkinter as tk
 from tkinter import ttk
-import yaml
+
 from ament_index_python.packages import get_package_share_directory, PackageNotFoundError
 from my_turtlebot3_controller.qos import STATE_QOS
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import Float32MultiArray, String
+import yaml
 
 
 class DashboardNode(Node):
     def __init__(self) -> None:
-        """Create the publishers (digital -> physical: weather, faults, report),
-        the subscribers that mirror physical state, the field-zone caches, then
-        build the Tk window and start the refresh loop."""
+        """
+        Create the node's ROS interfaces and build the dashboard GUI.
+
+        Creates the publishers (digital -> physical: weather, faults, report),
+        the subscribers that mirror physical state and the field-zone caches,
+        then builds the Tk window and starts the refresh loop.
+        """
         super().__init__('nexus_dashboard_node')
 
         # ── Publishers (Digital → Physical) ──────────────────────────
@@ -47,9 +52,12 @@ class DashboardNode(Node):
         self.create_subscription(String, '/obstacle_status', self.obstacle_cb, STATE_QOS)
 
         # ── Field zone telemetry (same data that colours the Gazebo tiles) ──
-        self.create_subscription(Float32MultiArray, '/field_moisture', self._moisture_cb, STATE_QOS)
-        self.create_subscription(Float32MultiArray, '/field_nutrients', self._nutrients_cb, STATE_QOS)
-        self.create_subscription(Float32MultiArray, '/field_vulnerability', self._vulnerability_cb, STATE_QOS)
+        self.create_subscription(
+            Float32MultiArray, '/field_moisture', self._moisture_cb, STATE_QOS)
+        self.create_subscription(
+            Float32MultiArray, '/field_nutrients', self._nutrients_cb, STATE_QOS)
+        self.create_subscription(
+            Float32MultiArray, '/field_vulnerability', self._vulnerability_cb, STATE_QOS)
 
         # ── Mirrored physical state (guarded by lock) ────────────────
         self.state_lock = threading.Lock()
@@ -83,8 +91,12 @@ class DashboardNode(Node):
     # ── GUI construction ──────────────────────────────────────────────
 
     def _build_gui(self) -> None:
-        """Build the dark-themed window and lay out every panel (resources,
-        telemetry, zone status, health, obstacle, weather, faults, audit)."""
+        """
+        Build the dark-themed window and lay out every panel.
+
+        Lays out resources, telemetry, zone status, health, obstacle, weather,
+        faults and audit panels.
+        """
         self.root = tk.Tk()
         self.root.title('Nutrient Nexus - Digital Twin Dashboard')
         self.root.geometry('980x880')
@@ -92,7 +104,8 @@ class DashboardNode(Node):
 
         self.style = ttk.Style()
         self.style.theme_use('clam')
-        self.style.configure('TLabel', background='#1E1E1E', foreground='#FFFFFF', font=('Helvetica', 12))
+        self.style.configure(
+            'TLabel', background='#1E1E1E', foreground='#FFFFFF', font=('Helvetica', 12))
         self.style.configure('Header.TLabel', font=('Helvetica', 16, 'bold'), foreground='#4A90E2')
         self.style.configure('red.Horizontal.TProgressbar', background='#E74C3C')
         self.style.configure('green.Horizontal.TProgressbar', background='#2ECC71')
@@ -100,7 +113,8 @@ class DashboardNode(Node):
         main = tk.Frame(self.root, bg='#1E1E1E', padx=20, pady=15)
         main.pack(fill=tk.BOTH, expand=True)
 
-        ttk.Label(main, text='Nutrient Nexus Command Center', style='Header.TLabel').pack(pady=(0, 5))
+        ttk.Label(
+            main, text='Nutrient Nexus Command Center', style='Header.TLabel').pack(pady=(0, 5))
 
         self.mode_var = tk.StringVar(value='TWIN MODE: NORMAL')
         self.mode_lbl = tk.Label(main, textvariable=self.mode_var, bg='#2ECC71', fg='#000',
@@ -122,16 +136,22 @@ class DashboardNode(Node):
                               fg='#FFFFFF', font=('Helvetica', 12, 'bold'))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
 
-        tk.Label(frame, text='Battery:', bg='#1E1E1E', fg='#FFF', font=('Helvetica', 10)).grid(row=0, column=0, sticky='w', pady=2)
-        self.bat_bar = ttk.Progressbar(frame, length=240, mode='determinate', style='green.Horizontal.TProgressbar')
+        tk.Label(frame, text='Battery:', bg='#1E1E1E', fg='#FFF',
+                 font=('Helvetica', 10)).grid(row=0, column=0, sticky='w', pady=2)
+        self.bat_bar = ttk.Progressbar(
+            frame, length=240, mode='determinate', style='green.Horizontal.TProgressbar')
         self.bat_bar.grid(row=0, column=1, padx=10)
-        self.bat_lbl = tk.Label(frame, text='100%', bg='#1E1E1E', fg='#FFF', font=('Helvetica', 10))
+        self.bat_lbl = tk.Label(
+            frame, text='100%', bg='#1E1E1E', fg='#FFF', font=('Helvetica', 10))
         self.bat_lbl.grid(row=0, column=2)
 
-        tk.Label(frame, text='Fertilizer:', bg='#1E1E1E', fg='#FFF', font=('Helvetica', 10)).grid(row=1, column=0, sticky='w', pady=2)
-        self.fert_bar = ttk.Progressbar(frame, length=240, mode='determinate', style='green.Horizontal.TProgressbar')
+        tk.Label(frame, text='Fertilizer:', bg='#1E1E1E', fg='#FFF',
+                 font=('Helvetica', 10)).grid(row=1, column=0, sticky='w', pady=2)
+        self.fert_bar = ttk.Progressbar(
+            frame, length=240, mode='determinate', style='green.Horizontal.TProgressbar')
         self.fert_bar.grid(row=1, column=1, padx=10)
-        self.fert_lbl = tk.Label(frame, text='100%', bg='#1E1E1E', fg='#FFF', font=('Helvetica', 10))
+        self.fert_lbl = tk.Label(
+            frame, text='100%', bg='#1E1E1E', fg='#FFF', font=('Helvetica', 10))
         self.fert_lbl.grid(row=1, column=2)
 
     def _build_telemetry(self, parent: tk.Widget) -> None:
@@ -140,25 +160,33 @@ class DashboardNode(Node):
                               font=('Helvetica', 12, 'bold'))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
         self.zone_var = tk.StringVar(value='Zone: Unknown')
-        tk.Label(frame, textvariable=self.zone_var, bg='#1E1E1E', fg='#4A90E2', font=('Helvetica', 11, 'bold')).grid(row=0, column=0, sticky='w', padx=10, pady=2)
+        tk.Label(frame, textvariable=self.zone_var, bg='#1E1E1E', fg='#4A90E2',
+                 font=('Helvetica', 11, 'bold')).grid(row=0, column=0, sticky='w', padx=10, pady=2)
         self.nav_var = tk.StringVar(value='Nav: IDLE')
-        tk.Label(frame, textvariable=self.nav_var, bg='#1E1E1E', fg='#CCC', font=('Helvetica', 10)).grid(row=1, column=0, sticky='w', padx=10, pady=2)
+        tk.Label(frame, textvariable=self.nav_var, bg='#1E1E1E', fg='#CCC',
+                 font=('Helvetica', 10)).grid(row=1, column=0, sticky='w', padx=10, pady=2)
 
     def _build_zone_status(self, parent: tk.Widget) -> None:
-        """One live row per field zone (moisture / nutrients / colour-coded
-        status), kept in self.zone_widgets for update_gui_loop to refresh."""
+        """
+        Build one live row per field zone.
+
+        Each row shows moisture / nutrients / colour-coded status, kept in
+        self.zone_widgets for update_gui_loop to refresh.
+        """
         frame = tk.LabelFrame(parent, text='Field Zone Status (live moisture / nutrients)',
                               bg='#1E1E1E', fg='#FFFFFF', font=('Helvetica', 12, 'bold'))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
 
         for col, h in enumerate(('Zone', 'Moisture', 'Nutrients', 'Status')):
             tk.Label(frame, text=h, bg='#1E1E1E', fg='#4A90E2',
-                     font=('Helvetica', 10, 'bold')).grid(row=0, column=col, sticky='w', padx=18, pady=(2, 4))
+                     font=('Helvetica', 10, 'bold')).grid(
+                         row=0, column=col, sticky='w', padx=18, pady=(2, 4))
 
         self.zone_widgets = {}
         for r, z in enumerate(self.zone_ids, start=1):
             tk.Label(frame, text=self._zone_label(z), bg='#1E1E1E', fg='#FFF',
-                     font=('Helvetica', 10, 'bold')).grid(row=r, column=0, sticky='w', padx=18, pady=2)
+                     font=('Helvetica', 10, 'bold')).grid(
+                         row=r, column=0, sticky='w', padx=18, pady=2)
             moist = tk.Label(frame, text='--', bg='#1E1E1E', fg='#CCC', font=('Helvetica', 10))
             moist.grid(row=r, column=1, sticky='w', padx=18, pady=2)
             nutri = tk.Label(frame, text='--', bg='#1E1E1E', fg='#CCC', font=('Helvetica', 10))
@@ -176,20 +204,29 @@ class DashboardNode(Node):
         self.health_bat_var = tk.StringVar(value='Battery: NO_DATA')
         self.health_lidar_var = tk.StringVar(value='LiDAR: NO_DATA')
         self.health_imu_var = tk.StringVar(value='IMU: NO_DATA')
-        self.health_bat_lbl = tk.Label(frame, textvariable=self.health_bat_var, bg='#1E1E1E', fg='#CCC', font=('Helvetica', 10))
+        self.health_bat_lbl = tk.Label(
+            frame, textvariable=self.health_bat_var, bg='#1E1E1E', fg='#CCC',
+            font=('Helvetica', 10))
         self.health_bat_lbl.grid(row=0, column=0, sticky='w', padx=10, pady=2)
-        self.health_lidar_lbl = tk.Label(frame, textvariable=self.health_lidar_var, bg='#1E1E1E', fg='#CCC', font=('Helvetica', 10))
+        self.health_lidar_lbl = tk.Label(
+            frame, textvariable=self.health_lidar_var, bg='#1E1E1E', fg='#CCC',
+            font=('Helvetica', 10))
         self.health_lidar_lbl.grid(row=0, column=1, sticky='w', padx=10, pady=2)
-        self.health_imu_lbl = tk.Label(frame, textvariable=self.health_imu_var, bg='#1E1E1E', fg='#CCC', font=('Helvetica', 10))
+        self.health_imu_lbl = tk.Label(
+            frame, textvariable=self.health_imu_var, bg='#1E1E1E', fg='#CCC',
+            font=('Helvetica', 10))
         self.health_imu_lbl.grid(row=0, column=2, sticky='w', padx=10, pady=2)
 
     def _build_obstacle(self, parent: tk.Widget) -> None:
         """Live obstacle readout (mirror of /obstacle_status from SafetyStop)."""
-        frame = tk.LabelFrame(parent, text='Environment / Obstacle (/obstacle_status)', bg='#1E1E1E',
-                              fg='#FFFFFF', font=('Helvetica', 12, 'bold'))
+        frame = tk.LabelFrame(
+            parent, text='Environment / Obstacle (/obstacle_status)', bg='#1E1E1E',
+            fg='#FFFFFF', font=('Helvetica', 12, 'bold'))
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
         self.obstacle_var = tk.StringVar(value='No obstacle')
-        self.obstacle_lbl = tk.Label(frame, textvariable=self.obstacle_var, bg='#1E1E1E', fg='#2ECC71', font=('Helvetica', 12, 'bold'))
+        self.obstacle_lbl = tk.Label(
+            frame, textvariable=self.obstacle_var, bg='#1E1E1E', fg='#2ECC71',
+            font=('Helvetica', 12, 'bold'))
         self.obstacle_lbl.pack(anchor='w', padx=10, pady=2)
 
     def _build_weather(self, parent: tk.Widget) -> None:
@@ -199,10 +236,14 @@ class DashboardNode(Node):
         frame.pack(fill=tk.X, pady=6, ipadx=10, ipady=8)
         bar = tk.Frame(frame, bg='#1E1E1E')
         bar.pack()
-        tk.Button(bar, text='Sunny', bg='#F1C40F', fg='#000', font=('Helvetica', 10, 'bold'), command=lambda: self.set_weather('sunny')).grid(row=0, column=0, padx=8)
-        tk.Button(bar, text='Rainy', bg='#3498DB', fg='#FFF', font=('Helvetica', 10, 'bold'), command=lambda: self.set_weather('rainy')).grid(row=0, column=1, padx=8)
-        tk.Button(bar, text='Overcast', bg='#95A5A6', fg='#FFF', font=('Helvetica', 10, 'bold'), command=lambda: self.set_weather('overcast')).grid(row=0, column=2, padx=8)
-        tk.Button(bar, text='Storm', bg='#8E44AD', fg='#FFF', font=('Helvetica', 10, 'bold'), command=lambda: self.set_weather('storm')).grid(row=0, column=3, padx=8)
+        tk.Button(bar, text='Sunny', bg='#F1C40F', fg='#000', font=('Helvetica', 10, 'bold'),
+                  command=lambda: self.set_weather('sunny')).grid(row=0, column=0, padx=8)
+        tk.Button(bar, text='Rainy', bg='#3498DB', fg='#FFF', font=('Helvetica', 10, 'bold'),
+                  command=lambda: self.set_weather('rainy')).grid(row=0, column=1, padx=8)
+        tk.Button(bar, text='Overcast', bg='#95A5A6', fg='#FFF', font=('Helvetica', 10, 'bold'),
+                  command=lambda: self.set_weather('overcast')).grid(row=0, column=2, padx=8)
+        tk.Button(bar, text='Storm', bg='#8E44AD', fg='#FFF', font=('Helvetica', 10, 'bold'),
+                  command=lambda: self.set_weather('storm')).grid(row=0, column=3, padx=8)
 
     def _build_faults(self, parent: tk.Widget) -> None:
         """Buttons that inject LiDAR / motor faults onto the physical robot."""
@@ -212,23 +253,27 @@ class DashboardNode(Node):
         bar = tk.Frame(frame, bg='#1E1E1E')
         bar.pack()
 
-        tk.Label(bar, text='LiDAR:', bg='#1E1E1E', fg='#FFF', font=('Helvetica', 10)).grid(row=0, column=0, padx=4)
+        tk.Label(bar, text='LiDAR:', bg='#1E1E1E', fg='#FFF',
+                 font=('Helvetica', 10)).grid(row=0, column=0, padx=4)
         self.lidar_btn = tk.Button(bar, text='OK', bg='#2ECC71', fg='#000', width=10,
                                    font=('Helvetica', 10, 'bold'), command=self.cycle_lidar)
         self.lidar_btn.grid(row=0, column=1, padx=4)
 
-        tk.Label(bar, text='Motor:', bg='#1E1E1E', fg='#FFF', font=('Helvetica', 10)).grid(row=0, column=2, padx=4)
+        tk.Label(bar, text='Motor:', bg='#1E1E1E', fg='#FFF',
+                 font=('Helvetica', 10)).grid(row=0, column=2, padx=4)
         self.motor_btn = tk.Button(bar, text='OK', bg='#2ECC71', fg='#000', width=10,
                                    font=('Helvetica', 10, 'bold'), command=self.toggle_motor)
         self.motor_btn.grid(row=0, column=3, padx=4)
 
-        # tk.Label(bar, text="Battery:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=0, column=4, padx=4)
+        # tk.Label(bar, text="Battery:", bg="#1E1E1E", fg="#FFF",
+        #          font=("Helvetica", 10)).grid(row=0, column=4, padx=4)
         # self.battery_btn = tk.Button(bar, text="NORMAL", bg="#2ECC71", fg="#000", width=10,
         #                              font=("Helvetica", 10, "bold"), command=self.toggle_battery)
         # self.battery_btn.grid(row=0, column=5, padx=4)
 
         tk.Button(bar, text='Clear All Faults', bg='#E67E22', fg='#FFF',
-                  font=('Helvetica', 10, 'bold'), command=self.clear_faults).grid(row=0, column=6, padx=12)
+                  font=('Helvetica', 10, 'bold'),
+                  command=self.clear_faults).grid(row=0, column=6, padx=12)
 
     def _build_audit(self, parent: tk.Widget) -> None:
         """Button that asks SustainabilityAuditNode to write its report."""
@@ -287,11 +332,15 @@ class DashboardNode(Node):
         self._publish_faults()
 
     def toggle_battery(self) -> None:
-        """Toggle the battery fault normal <-> clamped and republish faults
-        (button currently hidden; kept for the battery-fault cascade demo)."""
+        """
+        Toggle the battery fault normal <-> clamped and republish faults.
+
+        The button is currently hidden; kept for the battery-fault cascade demo.
+        """
         self.faults['battery'] = 'clamped' if self.faults['battery'] == 'normal' else 'normal'
         ok = self.faults['battery'] == 'normal'
-        self.battery_btn.config(text=self.faults['battery'].upper(), bg='#2ECC71' if ok else '#E74C3C')
+        self.battery_btn.config(
+            text=self.faults['battery'].upper(), bg='#2ECC71' if ok else '#E74C3C')
         self._publish_faults()
 
     def clear_faults(self) -> None:
@@ -380,8 +429,12 @@ class DashboardNode(Node):
 
     # ── Field zone telemetry (arrays indexed by self.zone_ids order) ──
     def _store_field(self, key: str, msg: Float32MultiArray) -> None:
-        """Cache a field-telemetry array (moisture/nutrients/vulnerability) into
-        self.field[key], indexed by zone in self.zone_ids order, under the lock."""
+        """
+        Cache a field-telemetry array into self.field[key].
+
+        Stores moisture/nutrients/vulnerability indexed by zone in
+        self.zone_ids order, under the lock.
+        """
         with self.state_lock:
             for i, z in enumerate(self.zone_ids):
                 if i < len(msg.data):
@@ -392,8 +445,12 @@ class DashboardNode(Node):
     def _vulnerability_cb(self, msg): self._store_field('vulnerability', msg)
 
     def _load_zone_ids(self) -> list:
-        """Return the sorted zone ids from zones.yaml (so the table matches the
-        array ordering), falling back to zone_0..zone_3 if it can't be read."""
+        """
+        Return the sorted zone ids from zones.yaml.
+
+        Ordered so the table matches the array ordering; falls back to
+        zone_0..zone_3 if the file can't be read.
+        """
         try:
             pkg = get_package_share_directory('my_turtlebot3_controller')
             with open(os.path.join(pkg, 'config', 'zones.yaml'), encoding='utf-8') as f:
@@ -409,7 +466,7 @@ class DashboardNode(Node):
         return zid.replace('_', ' ').title()
 
     def _zone_category(self, m, n, v):
-        """Same classification the Gazebo tiles use -> (label, colour)."""
+        """Classify a zone like the Gazebo tiles do, returning (label, colour)."""
         if m is None or n is None or v is None:
             return ('NO DATA', '#888888')
         if v > self.vulnerability_halt:
@@ -427,9 +484,13 @@ class DashboardNode(Node):
     # ── GUI refresh loop (main thread) ────────────────────────────────
 
     def update_gui_loop(self) -> None:
-        """Main-thread refresh (every 100 ms): snapshot the mirrored state under
-        the lock and repaint every widget, including the live zone table. Tk is
-        only ever touched here, never from the ROS spin thread."""
+        """
+        Refresh every widget from the mirrored state (every 100 ms).
+
+        Snapshots the mirrored state under the lock and repaints every widget,
+        including the live zone table. Tk is only ever touched here, never from
+        the ROS spin thread.
+        """
         with self.state_lock:
             s = dict(self.state)
             moisture = dict(self.field['moisture'])
@@ -438,25 +499,33 @@ class DashboardNode(Node):
 
         self.bat_bar['value'] = s['battery']
         self.bat_lbl.config(text=f"{s['battery']:.1f}%")
-        self.bat_bar.configure(style='red.Horizontal.TProgressbar' if s['battery'] < 30 else 'green.Horizontal.TProgressbar')
+        self.bat_bar.configure(
+            style='red.Horizontal.TProgressbar' if s['battery'] < 30
+            else 'green.Horizontal.TProgressbar')
         self.fert_bar['value'] = s['fertilizer']
         self.fert_lbl.config(text=f"{s['fertilizer']:.1f}%")
-        self.fert_bar.configure(style='red.Horizontal.TProgressbar' if s['fertilizer'] < 20 else 'green.Horizontal.TProgressbar')
+        self.fert_bar.configure(
+            style='red.Horizontal.TProgressbar' if s['fertilizer'] < 20
+            else 'green.Horizontal.TProgressbar')
         self.zone_var.set(f"Zone: {s['zone']}")
         self.nav_var.set(f"Nav: {s['nav']}")
 
         self.health_bat_var.set(f"Battery: {s['battery_status']}")
         self.health_lidar_var.set(f"LiDAR: {s['lidar_status']}")
         self.health_imu_var.set(f"IMU: {s['imu_status']}")
-        self.health_lidar_lbl.config(fg='#E74C3C' if s['lidar_status'] in ('FAILED', 'STALE', 'ALL_INVALID') else
-                                     '#F39C12' if s['lidar_status'] in ('DEGRADED', 'HIGH_DROPOUT') else '#CCC')
+        self.health_lidar_lbl.config(
+            fg='#E74C3C' if s['lidar_status'] in ('FAILED', 'STALE', 'ALL_INVALID')
+            else '#F39C12' if s['lidar_status'] in ('DEGRADED', 'HIGH_DROPOUT')
+            else '#CCC')
 
         self.obstacle_var.set(s['obstacle'])
         self.obstacle_lbl.config(fg='#2ECC71' if s['obstacle'] == 'No obstacle' else '#E74C3C')
 
         mode = s['twin_mode']
         self.mode_var.set(f'TWIN MODE: {mode}')
-        self.mode_lbl.config(bg='#2ECC71' if mode == 'NORMAL' else '#F39C12' if mode == 'DEGRADED' else '#E74C3C')
+        self.mode_lbl.config(
+            bg='#2ECC71' if mode == 'NORMAL'
+            else '#F39C12' if mode == 'DEGRADED' else '#E74C3C')
 
         # ── Field zone status table ──
         for z in self.zone_ids:

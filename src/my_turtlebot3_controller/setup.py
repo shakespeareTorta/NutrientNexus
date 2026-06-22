@@ -1,6 +1,8 @@
-from setuptools import find_packages, setup
-import os
 from glob import glob
+import os
+
+from setuptools import find_packages, setup
+
 package_name = 'my_turtlebot3_controller'
 
 setup(
@@ -25,7 +27,8 @@ setup(
     license='Apache-2.0',
     entry_points={
         'console_scripts': [
-            'navigation_executor_node = my_turtlebot3_controller.navigation.NavigationExecutorNode:main',
+            'navigation_executor_node = '
+            'my_turtlebot3_controller.navigation.NavigationExecutorNode:main',
             'field_sensor_mock_node = my_turtlebot3_controller.sensor.FieldSensorMockNode:main',
             'weather_adapter_node = my_turtlebot3_controller.sensor.WeatherAdapterNode:main',
             'crop_decision_node = my_turtlebot3_controller.algorithm.CropDecisionNode:main',
@@ -33,11 +36,14 @@ setup(
             'zone_detector_node = my_turtlebot3_controller.navigation.ZoneDetectorNode:main',
             'robot_resource_node = my_turtlebot3_controller.RobotResourceNode:main',
             'dashboard_node = my_turtlebot3_controller.dashboard.DashboardNode:main',
-            'sustainability_audit_node = my_turtlebot3_controller.audit.SustainabilityAuditNode:main',
+            'sustainability_audit_node = '
+            'my_turtlebot3_controller.audit.SustainabilityAuditNode:main',
             'twin_supervisor_node = my_turtlebot3_controller.twin.TwinSupervisorNode:main',
             'system_monitor_node = my_turtlebot3_controller.SystemMonitorNode:main',
-            'zone_visualizer_node = my_turtlebot3_controller.visualization.ZoneVisualizerNode:main',
-            'ground_truth_localization = my_turtlebot3_controller.localization.GroundTruthLocalizationNode:main',
+            'zone_visualizer_node = '
+            'my_turtlebot3_controller.visualization.ZoneVisualizerNode:main',
+            'ground_truth_localization = '
+            'my_turtlebot3_controller.localization.GroundTruthLocalizationNode:main',
         ],
     },
 )

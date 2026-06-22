@@ -14,12 +14,12 @@ Usage:
   ros2 launch my_turtlebot3_controller nexus.launch.py
   ros2 launch my_turtlebot3_controller nexus.launch.py gui:=false  # headless
 """
-import os
 import datetime
+import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -184,7 +184,9 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         name='rviz2',
-        arguments=['-d', os.path.join(get_package_share_directory('nav2_bringup'), 'rviz', 'nav2_default_view.rviz')],
+        arguments=['-d', os.path.join(
+            get_package_share_directory('nav2_bringup'), 'rviz',
+            'nav2_default_view.rviz')],
         output='screen',
         parameters=[{'use_sim_time': True}],
     )

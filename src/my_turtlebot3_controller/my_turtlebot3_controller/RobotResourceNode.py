@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Robot Resource Node
+Robot Resource Node — simulate the robot's battery and fertilizer depletion.
 
 Simulates physical resource depletion on the robot:
 - Battery drains based on physical distance travelled (calculated from /odom)
@@ -8,22 +8,20 @@ Simulates physical resource depletion on the robot:
 - Refills when a message is sent to /refill_resources
 Publishes state as a JSON string to /robot_resources.
 """
+import json
+import math
+from typing import Optional
+
+from my_turtlebot3_controller.qos import STATE_QOS
+from nav_msgs.msg import Odometry
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-from nav_msgs.msg import Odometry
-import math
-import json
-from typing import Optional
-
-
-from my_turtlebot3_controller.qos import STATE_QOS
 
 
 class RobotResourceNode(Node):
     """
-    Tracks the robot's consumable resources (battery and fertilizer tank) and
-    publishes them as telemetry on /robot_resources.
+    Track the robot's battery/fertilizer levels and publish on /robot_resources.
 
     Class invariant (must hold between every call):
         0.0 <= self.battery    <= 100.0
@@ -32,11 +30,13 @@ class RobotResourceNode(Node):
     Every mutator preserves this invariant: each drain is clamped with
     max(0.0, ...) and a refill sets the value to exactly 100.0.
     """
+
     def __init__(self) -> None:
         """
-        Construct the node: declare the robot_id parameter, initialise resource
-        state, and wire up the three subscriptions, the publisher and the 1 Hz
-        publish timer.
+        Construct the node and wire up its ROS interfaces.
+
+        Declares the robot_id parameter, initialises resource state, and wires
+        up the three subscriptions, the publisher and the 1 Hz publish timer.
 
         @param  (none besides self)
         @pre    rclpy.init() has been called (a ROS 2 context exists) before this
@@ -91,8 +91,10 @@ class RobotResourceNode(Node):
 
     def odom_callback(self, msg: Odometry) -> None:
         """
-        Integrate the distance travelled since the previous odometry sample and
-        drain the battery proportionally to it.
+        Drain the battery in proportion to the distance travelled.
+
+        Integrates the distance since the previous odometry sample and drains
+        the battery proportionally to it.
 
         Client: the ROS 2 executor, which invokes this callback for every message
         received on the 'odom' topic. Because the caller is the trusted middleware
@@ -148,8 +150,10 @@ class RobotResourceNode(Node):
 
     def fertilize_callback(self, msg: String) -> None:
         """
-        Drain the fertilizer tank when a spray command addressed to THIS robot is
-        received, then publish the updated state.
+        Drain the fertilizer tank on a spray command for this robot.
+
+        Drains the tank when a spray command addressed to THIS robot is
+        received, then publishes the updated state.
 
         Client: CropDecisionNode, which publishes the spray command on
         'fertilise_zone'.
@@ -186,8 +190,9 @@ class RobotResourceNode(Node):
 
     def refill_callback(self, msg: String) -> None:
         """
-        Reset both resources to full. Triggered when the robot docks at the base
-        station.
+        Reset both resources to full when the robot docks at base.
+
+        Triggered when the robot docks at the base station.
 
         Client: CropDecisionNode, which publishes on 'refill_resources' once it
         has successfully returned to base.
@@ -212,8 +217,9 @@ class RobotResourceNode(Node):
 
     def publish_resources(self) -> None:
         """
-        Serialise the current resource state to JSON and publish it on
-        'robot_resources'.
+        Serialise the current resource state to JSON and publish it.
+
+        Publishes the JSON state on 'robot_resources'.
 
         Called by: the 1 Hz heartbeat timer, and directly by fertilize_callback
         and refill_callback for immediate updates.
@@ -238,8 +244,10 @@ class RobotResourceNode(Node):
 
 def main(args=None) -> None:
     """
-    ROS 2 entry point: initialise the context, spin the node until interrupted,
-    then shut down cleanly.
+    Run the ROS 2 entry point for the robot resource node.
+
+    Initialises the context, spins the node until interrupted, then shuts down
+    cleanly.
 
     @param args  Optional command-line arguments forwarded to rclpy.init().
                  Defaults to None.

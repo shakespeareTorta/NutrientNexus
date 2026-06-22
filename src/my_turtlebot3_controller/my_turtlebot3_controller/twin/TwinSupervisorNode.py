@@ -12,17 +12,20 @@ Responsibilities:
 import json
 from typing import List
 
+from my_turtlebot3_controller.qos import STATE_QOS
 import rclpy
 from rclpy.node import Node
-
 from std_msgs.msg import String
-from my_turtlebot3_controller.qos import STATE_QOS
 
 
 class TwinSupervisorNode(Node):
     def __init__(self) -> None:
-        """Set up the patrol queue, fault de-bounce state, and the publishers/
-        subscribers that link the supervisor to the robot and the dashboard."""
+        """
+        Set up the patrol queue, fault de-bounce state and ROS interfaces.
+
+        Creates the publishers and subscribers that link the supervisor to the
+        robot and the dashboard.
+        """
         super().__init__('twin_supervisor_node')
 
         self.declare_parameter('system_mode', 'HYBRID')
@@ -42,7 +45,8 @@ class TwinSupervisorNode(Node):
 
         self.pending_zones: List[str] = ['zone_2', 'zone_1', 'zone_3', 'zone_0']
 
-        self.robot_state = {'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown', 'faulted': False}
+        self.robot_state = {
+            'status': 'IDLE', 'battery': 100.0, 'zone': 'Unknown', 'faulted': False}
 
         # Navigation-fault de-bounce state.
         self._last_nav_state = 'IDLE'
@@ -51,14 +55,16 @@ class TwinSupervisorNode(Node):
         self.current_weather = 'sunny'
 
         # ── Publishers ──
-        self.assignment_pub = self.create_publisher(String, '/supervisor/zone_assignment', STATE_QOS)
+        self.assignment_pub = self.create_publisher(
+            String, '/supervisor/zone_assignment', STATE_QOS)
         self.sync_pub = self.create_publisher(String, '/sync_status', STATE_QOS)
         self.alert_pub = self.create_publisher(String, '/system_alerts', STATE_QOS)
 
         # ── Subscribers ──
         self.create_subscription(String, '/weather_forecast', self._weather_cb, STATE_QOS)
         self.create_subscription(String, '/robot_resources', self._resource_cb, STATE_QOS)
-        self.create_subscription(String, '/navigation_executor_status', self._nav_status_cb, STATE_QOS)
+        self.create_subscription(
+            String, '/navigation_executor_status', self._nav_status_cb, STATE_QOS)
         self.create_subscription(String, '/supervisor/zone_request', self._zone_request_cb, 10)
 
         self.get_logger().info('Twin Supervisor Central Orchestrator Initialized.')
@@ -66,8 +72,12 @@ class TwinSupervisorNode(Node):
         self.create_timer(1.0, self._supervisor_tick)
 
     def _weather_cb(self, msg: String) -> None:
-        """React to a weather change from the dashboard; a 'storm' triggers an
-        immediate global abort so the robot returns to base (env interaction)."""
+        """
+        React to a weather change from the dashboard.
+
+        A 'storm' triggers an immediate global abort so the robot returns to
+        base (environmental interaction).
+        """
         new_weather = msg.data.lower()
         if new_weather != self.current_weather:
             self.current_weather = new_weather
@@ -76,8 +86,12 @@ class TwinSupervisorNode(Node):
                 self._broadcast_abort('STORM_EMERGENCY')
 
     def _resource_cb(self, msg: String) -> None:
-        """Mirror the robot's battery level; below 15% pause the patrol (state
-        sync: an internal robot state changing the supervisor's behaviour)."""
+        """
+        Mirror the robot's battery level into the supervisor's state.
+
+        Below 15% the patrol is paused — state sync, an internal robot state
+        changing the supervisor's behaviour.
+        """
         try:
             data = json.loads(msg.data)
             self.robot_state['battery'] = data.get('battery', 100.0)
@@ -156,7 +170,8 @@ class TwinSupervisorNode(Node):
 
         if self.robot_state.get('faulted', False):
             if self.robot_state['battery'] >= 20.0 and self.robot_state['status'] == 'IDLE':
-                self.get_logger().info('Robot has recovered from its fault. Resetting fault state!')
+                self.get_logger().info(
+                    'Robot has recovered from its fault. Resetting fault state!')
                 self.robot_state['faulted'] = False
             else:
                 self.get_logger().warn('Robot is currently FAULTED. Ignoring zone request.')
@@ -198,8 +213,12 @@ class TwinSupervisorNode(Node):
         self.alert_pub.publish(msg)
 
     def _supervisor_tick(self) -> None:
-        """1 Hz heartbeat: publish the fused robot/weather/queue snapshot on
-        /sync_status so the rest of the twin shares one consistent world view."""
+        """
+        Publish the fused robot/weather/queue snapshot at 1 Hz.
+
+        Broadcasts on /sync_status so the rest of the twin shares one
+        consistent world view.
+        """
         sync_data = {
             'robot': self.robot_state,
             'weather': self.current_weather,

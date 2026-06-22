@@ -27,13 +27,12 @@ Legend:
 import os
 import subprocess
 
+from ament_index_python.packages import get_package_share_directory
+from my_turtlebot3_controller.qos import STATE_QOS
 import rclpy
-import yaml
 from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
-from ament_index_python.packages import get_package_share_directory
-
-from my_turtlebot3_controller.qos import STATE_QOS
+import yaml
 
 # Colour table: category -> (r, g, b)
 COLOURS = {
@@ -94,9 +93,12 @@ class ZoneVisualizerNode(Node):
         os.makedirs(self.sdf_dir, exist_ok=True)
         self._gz_ok = True
 
-        self.create_subscription(Float32MultiArray, '/field_moisture', self._moisture_cb, STATE_QOS)
-        self.create_subscription(Float32MultiArray, '/field_nutrients', self._nutrients_cb, STATE_QOS)
-        self.create_subscription(Float32MultiArray, '/field_vulnerability', self._vulnerability_cb, STATE_QOS)
+        self.create_subscription(
+            Float32MultiArray, '/field_moisture', self._moisture_cb, STATE_QOS)
+        self.create_subscription(
+            Float32MultiArray, '/field_nutrients', self._nutrients_cb, STATE_QOS)
+        self.create_subscription(
+            Float32MultiArray, '/field_vulnerability', self._vulnerability_cb, STATE_QOS)
 
         self.create_timer(self.update_period, self._update_tick)
 

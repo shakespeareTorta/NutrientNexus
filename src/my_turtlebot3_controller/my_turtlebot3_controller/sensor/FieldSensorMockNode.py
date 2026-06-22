@@ -1,24 +1,33 @@
 #!/usr/bin/env python3
-import rclpy
-import random
-from rclpy.node import Node
-from std_msgs.msg import String, Float32MultiArray, MultiArrayDimension, MultiArrayLayout
-from typing import Dict, List, Any
-import os
-import yaml
 import json
+import os
+import random
+from typing import Any, Dict, List
+
 from ament_index_python.packages import get_package_share_directory
 from my_turtlebot3_controller.qos import STATE_QOS
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import Float32MultiArray, MultiArrayDimension, MultiArrayLayout, String
+import yaml
 
 
 class FieldSensorMockNode(Node):
-    """Simulates the field environment: each zone's moisture/nutrients/growth/
-    vulnerability evolve with the weather and are restored by irrigate/fertilise
-    treatments. Publishes the four telemetry arrays the rest of the twin reads."""
+    """
+    Simulate the field environment for every zone.
+
+    Each zone's moisture, nutrients, growth and vulnerability evolve with the
+    weather and are restored by irrigate/fertilise treatments. Publishes the
+    four telemetry arrays the rest of the twin reads.
+    """
 
     def __init__(self) -> None:
-        """Load zone baselines from zones.yaml, set up the telemetry publishers
-        and treatment subscribers, and start the simulation tick."""
+        """
+        Load zone baselines and wire up publishers, subscribers and the tick.
+
+        Loads the zone baselines from zones.yaml, sets up the telemetry
+        publishers and treatment subscribers, and starts the simulation tick.
+        """
         super().__init__('field_sensor_mock_node')
 
         pkg_dir = get_package_share_directory('my_turtlebot3_controller')
@@ -66,15 +75,20 @@ class FieldSensorMockNode(Node):
 
         # Publishers
         self.moisture_pub = self.create_publisher(Float32MultiArray, '/field_moisture', STATE_QOS)
-        self.nutrients_pub = self.create_publisher(Float32MultiArray, '/field_nutrients', STATE_QOS)
+        self.nutrients_pub = self.create_publisher(
+            Float32MultiArray, '/field_nutrients', STATE_QOS)
         self.growth_pub = self.create_publisher(Float32MultiArray, '/field_growth', STATE_QOS)
-        self.vulnerability_pub = self.create_publisher(Float32MultiArray, '/field_vulnerability', STATE_QOS)
+        self.vulnerability_pub = self.create_publisher(
+            Float32MultiArray, '/field_vulnerability', STATE_QOS)
 
         # Subscribers to apply treatment and replenish zone metrics
-        self.irrigate_sub = self.create_subscription(String, '/irrigate_zone', self.irrigate_callback, STATE_QOS)
-        self.fertilise_sub = self.create_subscription(String, '/fertilise_zone', self.fertilise_callback, STATE_QOS)
+        self.irrigate_sub = self.create_subscription(
+            String, '/irrigate_zone', self.irrigate_callback, STATE_QOS)
+        self.fertilise_sub = self.create_subscription(
+            String, '/fertilise_zone', self.fertilise_callback, STATE_QOS)
 
-        self.weather_sub = self.create_subscription(String, '/weather_forecast', self.weather_cb, STATE_QOS)
+        self.weather_sub = self.create_subscription(
+            String, '/weather_forecast', self.weather_cb, STATE_QOS)
 
         # Single timer for environment simulation + telemetry publishing
         # (merged to avoid race conditions between depletion and publishing)
@@ -84,7 +98,7 @@ class FieldSensorMockNode(Node):
         self.log_zone_states('Initial')
 
     def simulation_tick(self) -> None:
-        """Combined tick: deplete/grow environment, then publish updated telemetry."""
+        """Step the environment one tick, then publish the updated telemetry."""
         self.deplete_and_grow_tick()
         self.publish_telemetry_tick()
 
@@ -135,12 +149,14 @@ class FieldSensorMockNode(Node):
             # Calculate vulnerability
             risk_map = {'Low': 0.2, 'Medium': 0.5, 'High': 0.8}
             base_risk = risk_map.get(zone.get('runoff_risk', 'Low'), 0.2)
-            weather_factor = {'rainy': 1.5, 'storm': 2.0, 'overcast': 0.8, 'sunny': 0.3}.get(self.weather, 0.5)
+            weather_factor = {
+                'rainy': 1.5, 'storm': 2.0, 'overcast': 0.8, 'sunny': 0.3}.get(self.weather, 0.5)
             moisture_factor = zone['moisture'] / 100.0
-            zone['vulnerability'] = min(100.0, base_risk * weather_factor * moisture_factor * 100.0)
+            zone['vulnerability'] = min(
+                100.0, base_risk * weather_factor * moisture_factor * 100.0)
 
     def publish_telemetry_tick(self) -> None:
-        """Constructs and publishes array metrics for soil moisture, nutrients, and growth."""
+        """Construct and publish array metrics for soil moisture, nutrients and growth."""
         moisture_msg = self.make_float_array([z['moisture'] for z in self.zones])
         nutrients_msg = self.make_float_array([z['nutrients'] for z in self.zones])
         growth_msg = self.make_float_array([z['growth'] for z in self.zones])
@@ -183,7 +199,9 @@ class FieldSensorMockNode(Node):
 
         for zone in self.zones:
             if zone['id'] == zone_id:
-                self.get_logger().info(f"Irrigating {zone_id}. Moisture replenished from {zone['moisture']:.1f}% to {self.irrigate_replenish:.0f}%")
+                self.get_logger().info(
+                    f'Irrigating {zone_id}. Moisture replenished from '
+                    f"{zone['moisture']:.1f}% to {self.irrigate_replenish:.0f}%")
                 zone['moisture'] = self.irrigate_replenish
                 break
         self.publish_telemetry_tick()
@@ -206,7 +224,9 @@ class FieldSensorMockNode(Node):
 
         for zone in self.zones:
             if zone['id'] == zone_id:
-                self.get_logger().info(f"Fertilising {zone_id}. Nutrients replenished from {zone['nutrients']:.1f}% to {self.fertilise_replenish:.0f}%")
+                self.get_logger().info(
+                    f'Fertilising {zone_id}. Nutrients replenished from '
+                    f"{zone['nutrients']:.1f}% to {self.fertilise_replenish:.0f}%")
                 zone['nutrients'] = self.fertilise_replenish
                 break
         self.publish_telemetry_tick()
@@ -215,7 +235,9 @@ class FieldSensorMockNode(Node):
         """Log a one-line summary of every zone's moisture/nutrients/growth."""
         states = []
         for z in self.zones:
-            states.append(f"{z['id']}: Moisture={z['moisture']:.1f}%, Nutrients={z['nutrients']:.1f}%, Growth={z['growth']:.1f}%")
+            states.append(
+                f"{z['id']}: Moisture={z['moisture']:.1f}%, "
+                f"Nutrients={z['nutrients']:.1f}%, Growth={z['growth']:.1f}%")
         self.get_logger().info(f'{prefix} Zone States: [ ' + ' | '.join(states) + ' ]')
 
 

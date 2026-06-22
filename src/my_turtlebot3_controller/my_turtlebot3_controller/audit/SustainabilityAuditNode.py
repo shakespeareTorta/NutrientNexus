@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
 """
-Sustainability Audit Node
+Sustainability Audit Node — independent ledger of farm operations and SDG-14.
 
 Acts as an independent ledger, monitoring farm operations and SDG-14 interventions.
 Generates a comprehensive Markdown report when requested.
 """
+from datetime import datetime
+import json
+import os
+
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-import json
-import os
-from datetime import datetime
 
 
 class SustainabilityAuditNode(Node):
-    """Independent ledger of farm operations. Logs every fertilise/irrigate/
-    SDG-14 intervention and, on request, writes a Markdown sustainability
-    report estimating prevented runoff."""
+    """
+    Independent ledger of farm operations.
+
+    Logs every fertilise/irrigate/SDG-14 intervention and, on request, writes a
+    Markdown sustainability report estimating prevented runoff.
+    """
 
     def __init__(self) -> None:
-        """Initialise the ledgers and subscribe to the operation and report
-        topics."""
+        """Initialise the ledgers and subscribe to the operation/report topics."""
         super().__init__('sustainability_audit_node')
 
         # Ledgers
@@ -87,13 +90,18 @@ class SustainabilityAuditNode(Node):
             data = json.loads(msg.data)
             data['time'] = datetime.now().strftime('%H:%M:%S')
             self.interventions.append(data)
-            self.get_logger().info(f"[AUDIT] Logged SDG-14 Intervention in {data.get('zone', 'Unknown')}.")
+            self.get_logger().info(
+                f"[AUDIT] Logged SDG-14 Intervention in {data.get('zone', 'Unknown')}.")
         except (json.JSONDecodeError, TypeError, AttributeError) as e:
             self.get_logger().error(f'Failed to parse intervention: {e}')
 
     def generate_report_cb(self, msg: String):
-        """Compile the ledgers into a Markdown report (SDG-14 impact, operations,
-        recommendations) and write it to nexus_farm_report.md."""
+        """
+        Compile the ledgers into a Markdown sustainability report.
+
+        Writes the report (SDG-14 impact, operations, recommendations) to
+        nexus_farm_report.md.
+        """
         self.get_logger().info('Compiling Sustainability Report...')
 
         # Estimate savings: Assume each aborted fertilizer spray saves 1.5kg of nitrogen
@@ -116,7 +124,9 @@ class SustainabilityAuditNode(Node):
                 for idx, item in enumerate(self.interventions, 1):
                     f.write(f"{idx}. **{item['time']} | {item['zone']}**\n")
                     f.write(f"   - **Reason:** {item['reason']}\n")
-                    f.write(f"   - **Vulnerability Score:** {item.get('vulnerability_score', 'N/A')}/100\n\n")
+                    f.write(
+                        f'   - **Vulnerability Score:** '
+                        f"{item.get('vulnerability_score', 'N/A')}/100\n\n")
 
             f.write('## 🚜 Agricultural Operations\n')
             f.write(f'**Total Fertilizations Applied:** {len(self.fertilizations)}\n')
@@ -130,14 +140,25 @@ class SustainabilityAuditNode(Node):
                 high_risk_zones[z] = high_risk_zones.get(z, 0) + 1
 
             if high_risk_zones:
-                f.write('Based on recent intervention data, the system recommends the following physical farm improvements:\n\n')
+                f.write(
+                    'Based on recent intervention data, the system recommends '
+                    'the following physical farm improvements:\n\n')
                 for z, count in high_risk_zones.items():
                     if count >= 2:
-                        f.write(f'- ⚠️ **{z}** has triggered {count} runoff safety aborts. **Recommendation:** Investigate soil drainage capabilities or consider relocating crops further from the water table to reduce continuous risk.\n')
+                        f.write(
+                            f'- ⚠️ **{z}** has triggered {count} runoff safety aborts. '
+                            f'**Recommendation:** Investigate soil drainage capabilities '
+                            f'or consider relocating crops further from the water table '
+                            f'to reduce continuous risk.\n')
                     else:
-                        f.write(f'- ℹ️ **{z}** triggered a weather-based runoff abort. Monitor weather closely before scheduling manual operations here.\n')
+                        f.write(
+                            f'- ℹ️ **{z}** triggered a weather-based runoff abort. '
+                            f'Monitor weather closely before scheduling manual '
+                            f'operations here.\n')
             else:
-                f.write('*All zones are currently operating within safe parameters. No structural changes recommended at this time.*\n')
+                f.write(
+                    '*All zones are currently operating within safe parameters. '
+                    'No structural changes recommended at this time.*\n')
 
         self.get_logger().info(f'Report successfully saved to {report_path}')
 
