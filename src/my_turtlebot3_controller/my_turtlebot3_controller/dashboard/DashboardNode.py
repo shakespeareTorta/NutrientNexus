@@ -210,10 +210,10 @@ class DashboardNode(Node):
                                    font=("Helvetica", 10, "bold"), command=self.toggle_motor)
         self.motor_btn.grid(row=0, column=3, padx=4)
 
-        tk.Label(bar, text="Battery:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=0, column=4, padx=4)
-        self.battery_btn = tk.Button(bar, text="NORMAL", bg="#2ECC71", fg="#000", width=10,
-                                     font=("Helvetica", 10, "bold"), command=self.toggle_battery)
-        self.battery_btn.grid(row=0, column=5, padx=4)
+        # tk.Label(bar, text="Battery:", bg="#1E1E1E", fg="#FFF", font=("Helvetica", 10)).grid(row=0, column=4, padx=4)
+        # self.battery_btn = tk.Button(bar, text="NORMAL", bg="#2ECC71", fg="#000", width=10,
+        #                              font=("Helvetica", 10, "bold"), command=self.toggle_battery)
+        # self.battery_btn.grid(row=0, column=5, padx=4)
 
         tk.Button(bar, text="Clear All Faults", bg="#E67E22", fg="#FFF",
                   font=("Helvetica", 10, "bold"), command=self.clear_faults).grid(row=0, column=6, padx=12)
