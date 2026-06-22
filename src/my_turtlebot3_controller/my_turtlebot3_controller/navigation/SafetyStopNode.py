@@ -29,7 +29,6 @@ Topic pipeline:
 
 import math
 import json
-from typing import List
 
 import rclpy
 from rclpy.node import Node
@@ -86,11 +85,11 @@ class SafetyStopNode(Node):
         self._base_stop_distance: float = self.get_parameter(
             'stop_distance').get_parameter_value().double_value
         self.stop_distance: float = self._base_stop_distance
-        
+
         self._base_narrow_dist: float = self.get_parameter(
             'narrow_obj_dist').get_parameter_value().double_value
         self.narrow_dist: float = self._base_narrow_dist
-        
+
         self.weather_status = 'sunny'
 
         self.front_deg: float = self.get_parameter(
@@ -251,11 +250,11 @@ class SafetyStopNode(Node):
         sa = self.side_deg
         ra = self.rear_deg
 
-        self.d_front       = sector_min(msg, -fa,  fa)
-        self.d_front_left  = sector_min(msg,  fa,  sa)
+        self.d_front = sector_min(msg, -fa, fa)
+        self.d_front_left = sector_min(msg, fa, sa)
         self.d_front_right = sector_min(msg, -sa, -fa)
-        self.d_left        = sector_min(msg,  sa,  ra)
-        self.d_right       = sector_min(msg, -ra, -sa)
+        self.d_left = sector_min(msg, sa, ra)
+        self.d_right = sector_min(msg, -ra, -sa)
 
         # Narrow-object detection: widen the check to ±side_angle_deg.
         # If a thin object is detected and the FRONT sector doesn't already

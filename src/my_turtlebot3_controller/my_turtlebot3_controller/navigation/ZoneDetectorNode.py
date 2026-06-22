@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Zone Detector Node
- 
+
 Determines which agricultural zone the robot is currently in (by looking up its
 map-frame pose via TF and testing it against the zone bounding boxes from
 config/zones.yaml), publishes that zone name on /current_zone, and publishes
@@ -17,7 +17,6 @@ from ament_index_python.packages import get_package_share_directory, PackageNotF
 from std_msgs.msg import String
 from visualization_msgs.msg import Marker, MarkerArray
 from tf2_ros import Buffer, TransformListener, LookupException, ConnectivityException, ExtrapolationException
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 from my_turtlebot3_controller.qos import STATE_QOS
 
@@ -25,7 +24,7 @@ from my_turtlebot3_controller.qos import STATE_QOS
 def _package_share_or_source_dir() -> str:
     """
     Resolve the directory that is expected to contain 'config/zones.yaml'.
- 
+
     @param  (none)
     @pre    (none)
     @post   Returns the installed package share directory of
@@ -47,7 +46,7 @@ def _package_share_or_source_dir() -> str:
 class ZoneDetectorNode(Node):
     """
     Publishes the robot's current zone and the RViz visualisation of all zones.
- 
+
     Class invariant (must hold between every call):
         - self.zones is a dict (possibly empty) mapping zone-name -> zone
           definition (each definition ideally provides min_x/max_x/min_y/max_y
@@ -62,7 +61,7 @@ class ZoneDetectorNode(Node):
         Construct the node: load the zone definitions from zones.yaml, set up the
         TF listener, the two publishers (/current_zone, /zone_markers) and the
         two periodic timers.
- 
+
         @param  (none besides self)
         @pre    rclpy.init() has been called (a ROS 2 context exists) before this
                 node is constructed.
@@ -83,7 +82,7 @@ class ZoneDetectorNode(Node):
 
         pkg_dir = _package_share_or_source_dir()
         zones_file = os.path.join(pkg_dir, 'config', 'zones.yaml')
-        
+
         try:
             with open(zones_file, 'r', encoding='utf-8') as f:
                 self.zones: Dict[str, Any] = yaml.safe_load(f) or {}
@@ -102,7 +101,7 @@ class ZoneDetectorNode(Node):
 
         self.publisher = self.create_publisher(String, '/current_zone', STATE_QOS)
         self.marker_pub = self.create_publisher(MarkerArray, '/zone_markers', 10)
-        
+
         self.timer = self.create_timer(0.5, self.update_and_publish_zone)
         self.marker_timer = self.create_timer(1.0, self.publish_markers)
 
@@ -110,9 +109,9 @@ class ZoneDetectorNode(Node):
         """
         Look up the robot's pose in the map frame, resolve which zone it is in,
         and publish that zone name on /current_zone.
- 
+
         Client: the ROS 2 executor, via the 0.5 s timer.
- 
+
         @param  (none besides self)
         @pre    The TF tree should contain a map->base_footprint transform. If it
                 does not yet (e.g. at start-up, before SLAM/odometry are ready),
@@ -148,7 +147,7 @@ class ZoneDetectorNode(Node):
         """
         Map a map-frame (x, y) position to the name of the zone whose
         axis-aligned bounding box contains it.
- 
+
         @param x  float - x coordinate in the 'map' frame (metres).
         @param y  float - y coordinate in the 'map' frame (metres).
         @pre   Each zone in self.zones should define numeric 'min_x', 'max_x',
@@ -179,9 +178,9 @@ class ZoneDetectorNode(Node):
         """
         Build and publish the RViz visualisation of all zones: one translucent
         CUBE per zone box and one white SPHERE per zone target point.
- 
+
         Client: the ROS 2 executor, via the 1.0 s timer.
- 
+
         @param  (none besides self)
         @pre    self.zones is populated (an empty dict simply yields an empty
                 MarkerArray). self.current_zone reflects the latest detection.
@@ -199,7 +198,7 @@ class ZoneDetectorNode(Node):
         @return None
         """
         marker_array = MarkerArray()
-        
+
         colors = {
             'base_station': (0.5, 0.5, 0.5, 0.5),
             'zone_0': (0.0, 1.0, 0.0, 0.4),
@@ -215,7 +214,7 @@ class ZoneDetectorNode(Node):
             max_y = zone.get('max_y', 0.0)
             target_x = zone.get('target_x', 0.0)
             target_y = zone.get('target_y', 0.0)
-            
+
             cube = Marker()
             cube.header.frame_id = 'map'
             cube.header.stamp = self.get_clock().now().to_msg()
@@ -223,24 +222,24 @@ class ZoneDetectorNode(Node):
             cube.id = idx
             cube.type = Marker.CUBE
             cube.action = Marker.ADD
-            
+
             cube.pose.position.x = (min_x + max_x) / 2.0
             cube.pose.position.y = (min_y + max_y) / 2.0
             cube.pose.position.z = 0.025
-            
+
             cube.scale.x = max(0.1, abs(max_x - min_x))
             cube.scale.y = max(0.1, abs(max_y - min_y))
             cube.scale.z = 0.05
-            
+
             r, g, b, a = colors.get(zone_name, (1.0, 1.0, 1.0, 0.3))
             if zone_name == self.current_zone:
                 a = 0.8
-                
+
             cube.color.r = r
             cube.color.g = g
             cube.color.b = b
             cube.color.a = a
-            
+
             marker_array.markers.append(cube)
 
             target = Marker()
@@ -250,22 +249,22 @@ class ZoneDetectorNode(Node):
             target.id = idx + 100
             target.type = Marker.SPHERE
             target.action = Marker.ADD
-            
+
             target.pose.position.x = float(target_x)
             target.pose.position.y = float(target_y)
             target.pose.position.z = 0.1
-            
+
             target.scale.x = 0.2
             target.scale.y = 0.2
             target.scale.z = 0.2
-            
+
             target.color.r = 1.0
             target.color.g = 1.0
             target.color.b = 1.0
             target.color.a = 0.8
-            
+
             marker_array.markers.append(target)
-            
+
         self.marker_pub.publish(marker_array)
 
 
@@ -273,7 +272,7 @@ def main(args=None) -> None:
     """
     ROS 2 entry point: initialise the context, spin the node until interrupted,
     then shut down cleanly.
- 
+
     @param args  Optional command-line arguments forwarded to rclpy.init().
                  Defaults to None.
     @pre   (none) this function initialises rclpy itself.

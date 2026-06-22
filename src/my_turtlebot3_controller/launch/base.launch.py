@@ -155,7 +155,7 @@ def generate_launch_description():
     )
 
     # Gazebo -> ROS 2 Bridge
-    # We must do this manually because the turtlebot3_gazebo bridge.yaml 
+    # We must do this manually because the turtlebot3_gazebo bridge.yaml
     # maps /cmd_vel to TwistStamped, which breaks Nav2/teleop that expect Twist.
     bridge_cmd = Node(
         package='ros_gz_bridge',

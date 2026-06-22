@@ -16,19 +16,19 @@ import math
 import json
 from typing import Optional
 
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 from my_turtlebot3_controller.qos import STATE_QOS
+
 
 class RobotResourceNode(Node):
     """
     Tracks the robot's consumable resources (battery and fertilizer tank) and
     publishes them as telemetry on /robot_resources.
- 
+
     Class invariant (must hold between every call):
         0.0 <= self.battery    <= 100.0
         0.0 <= self.fertilizer <= 100.0
- 
+
     Every mutator preserves this invariant: each drain is clamped with
     max(0.0, ...) and a refill sets the value to exactly 100.0.
     """
@@ -37,7 +37,7 @@ class RobotResourceNode(Node):
         Construct the node: declare the robot_id parameter, initialise resource
         state, and wire up the three subscriptions, the publisher and the 1 Hz
         publish timer.
- 
+
         @param  (none besides self)
         @pre    rclpy.init() has been called (a ROS 2 context exists) before this
                 node is constructed.
@@ -51,7 +51,7 @@ class RobotResourceNode(Node):
         @return None
         """
         super().__init__('robot_resource_node')
-        
+
         self.declare_parameter('robot_id', 'A')
 
         # Resource levels (0.0 to 100.0)
@@ -93,12 +93,12 @@ class RobotResourceNode(Node):
         """
         Integrate the distance travelled since the previous odometry sample and
         drain the battery proportionally to it.
- 
+
         Client: the ROS 2 executor, which invokes this callback for every message
         received on the 'odom' topic. Because the caller is the trusted middleware
         and the message type is guaranteed by the subscription, no defensive
         precondition check is performed here.
- 
+
         @param msg  nav_msgs/Odometry. Only msg.pose.pose.position.x and .y
                     (metres, in the odom frame) are read.
         @pre   msg is a valid Odometry message with a finite (x, y) position.
@@ -127,7 +127,7 @@ class RobotResourceNode(Node):
             if distance > 0.001:  # Only drain if actually moving
                 drain = distance * self.battery_drain_per_meter
                 self.battery = max(0.0, self.battery - drain)
-        
+
         self.last_x = x
         self.last_y = y
 
@@ -150,10 +150,10 @@ class RobotResourceNode(Node):
         """
         Drain the fertilizer tank when a spray command addressed to THIS robot is
         received, then publish the updated state.
- 
+
         Client: CropDecisionNode, which publishes the spray command on
         'fertilise_zone'.
- 
+
         @param msg  std_msgs/String. msg.data is expected to be a JSON object of
                     the form {"robot": <id>, "zone": <zone_id>}. A bare (non-JSON)
                     string is also accepted as a legacy fallback.
@@ -188,10 +188,10 @@ class RobotResourceNode(Node):
         """
         Reset both resources to full. Triggered when the robot docks at the base
         station.
- 
+
         Client: CropDecisionNode, which publishes on 'refill_resources' once it
         has successfully returned to base.
- 
+
         @param msg  std_msgs/String. The content is ignored; the mere arrival of a
                     message on 'refill_resources' is the trigger.
         @pre   (none on the client beyond publishing any message on
@@ -214,10 +214,10 @@ class RobotResourceNode(Node):
         """
         Serialise the current resource state to JSON and publish it on
         'robot_resources'.
- 
+
         Called by: the 1 Hz heartbeat timer, and directly by fertilize_callback
         and refill_callback for immediate updates.
- 
+
         @param  (none besides self)
         @pre    self.resource_pub has been created (true after __init__).
         @post   A std_msgs/String whose data is the JSON object
@@ -240,7 +240,7 @@ def main(args=None) -> None:
     """
     ROS 2 entry point: initialise the context, spin the node until interrupted,
     then shut down cleanly.
- 
+
     @param args  Optional command-line arguments forwarded to rclpy.init().
                  Defaults to None.
     @pre   (none) this function initialises rclpy itself.
@@ -258,6 +258,7 @@ def main(args=None) -> None:
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

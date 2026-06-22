@@ -14,11 +14,9 @@ from typing import List
 
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 
 from std_msgs.msg import String
 from my_turtlebot3_controller.qos import STATE_QOS
-
 
 
 class TwinSupervisorNode(Node):
@@ -211,6 +209,7 @@ class TwinSupervisorNode(Node):
         msg.data = json.dumps(sync_data)
         self.sync_pub.publish(msg)
 
+
 def main(args=None) -> None:
     rclpy.init(args=args)
     node = TwinSupervisorNode()
@@ -222,6 +221,7 @@ def main(args=None) -> None:
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

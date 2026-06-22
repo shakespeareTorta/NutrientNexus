@@ -4,14 +4,13 @@ from rclpy.node import Node
 from rclpy.action import ActionClient
 from rclpy.action.client import ClientGoalHandle
 from nav2_msgs.action import NavigateToPose
-from geometry_msgs.msg import PoseStamped 
-from std_msgs.msg import String 
+from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import String
 from action_msgs.msg import GoalStatus as ActionGoalStatus
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
-import math
 from typing import Optional
 
 from my_turtlebot3_controller.qos import STATE_QOS
+
 
 class NavigationExecutorNode(Node):
     """Thin wrapper around the Nav2 `navigate_to_pose` action. Turns goals
@@ -23,8 +22,8 @@ class NavigationExecutorNode(Node):
         and a 0.5 s timer that re-broadcasts the latest status."""
         super().__init__('navigation_executor_node')
         # Use relative topics so this works inside namespaces
-        self._action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose') 
-        
+        self._action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
+
         self.goal_handle: Optional[ClientGoalHandle] = None
         self.current_nav_status: str = 'IDLE'
         self.active_goal_pose_for_logging: Optional[PoseStamped] = None
@@ -33,10 +32,10 @@ class NavigationExecutorNode(Node):
         # Subscriber - incoming navigation goals
         self.goal_subscriber = self.create_subscription(
             PoseStamped,
-            'dispatch_nav_goal', 
+            'dispatch_nav_goal',
             self.dispatch_goal_callback,
             10)
-        
+
         # Publisher - navigation status
         self.status_publisher = self.create_publisher(String, 'navigation_executor_status', STATE_QOS)
 
@@ -87,7 +86,6 @@ class NavigationExecutorNode(Node):
         if self.send_nav2_goal(msg):
             self._publish_status('NAVIGATING')
 
-
     def wait_for_action_server(self, timeout_sec: float = 2.0) -> bool:
         """Block briefly for the Nav2 action server; report unavailability via
         the IDLE_SERVER_UNAVAILABLE status. Returns True if the server is up."""
@@ -95,7 +93,7 @@ class NavigationExecutorNode(Node):
 
         if not self._action_client.wait_for_server(timeout_sec=timeout_sec):
             self.get_logger().error('/navigate_to_pose action server not available after waiting.')
-            self._publish_status('IDLE_SERVER_UNAVAILABLE') 
+            self._publish_status('IDLE_SERVER_UNAVAILABLE')
             return False
 
         self.get_logger().info('/navigate_to_pose action server is available.')
@@ -108,17 +106,16 @@ class NavigationExecutorNode(Node):
             return False
 
         goal_msg = NavigateToPose.Goal()
-        goal_msg.pose = target_pose_stamped 
+        goal_msg.pose = target_pose_stamped
 
         self.get_logger().info(f'Sending goal to Nav2: Pos(X:{target_pose_stamped.pose.position.x:.2f}, Y:{target_pose_stamped.pose.position.y:.2f})')
-        
+
         send_goal_future = self._action_client.send_goal_async(
             goal_msg,
             feedback_callback=self.feedback_callback)
-        
+
         send_goal_future.add_done_callback(self.goal_response_callback)
         return True
-
 
     def _schedule_idle(self) -> None:
         """Cancel any pending idle transition, then schedule a new one-shot."""
@@ -188,12 +185,13 @@ class NavigationExecutorNode(Node):
         feedback = feedback_msg.feedback
         self.get_logger().debug(f'Navigating to goal, Dist_rem: {feedback.distance_remaining:.2f} m')
 
+
 def main(args=None) -> None:
     rclpy.init(args=args)
-    executor_node = NavigationExecutorNode() 
+    executor_node = NavigationExecutorNode()
 
     try:
-        rclpy.spin(executor_node) 
+        rclpy.spin(executor_node)
     except KeyboardInterrupt:
         executor_node.get_logger().info('Navigation Executor Node shutting down.')
     finally:
@@ -201,6 +199,7 @@ def main(args=None) -> None:
         executor_node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

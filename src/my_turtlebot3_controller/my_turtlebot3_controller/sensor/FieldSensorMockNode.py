@@ -8,7 +8,6 @@ import os
 import yaml
 import json
 from ament_index_python.packages import get_package_share_directory
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from my_turtlebot3_controller.qos import STATE_QOS
 
 
@@ -24,7 +23,7 @@ class FieldSensorMockNode(Node):
 
         pkg_dir = get_package_share_directory('my_turtlebot3_controller')
         zones_file = os.path.join(pkg_dir, 'config', 'zones.yaml')
-        
+
         try:
             with open(zones_file, 'r', encoding='utf-8') as f:
                 raw_zones = yaml.safe_load(f) or {}
@@ -36,11 +35,11 @@ class FieldSensorMockNode(Node):
         for zone_id in sorted(raw_zones.keys()):
             if zone_id == 'base_station':
                 continue
-                
+
             baseline_m = raw_zones[zone_id].get('baseline_moisture', 50.0)
             baseline_n = raw_zones[zone_id].get('baseline_nutrients', 50.0)
             runoff_risk = raw_zones[zone_id].get('runoff_risk', 'Low')
-            
+
             self.zones.append({
                 'id': zone_id,
                 'moisture': float(baseline_m),
@@ -49,7 +48,7 @@ class FieldSensorMockNode(Node):
                 'runoff_risk': runoff_risk,
                 'vulnerability': 0.0
             })
-            
+
         self.num_zones = len(self.zones)
         self.weather = 'sunny'
 
@@ -121,7 +120,7 @@ class FieldSensorMockNode(Node):
             elif self.weather == 'overcast':
                 zone['moisture'] -= random.uniform(0.1, 0.4)
                 zone['nutrients'] -= random.uniform(0.1, 0.4)  # Normal absorption
-                
+
             # Clamp limits
             zone['moisture'] = max(5.0, min(99.0, zone['moisture']))
             zone['nutrients'] = max(5.0, zone['nutrients'])
@@ -219,6 +218,7 @@ class FieldSensorMockNode(Node):
             states.append(f"{z['id']}: Moisture={z['moisture']:.1f}%, Nutrients={z['nutrients']:.1f}%, Growth={z['growth']:.1f}%")
         self.get_logger().info(f'{prefix} Zone States: [ ' + ' | '.join(states) + ' ]')
 
+
 def main(args=None) -> None:
     rclpy.init(args=args)
     node = FieldSensorMockNode()
@@ -230,6 +230,7 @@ def main(args=None) -> None:
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

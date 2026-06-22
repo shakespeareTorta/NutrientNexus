@@ -7,10 +7,11 @@ Generates a comprehensive Markdown report when requested.
 """
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String, Float32MultiArray
+from std_msgs.msg import String
 import json
 import os
 from datetime import datetime
+
 
 class SustainabilityAuditNode(Node):
     """Independent ledger of farm operations. Logs every fertilise/irrigate/
@@ -29,7 +30,7 @@ class SustainabilityAuditNode(Node):
 
         # Current State
         self.current_weather = 'sunny'
-        self.zone_states = {} # Track latest moisture/nutrients per zone
+        self.zone_states = {}  # Track latest moisture/nutrients per zone
 
         # Subscribers
         self.create_subscription(String, '/weather_forecast', self.weather_cb, 10)
@@ -94,20 +95,20 @@ class SustainabilityAuditNode(Node):
         """Compile the ledgers into a Markdown report (SDG-14 impact, operations,
         recommendations) and write it to nexus_farm_report.md."""
         self.get_logger().info('Compiling Sustainability Report...')
-        
+
         # Estimate savings: Assume each aborted fertilizer spray saves 1.5kg of nitrogen
         saved_nitrogen = len(self.interventions) * 1.5
-        
+
         report_path = os.path.join(os.getcwd(), 'nexus_farm_report.md')
-        
+
         with open(report_path, 'w') as f:
             f.write('# 🌍 Nutrient Nexus Sustainability & Audit Report\n\n')
             f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-            
+
             f.write('## 🏆 SDG-14 Environmental Impact\n')
             f.write(f'**Total Prevented Runoff Events:** {len(self.interventions)}\n')
             f.write(f'**Estimated Nitrogen Saved from Waterways:** {saved_nitrogen:.1f} kg\n\n')
-            
+
             f.write('### Intervention Ledger\n')
             if not self.interventions:
                 f.write('*No unsafe conditions encountered yet.*\n')
@@ -120,14 +121,14 @@ class SustainabilityAuditNode(Node):
             f.write('## 🚜 Agricultural Operations\n')
             f.write(f'**Total Fertilizations Applied:** {len(self.fertilizations)}\n')
             f.write(f'**Total Irrigations Applied:** {len(self.irrigations)}\n\n')
-            
+
             f.write('## 💡 AI Farm Recommendations\n')
             # Generate smart recommendations based on interventions
             high_risk_zones = {}
             for item in self.interventions:
                 z = item['zone']
                 high_risk_zones[z] = high_risk_zones.get(z, 0) + 1
-                
+
             if high_risk_zones:
                 f.write('Based on recent intervention data, the system recommends the following physical farm improvements:\n\n')
                 for z, count in high_risk_zones.items():
@@ -137,8 +138,9 @@ class SustainabilityAuditNode(Node):
                         f.write(f'- ℹ️ **{z}** triggered a weather-based runoff abort. Monitor weather closely before scheduling manual operations here.\n')
             else:
                 f.write('*All zones are currently operating within safe parameters. No structural changes recommended at this time.*\n')
-                
+
         self.get_logger().info(f'Report successfully saved to {report_path}')
+
 
 def main(args=None):
     rclpy.init(args=args)
@@ -151,6 +153,7 @@ def main(args=None):
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

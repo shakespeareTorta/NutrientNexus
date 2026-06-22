@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from rclpy.timer import Timer
 from std_msgs.msg import Float32MultiArray, String
 from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry
@@ -10,10 +9,7 @@ import os
 import yaml
 import json
 from ament_index_python.packages import get_package_share_directory
-from typing import Dict, List, Optional, Any
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from my_turtlebot3_controller.qos import STATE_QOS
-
 
 
 class CropDecisionNode(Node):
@@ -46,14 +42,14 @@ class CropDecisionNode(Node):
         self.treatment_vel_pub = self.create_publisher(Twist, 'cmd_vel_nav', 10)
         self.refill_pub = self.create_publisher(String, 'refill_resources', STATE_QOS)
         self.intervention_pub = self.create_publisher(String, 'sdg14_intervention', STATE_QOS)
-        
+
         # Supervisor Comms
         self.zone_request_pub = self.create_publisher(String, 'supervisor/zone_request', 10)
 
         # Subscribers (robot-specific)
         self.nav_status_sub = self.create_subscription(String, 'navigation_executor_status', self.nav_status_callback, 10)
         self.current_zone_sub = self.create_subscription(String, 'current_zone', self.current_zone_callback, 10)
-        
+
         # Shared/Global Subscribers
         self.moisture_sub = self.create_subscription(Float32MultiArray, '/field_moisture', self.moisture_callback, 10)
         self.nutrients_sub = self.create_subscription(Float32MultiArray, '/field_nutrients', self.nutrients_callback, 10)
@@ -68,7 +64,7 @@ class CropDecisionNode(Node):
         zones_file = os.path.join(pkg_dir, 'config', 'zones.yaml')
         with open(zones_file, 'r', encoding='utf-8') as f:
             self.raw_zones = yaml.safe_load(f) or {}
-            
+
         self.ordered_zones = sorted([z for z in self.raw_zones.keys() if z != 'base_station'])
         self.latest_moisture = {}
         self.latest_nutrients = {}
@@ -79,7 +75,7 @@ class CropDecisionNode(Node):
         self.physical_current_zone = 'no_zone'
         self.active_zone_id = None
         self.sub_targets = []
-        
+
         self.battery_level = 100.0
         self.fertilizer_level = 100.0
         self.nav2_ready = False
@@ -203,7 +199,7 @@ class CropDecisionNode(Node):
         """
         if self.current_phase != 'WAITING_FOR_ASSIGNMENT':
             return
-            
+
         try:
             data = json.loads(msg.data)
             if data.get('robot') == self.robot_id:
@@ -249,14 +245,14 @@ class CropDecisionNode(Node):
         status = msg.data
         if status == 'IDLE' and not self.nav2_ready:
             self.nav2_ready = True
-            
+
         if self.current_phase == 'NAVIGATING':
             if status == 'SUCCEEDED_AT_POSE':
                 self.current_phase = 'VERIFYING_ZONE'
             elif status in ['FAILED_NAVIGATION', 'ABORTED_NAVIGATION', 'CANCELED_NAVIGATION', 'REJECTED', 'IDLE_SERVER_UNAVAILABLE']:
                 self.get_logger().warn(f'Navigation failed with status {status}. Skipping sub-target.')
                 self._start_cooldown()
-                
+
         elif self.current_phase == 'RETURNING_TO_BASE':
             if status == 'SUCCEEDED_AT_POSE':
                 self.get_logger().info('Arrived at Base Station. Refilling...')
@@ -305,10 +301,10 @@ class CropDecisionNode(Node):
             self.get_logger().info(f'Finished all sub-targets for {self.active_zone_id}.')
             self.current_phase = 'IDLE'
             return
-            
+
         x, y, yaw_deg = self.sub_targets.pop(0)
         self.get_logger().info(f'Navigating to sub-target at ({x:.2f}, {y:.2f})')
-        
+
         goal = PoseStamped()
         goal.header.stamp = self.get_clock().now().to_msg()
         goal.header.frame_id = 'map'
@@ -317,7 +313,7 @@ class CropDecisionNode(Node):
         yaw_rad = math.radians(float(yaw_deg))
         goal.pose.orientation.z = math.sin(yaw_rad / 2.0)
         goal.pose.orientation.w = math.cos(yaw_rad / 2.0)
-        
+
         self.goal_pub.publish(goal)
         self.current_phase = 'NAVIGATING'
 
@@ -327,7 +323,7 @@ class CropDecisionNode(Node):
         z = self.raw_zones.get('base_station')
         if not z:
             return
-        
+
         # Offset parking spots so robots don't crash into each other
         y_offset = 0.4 if self.robot_id == 'B' else -0.4
 
@@ -417,12 +413,12 @@ class CropDecisionNode(Node):
         """
         self._cancel_and_destroy('_scan_timer')
         self.current_phase = 'DECIDING'
-        
+
         # Read from field sensors for the active zone
         moist = self.latest_moisture.get(self.active_zone_id, 100.0)
         nutri = self.latest_nutrients.get(self.active_zone_id, 100.0)
         vuln = self.latest_vulnerability.get(self.active_zone_id, 0.0)
-        
+
         # Hard constraint: Never actuate in the base station
         if self.active_zone_id == 'base_station' or self.physical_current_zone == 'base_station':
             self.get_logger().info('Zone is base station. Treatment is strictly forbidden here. Returning to IDLE.')
@@ -456,7 +452,7 @@ class CropDecisionNode(Node):
             irr_msg.data = json.dumps({'robot': self.robot_id, 'zone': self.active_zone_id})
             self.irrigate_pub.publish(irr_msg)
             action_taken = True
-            
+
         if not action_taken and vuln <= self.vulnerability_halt:
             self.get_logger().info(f'[{self.active_zone_id}] Zone is healthy. No treatment needed.')
 
@@ -499,6 +495,7 @@ class CropDecisionNode(Node):
         else:
             self.current_phase = 'IDLE'
 
+
 def main(args=None):
     rclpy.init(args=args)
     node = CropDecisionNode()
@@ -510,6 +507,7 @@ def main(args=None):
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
