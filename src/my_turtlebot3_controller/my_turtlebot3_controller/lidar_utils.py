@@ -1,5 +1,6 @@
 import math
 from typing import List
+
 from sensor_msgs.msg import LaserScan
 
 
@@ -25,11 +26,10 @@ def sector_min(
     msg: LaserScan, angle_low_deg: float, angle_high_deg: float
 ) -> float:
     """
-    Return the minimum valid range reading in the angular sector
-    [angle_low_deg, angle_high_deg] (both in degrees, signed).
+    Return the minimum valid range reading in the given angular sector.
 
+    The sector is [angle_low_deg, angle_high_deg] (both in degrees, signed).
     Uses the same angle normalisation as get_front_arc_distances().
-    Adapted from OceanDeepSeek's RobotController._sector_min.
     """
     low = math.radians(angle_low_deg)
     high = math.radians(angle_high_deg)
@@ -59,8 +59,6 @@ def narrow_object_in_sector(
     Catches thin objects (water bottles, chair legs) that only occupy
     1-3 scan rays and might be missed by a sector-minimum approach with
     a wider threshold.
-
-    Adapted from OceanDeepSeek's RobotController._narrow_object_in_sector.
     """
     low = math.radians(angle_low_deg)
     high = math.radians(angle_high_deg)

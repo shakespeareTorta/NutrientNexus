@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Robot Resource Node
+Robot Resource Node — simulate the robot's battery and fertilizer depletion.
 
 Simulates physical resource depletion on the robot:
 - Battery drains based on physical distance travelled (calculated from /odom)
@@ -8,36 +8,36 @@ Simulates physical resource depletion on the robot:
 - Refills when a message is sent to /refill_resources
 Publishes state as a JSON string to /robot_resources.
 """
+import json
+import math
+from typing import Optional
+
+from my_turtlebot3_controller.qos import STATE_QOS
+from nav_msgs.msg import Odometry
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-from nav_msgs.msg import Odometry
-import math
-import json
-from typing import Optional
 
-from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
-
-from my_turtlebot3_controller.qos import STATE_QOS
 
 class RobotResourceNode(Node):
     """
-    Tracks the robot's consumable resources (battery and fertilizer tank) and
-    publishes them as telemetry on /robot_resources.
- 
+    Track the robot's battery/fertilizer levels and publish on /robot_resources.
+
     Class invariant (must hold between every call):
         0.0 <= self.battery    <= 100.0
         0.0 <= self.fertilizer <= 100.0
- 
+
     Every mutator preserves this invariant: each drain is clamped with
     max(0.0, ...) and a refill sets the value to exactly 100.0.
     """
+
     def __init__(self) -> None:
         """
-        Construct the node: declare the robot_id parameter, initialise resource
-        state, and wire up the three subscriptions, the publisher and the 1 Hz
-        publish timer.
- 
+        Construct the node and wire up its ROS interfaces.
+
+        Declares the robot_id parameter, initialises resource state, and wires
+        up the three subscriptions, the publisher and the 1 Hz publish timer.
+
         @param  (none besides self)
         @pre    rclpy.init() has been called (a ROS 2 context exists) before this
                 node is constructed.
@@ -51,7 +51,7 @@ class RobotResourceNode(Node):
         @return None
         """
         super().__init__('robot_resource_node')
-        
+
         self.declare_parameter('robot_id', 'A')
 
         # Resource levels (0.0 to 100.0)
@@ -70,27 +70,37 @@ class RobotResourceNode(Node):
         self.last_x: Optional[float] = None
         self.last_y: Optional[float] = None
 
-        # Subscribers (use relative topics so namespace /tb2 applies automatically)
+        # Digital-twin battery fault override.
+        # When the dashboard injects a battery fault, normal drain is
+        # suspended and the level is clamped low to force a fault cascade
+        # (RETURNING_TO_BASE in CropDecision, fault in TwinSupervisor).
+        self.battery_fault: bool = False
+        self.battery_fault_clamp: float = 10.0
+
+        # Subscribers (relative topics)
         self.create_subscription(Odometry, 'odom', self.odom_callback, 10)
         self.create_subscription(String, 'fertilise_zone', self.fertilize_callback, 10)
         self.create_subscription(String, 'refill_resources', self.refill_callback, 10)
+        self.create_subscription(String, '/twin_fault_state', self.fault_callback, STATE_QOS)
 
         # Publisher
         self.resource_pub = self.create_publisher(String, 'robot_resources', STATE_QOS)
         self.timer = self.create_timer(1.0, self.publish_resources)
 
-        self.get_logger().info("Robot Resource Node started.")
+        self.get_logger().info('Robot Resource Node started.')
 
     def odom_callback(self, msg: Odometry) -> None:
         """
-        Integrate the distance travelled since the previous odometry sample and
-        drain the battery proportionally to it.
- 
+        Drain the battery in proportion to the distance travelled.
+
+        Integrates the distance since the previous odometry sample and drains
+        the battery proportionally to it.
+
         Client: the ROS 2 executor, which invokes this callback for every message
         received on the 'odom' topic. Because the caller is the trusted middleware
         and the message type is guaranteed by the subscription, no defensive
         precondition check is performed here.
- 
+
         @param msg  nav_msgs/Odometry. Only msg.pose.pose.position.x and .y
                     (metres, in the odom frame) are read.
         @pre   msg is a valid Odometry message with a finite (x, y) position.
@@ -108,23 +118,46 @@ class RobotResourceNode(Node):
         x = msg.pose.pose.position.x
         y = msg.pose.pose.position.y
 
+        if self.battery_fault:
+            self.battery = min(self.battery, self.battery_fault_clamp)
+            self.last_x = x
+            self.last_y = y
+            return
+
         if self.last_x is not None and self.last_y is not None:
             distance = math.sqrt((x - self.last_x)**2 + (y - self.last_y)**2)
             if distance > 0.001:  # Only drain if actually moving
                 drain = distance * self.battery_drain_per_meter
                 self.battery = max(0.0, self.battery - drain)
-        
+
         self.last_x = x
         self.last_y = y
 
+    def fault_callback(self, msg: String) -> None:
+        try:
+            data = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        active = (data.get('battery', 'normal') == 'clamped')
+        if active and not self.battery_fault:
+            self.get_logger().error('BATTERY FAULT injected: clamping battery low.')
+        elif not active and self.battery_fault:
+            self.get_logger().info('Battery fault cleared.')
+        self.battery_fault = active
+        if active:
+            self.battery = min(self.battery, self.battery_fault_clamp)
+            self.publish_resources()
+
     def fertilize_callback(self, msg: String) -> None:
         """
-        Drain the fertilizer tank when a spray command addressed to THIS robot is
-        received, then publish the updated state.
- 
+        Drain the fertilizer tank on a spray command for this robot.
+
+        Drains the tank when a spray command addressed to THIS robot is
+        received, then publishes the updated state.
+
         Client: CropDecisionNode, which publishes the spray command on
         'fertilise_zone'.
- 
+
         @param msg  std_msgs/String. msg.data is expected to be a JSON object of
                     the form {"robot": <id>, "zone": <zone_id>}. A bare (non-JSON)
                     string is also accepted as a legacy fallback.
@@ -143,26 +176,27 @@ class RobotResourceNode(Node):
         """
         try:
             data = json.loads(msg.data)
-            robot_id = data.get("robot")
+            robot_id = data.get('robot')
             # If the payload specifies a robot, only drain if it matches our namespace
             my_id = self.get_parameter('robot_id').get_parameter_value().string_value
             if robot_id and robot_id != my_id:
                 return
         except json.JSONDecodeError:
-            pass # Fallback to old behavior if just a string is sent
+            pass  # A bare (non-JSON) string is accepted as a spray for this robot
 
-        self.get_logger().info("Fertilizer sprayed. Draining tank.")
+        self.get_logger().info('Fertilizer sprayed. Draining tank.')
         self.fertilizer = max(0.0, self.fertilizer - self.fertilizer_drain_per_spray)
         self.publish_resources()
 
     def refill_callback(self, msg: String) -> None:
         """
-        Reset both resources to full. Triggered when the robot docks at the base
-        station.
- 
+        Reset both resources to full when the robot docks at base.
+
+        Triggered when the robot docks at the base station.
+
         Client: CropDecisionNode, which publishes on 'refill_resources' once it
         has successfully returned to base.
- 
+
         @param msg  std_msgs/String. The content is ignored; the mere arrival of a
                     message on 'refill_resources' is the trigger.
         @pre   (none on the client beyond publishing any message on
@@ -171,19 +205,25 @@ class RobotResourceNode(Node):
                trivially holds), and the new state is published immediately.
         @return None
         """
-        self.get_logger().info("Base Station connected. Refilling battery and fertilizer to 100%.")
-        self.battery = 100.0
-        self.fertilizer = 100.0
+        self.get_logger().info('Base Station connected. Refilling battery and fertilizer to 100%.')
+        if self.battery_fault:
+            self.get_logger().warn(
+                'Battery fault active: refilling fertilizer only, battery stays clamped.')
+            self.fertilizer = 100.0
+        else:
+            self.battery = 100.0
+            self.fertilizer = 100.0
         self.publish_resources()
 
     def publish_resources(self) -> None:
         """
-        Serialise the current resource state to JSON and publish it on
-        'robot_resources'.
- 
+        Serialise the current resource state to JSON and publish it.
+
+        Publishes the JSON state on 'robot_resources'.
+
         Called by: the 1 Hz heartbeat timer, and directly by fertilize_callback
         and refill_callback for immediate updates.
- 
+
         @param  (none besides self)
         @pre    self.resource_pub has been created (true after __init__).
         @post   A std_msgs/String whose data is the JSON object
@@ -194,8 +234,8 @@ class RobotResourceNode(Node):
         @return None
         """
         state = {
-            "battery": round(self.battery, 1),
-            "fertilizer": round(self.fertilizer, 1)
+            'battery': round(self.battery, 1),
+            'fertilizer': round(self.fertilizer, 1)
         }
         msg = String()
         msg.data = json.dumps(state)
@@ -204,9 +244,11 @@ class RobotResourceNode(Node):
 
 def main(args=None) -> None:
     """
-    ROS 2 entry point: initialise the context, spin the node until interrupted,
-    then shut down cleanly.
- 
+    Run the ROS 2 entry point for the robot resource node.
+
+    Initialises the context, spins the node until interrupted, then shuts down
+    cleanly.
+
     @param args  Optional command-line arguments forwarded to rclpy.init().
                  Defaults to None.
     @pre   (none) this function initialises rclpy itself.
@@ -224,6 +266,7 @@ def main(args=None) -> None:
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()

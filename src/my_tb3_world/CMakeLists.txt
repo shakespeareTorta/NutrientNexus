@@ -4,7 +4,6 @@ project(my_tb3_world)
 find_package(ament_cmake REQUIRED)
 
 install(DIRECTORY
-  launch
   worlds
   DESTINATION share/${PROJECT_NAME}
 )

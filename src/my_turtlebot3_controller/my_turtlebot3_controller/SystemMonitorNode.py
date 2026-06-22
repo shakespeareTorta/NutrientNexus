@@ -24,22 +24,33 @@ Monitored topics:
 All thresholds are configurable via nexus_params.yaml.
 """
 
-import math
 import json
+import math
 
+from my_turtlebot3_controller.qos import STATE_QOS
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
-
-from sensor_msgs.msg import BatteryState, LaserScan, Imu
+from sensor_msgs.msg import BatteryState, Imu, LaserScan
 from std_msgs.msg import String
-
-from my_turtlebot3_controller.qos import STATE_QOS
 
 
 class SystemMonitorNode(Node):
+    """
+    Sole publisher of /system_health.
+
+    Subscribes to the raw sensor topics (battery/scan/imu), fuses them with any
+    dashboard-injected faults, and publishes one authoritative health view plus
+    a derived twin_mode.
+    """
 
     def __init__(self):
+        """
+        Declare parameters, subscribe to sensors and start the check timer.
+
+        Subscribes to the sensors and the injected /twin_fault_state, and starts
+        the periodic health check.
+        """
         super().__init__('system_monitor_node')
 
         # ── Parameters ────────────────────────────────────────────────
@@ -79,7 +90,8 @@ class SystemMonitorNode(Node):
         self.scan_stale = self.get_parameter('scan_stale_sec').get_parameter_value().double_value
         self.dropout_pct = self.get_parameter('dropout_pct').get_parameter_value().double_value
         self.imu_stale = self.get_parameter('imu_stale_sec').get_parameter_value().double_value
-        self.accel_limit = self.get_parameter('accel_warn_g').get_parameter_value().double_value * 9.81
+        self.accel_limit = (
+            self.get_parameter('accel_warn_g').get_parameter_value().double_value * 9.81)
         self.gyro_limit = self.get_parameter('gyro_warn_rps').get_parameter_value().double_value
 
         # ── State: last received messages and timestamps ──────────────
@@ -92,6 +104,11 @@ class SystemMonitorNode(Node):
         self._imu_stamp = None
 
         self._last_battery_level: str = ''
+
+        # Injected digital-twin faults. SystemMonitor stays the SOLE publisher
+        # of /system_health: it fuses these injected overrides with real
+        # telemetry into one authoritative health view.
+        self._faults = {'lidar': 'ok', 'motor': 'ok', 'battery': 'normal'}
 
         # ── QoS — BEST_EFFORT for sensor topics ──────────────────────
         sensor_qos = QoSProfile(
@@ -116,6 +133,10 @@ class SystemMonitorNode(Node):
         # ── Publisher for system health status ────────────────────────
         self.health_pub = self.create_publisher(String, '/system_health', STATE_QOS)
 
+        # ── Injected fault subscription (digital entity → physical) ────
+        self.create_subscription(
+            String, '/twin_fault_state', self._fault_callback, STATE_QOS)
+
         # ── Check timer ───────────────────────────────────────────────
         self.create_timer(1.0 / check_hz, self._check)
 
@@ -135,33 +156,96 @@ class SystemMonitorNode(Node):
     # ── Callbacks: store message and wall-clock timestamp ─────────────
 
     def _battery_callback(self, msg: BatteryState) -> None:
+        """Store the latest battery message and its arrival time."""
         self._battery_msg = msg
         self._battery_stamp = self.get_clock().now()
 
     def _scan_callback(self, msg: LaserScan) -> None:
+        """Store the latest LiDAR scan and its arrival time."""
         self._scan_msg = msg
         self._scan_stamp = self.get_clock().now()
 
     def _imu_callback(self, msg: Imu) -> None:
+        """Store the latest IMU message and its arrival time."""
         self._imu_msg = msg
         self._imu_stamp = self.get_clock().now()
+
+    def _fault_callback(self, msg: String) -> None:
+        """Record the dashboard-injected fault overrides (lidar/motor/battery)."""
+        try:
+            data = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        self._faults['lidar'] = data.get('lidar', 'ok')
+        self._faults['motor'] = data.get('motor', 'ok')
+        self._faults['battery'] = data.get('battery', 'normal')
 
     # ── Master check (called by timer) ────────────────────────────────
 
     def _check(self) -> None:
+        """
+        Assemble and publish the fused system-health view.
+
+        Runs the per-sensor checks, overlays any dashboard-injected faults so an
+        operator override wins over the raw verdict, derives the single
+        twin_mode, and publishes the whole thing as JSON.
+
+        @pre  Called by the check timer; latest sensor messages may be absent
+              (handled as NO_DATA in simulation).
+        @post One std_msgs/String is published on /system_health.
+        @return None.
+        """
         health = {}
         health['battery'] = self._check_battery()
         health['lidar'] = self._check_scan()
         health['imu'] = self._check_imu()
+
+        # Fuse injected faults into the authoritative health view. An
+        # injected fault overrides the raw sensor verdict so the digital
+        # twin presents the operator-declared state.
+        health['faults'] = dict(self._faults)
+        if self._faults['lidar'] == 'failed':
+            health['lidar']['status'] = 'FAILED'
+        elif self._faults['lidar'] == 'degraded' and health['lidar'].get('status') == 'OK':
+            health['lidar']['status'] = 'DEGRADED'
+        if self._faults['motor'] == 'stalled':
+            health['motor'] = {'status': 'STALLED'}
+        else:
+            health['motor'] = {'status': 'OK'}
+
+        health['twin_mode'] = self._derive_twin_mode(health)
 
         # Publish combined health status
         msg = String()
         msg.data = json.dumps(health)
         self.health_pub.publish(msg)
 
+    def _derive_twin_mode(self, health: dict) -> str:
+        """
+        Reduce the fused health to one of NORMAL / DEGRADED / FAULTED.
+
+        This is the single mode the dashboard banner reflects.
+        """
+        if (self._faults['motor'] == 'stalled'
+                or self._faults['lidar'] == 'failed'
+                or self._faults['battery'] == 'clamped'
+                or health['battery'].get('status') == 'CRITICAL'):
+            return 'FAULTED'
+        if (self._faults['lidar'] == 'degraded'
+                or health['lidar'].get('status') in ('STALE', 'HIGH_DROPOUT', 'ALL_INVALID')
+                or health['battery'].get('status') == 'WARNING'):
+            return 'DEGRADED'
+        return 'NORMAL'
+
     # ── Battery check ─────────────────────────────────────────────────
 
     def _check_battery(self) -> dict:
+        """
+        Classify the battery as OK/WARNING/CRITICAL (or NO_DATA in sim).
+
+        Classifies by voltage/percent, logging only on level changes. Returns a
+        status dict.
+        """
         if self._battery_msg is None:
             if self._battery_stamp is None:
                 self.get_logger().info(
@@ -211,6 +295,14 @@ class SystemMonitorNode(Node):
     # ── LiDAR check ───────────────────────────────────────────────────
 
     def _check_scan(self) -> dict:
+        """
+        Classify LiDAR health from scan age and ray quality.
+
+        @pre  self._scan_msg / self._scan_stamp hold the latest scan, if any.
+        @post No state is mutated (read-only verdict).
+        @return A status dict whose 'status' is one of STALE, EMPTY,
+                ALL_INVALID, HIGH_DROPOUT or OK, with supporting ray counts.
+        """
         now = self.get_clock().now()
 
         # Staleness
@@ -282,6 +374,12 @@ class SystemMonitorNode(Node):
     # ── IMU check ─────────────────────────────────────────────────────
 
     def _check_imu(self) -> dict:
+        """
+        Classify the IMU health (or NO_DATA in sim).
+
+        Warns on excessive linear acceleration or angular velocity. Returns a
+        status dict.
+        """
         now = self.get_clock().now()
 
         # No data received yet

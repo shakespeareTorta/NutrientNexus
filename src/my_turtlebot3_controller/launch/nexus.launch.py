@@ -4,7 +4,7 @@ Unified Nutrient Nexus Launch File.
 
 Starts the entire agricultural digital twin simulation pipeline with
 a single command:
-  1. base.launch.py  — Gazebo + SLAM + Nav2
+  1. base.launch.py  — Gazebo + Nav2 + ground-truth localization
   2. SafetyStopNode  — LiDAR collision guard (defence-in-depth)
   3. FieldSensorMock  — Soil telemetry simulation
   4. NavigationExecutor — Nav2 action client relay
@@ -14,12 +14,12 @@ Usage:
   ros2 launch my_turtlebot3_controller nexus.launch.py
   ros2 launch my_turtlebot3_controller nexus.launch.py gui:=false  # headless
 """
-import os
 import datetime
+import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -27,7 +27,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     # Locate package share directory
-    my_controller_share = get_package_share_directory("my_turtlebot3_controller")
+    my_controller_share = get_package_share_directory('my_turtlebot3_controller')
     nexus_params_file = os.path.join(my_controller_share, 'config', 'nexus_params.yaml')
 
     # Declare gui argument (passed through to base.launch.py)
@@ -36,12 +36,12 @@ def generate_launch_description():
         default_value='true',
         description='Set to "false" to run headless (no Gazebo GUI).'
     )
-    gui = LaunchConfiguration("gui")
+    gui = LaunchConfiguration('gui')
 
-    # 1. Include base.launch.py (starts Gazebo, SLAM, and Nav2)
+    # 1. Include base.launch.py (starts Gazebo, Nav2, and localization)
     base_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(my_controller_share, "launch", "base.launch.py")
+            os.path.join(my_controller_share, 'launch', 'base.launch.py')
         ),
         launch_arguments={
             'gui': gui,
@@ -54,10 +54,10 @@ def generate_launch_description():
     # 2. Safety Stop Node — LiDAR-based collision guard (defence-in-depth)
     #    Intercepts /cmd_vel_nav from Nav2 and publishes safe commands to /cmd_vel
     safety_stop = Node(
-        package="my_turtlebot3_controller",
-        executable="safety_stop_node",
-        name="safety_stop_node",
-        output="screen",
+        package='my_turtlebot3_controller',
+        executable='safety_stop_node',
+        name='safety_stop_node',
+        output='screen',
         emulate_tty=True,
         parameters=[
             nexus_params_file,
@@ -70,87 +70,88 @@ def generate_launch_description():
 
     # 3. Field Sensor Mock Node
     field_sensor_mock = Node(
-        package="my_turtlebot3_controller",
-        executable="field_sensor_mock_node",
-        name="field_sensor_mock_node",
-        output="screen",
+        package='my_turtlebot3_controller',
+        executable='field_sensor_mock_node',
+        name='field_sensor_mock_node',
+        output='screen',
         emulate_tty=True,
         parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     weather_adapter = Node(
-        package="my_turtlebot3_controller",
-        executable="weather_adapter_node",
-        name="weather_adapter_node",
-        output="screen", emulate_tty=True,
+        package='my_turtlebot3_controller',
+        executable='weather_adapter_node',
+        name='weather_adapter_node',
+        output='screen', emulate_tty=True,
+        parameters=[{'use_sim_time': True}],
     )
 
     # 4. Navigation Executor Node (Nav2 Action Client Relay)
     navigation_executor = Node(
-        package="my_turtlebot3_controller",
-        executable="navigation_executor_node",
-        name="navigation_executor_node",
-        output="screen",
+        package='my_turtlebot3_controller',
+        executable='navigation_executor_node',
+        name='navigation_executor_node',
+        output='screen',
         emulate_tty=True,
         parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 5. Zone Detector Node (Physical Spatial Verification)
     zone_detector = Node(
-        package="my_turtlebot3_controller",
-        executable="zone_detector_node",
-        name="zone_detector_node",
-        output="screen",
+        package='my_turtlebot3_controller',
+        executable='zone_detector_node',
+        name='zone_detector_node',
+        output='screen',
         emulate_tty=True,
         parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 6. Robot Resource Node (Battery & Tank tracking)
     robot_resource = Node(
-        package="my_turtlebot3_controller",
-        executable="robot_resource_node",
-        name="robot_resource_node",
-        output="screen",
+        package='my_turtlebot3_controller',
+        executable='robot_resource_node',
+        name='robot_resource_node',
+        output='screen',
         emulate_tty=True,
         parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 7. Crop Decision Node (Agricultural State Machine & SDG-14 controller)
     crop_decision = Node(
-        package="my_turtlebot3_controller",
-        executable="crop_decision_node",
-        name="crop_decision_node",
-        output="screen",
+        package='my_turtlebot3_controller',
+        executable='crop_decision_node',
+        name='crop_decision_node',
+        output='screen',
         emulate_tty=True,
         parameters=[nexus_params_file, {'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 8. Real-Time Dashboard Node (Tkinter GUI)
     dashboard = Node(
-        package="my_turtlebot3_controller",
-        executable="dashboard_node",
-        name="dashboard_node",
-        output="screen",
+        package='my_turtlebot3_controller',
+        executable='dashboard_node',
+        name='dashboard_node',
+        output='screen',
         emulate_tty=True,
         parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
     # 9. Sustainability Audit Node
     sustainability_audit = Node(
-        package="my_turtlebot3_controller",
-        executable="sustainability_audit_node",
-        name="sustainability_audit_node",
-        output="screen",
+        package='my_turtlebot3_controller',
+        executable='sustainability_audit_node',
+        name='sustainability_audit_node',
+        output='screen',
         emulate_tty=True,
         parameters=[{'use_sim_time': True}, {'robot_id': 'A'}],
     )
 
-    # 10. Twin Supervisor Node (Lecture Week 6)
+    # 10. Twin Supervisor Node
     twin_supervisor = Node(
-        package="my_turtlebot3_controller",
-        executable="twin_supervisor_node",
-        name="twin_supervisor_node",
-        output="screen",
+        package='my_turtlebot3_controller',
+        executable='twin_supervisor_node',
+        name='twin_supervisor_node',
+        output='screen',
         emulate_tty=True,
         parameters=[
             {'system_mode': 'SIM_ONLY'},
@@ -160,12 +161,22 @@ def generate_launch_description():
 
     # 11. System Monitor Node (Hardware watchdog)
     system_monitor = Node(
-        package="my_turtlebot3_controller",
-        executable="system_monitor_node",
-        name="system_monitor_node",
-        output="screen",
+        package='my_turtlebot3_controller',
+        executable='system_monitor_node',
+        name='system_monitor_node',
+        output='screen',
         emulate_tty=True,
         parameters=[nexus_params_file, {'use_sim_time': True}],
+    )
+
+    # 11b. Zone Visualizer — draws colour-coded zone tiles into Gazebo
+    zone_visualizer = Node(
+        package='my_turtlebot3_controller',
+        executable='zone_visualizer_node',
+        name='zone_visualizer_node',
+        output='screen',
+        emulate_tty=True,
+        parameters=[nexus_params_file, {'use_sim_time': True}, {'world_name': 'default'}],
     )
 
     # 11. RViz2 (with Nav2 Default View)
@@ -173,11 +184,14 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         name='rviz2',
-        arguments=['-d', os.path.join(get_package_share_directory('nav2_bringup'), 'rviz', 'nav2_default_view.rviz')],
+        arguments=['-d', os.path.join(
+            get_package_share_directory('nav2_bringup'), 'rviz',
+            'nav2_default_view.rviz')],
         output='screen',
+        parameters=[{'use_sim_time': True}],
     )
 
-    # 12. rosbag2 auto-recording (Lecture Week 6: evidence collection)
+    # 12. rosbag2 auto-recording
     bag_output = '/tmp/nexus_recording_' + datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     rosbag_record = ExecuteProcess(
         cmd=[
@@ -188,6 +202,7 @@ def generate_launch_description():
             '/field_moisture', '/field_nutrients', '/field_growth',
             '/robot_resources', '/sdg14_intervention', '/weather_forecast',
             '/sync_status', '/system_alerts',
+            '/system_health', '/twin_fault_state', '/obstacle_status',
         ],
         output='screen',
     )
@@ -208,6 +223,7 @@ def generate_launch_description():
             sustainability_audit,
             twin_supervisor,
             system_monitor,
+            zone_visualizer,
             rosbag_record,
             rviz_node,
         ]

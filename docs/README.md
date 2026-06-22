@@ -48,8 +48,70 @@ Listens to `tf2` transforms (specifically `map` -> `base_footprint`) to calculat
 *   **Safety Stop**: A defense-in-depth node that directly intercepts velocity commands (`/cmd_vel_nav`) and halts the robot if the LiDAR (`/scan`) detects an imminent collision.
 *   **Audit**: Listens for critical blocked actions (e.g., "Refused to fertilize Zone 3 due to High Runoff Risk") and permanently logs them to an audit ledger file.
 
-### 7. Visualization: `dashboard_node`
-A lightweight Flask web server running in a background thread that serves a live, auto-updating HTML dashboard. It displays robot telemetry, zone health, and recent audit logs.
+### 7. Visualization & Control: `dashboard_node`
+A Tkinter desktop GUI running ROS 2 in a background thread. It is the **digital
+entity** of the twin: it mirrors physical-robot state (resources, zone,
+navigation, system health, obstacles) and controls the physical robot by
+injecting weather events and hardware faults.
+
+### 8. Health & Twin State: `system_monitor_node`
+The single authoritative publisher of `/system_health`. It fuses real sensor
+telemetry (battery, LiDAR, IMU) with operator-injected faults from
+`/twin_fault_state` and derives a `twin_mode` of `NORMAL`, `DEGRADED`, or
+`FAULTED` that the dashboard surfaces.
+
+---
+
+## Digital Twin Architecture (Assignment Option B)
+
+NutrientNexus is structured as **two distinct entities** that stay synchronized
+over ROS 2 topics:
+
+*   **Physical entity (source of truth)** — the TurtleBot3 robot in Gazebo. It
+    produces sensor/state/world events (`/scan`, `/odom`, `/imu`,
+    `/robot_resources`, `/obstacle_status`, `/system_health`).
+*   **Digital entity (mirror & control)** — the `dashboard_node` Tkinter GUI. It
+    visualizes the physical state and sends control/override events back
+    (`/weather_forecast`, `/twin_fault_state`, `/operator_override_response`).
+
+The mental model: **the dashboard injects digital state overrides; the robot
+publishes telemetry; `system_monitor_node` fuses both into one authoritative
+system-health view; `safety_stop_node` enforces the resulting safety behavior.**
+
+### Requirement mapping
+
+| Option B requirement | How it is satisfied | Evidence topics |
+|---|---|---|
+| **1. Bidirectional pub/sub** | Robot → dashboard telemetry stream; dashboard → robot control stream | `/robot_resources`, `/system_health`, `/obstacle_status` (P→D) and `/weather_forecast`, `/twin_fault_state` (D→P) |
+| **2. State synchronization (not just commands)** | Operator injects a LiDAR/motor/battery fault on the dashboard. `system_monitor_node` fuses it into `/system_health` (status + `twin_mode`); `safety_stop_node`/`robot_resource_node` change behavior; the dashboard reflects the new state. | `/twin_fault_state`, `/system_health` |
+| **3. Environmental interaction across the twin** | An obstacle in Gazebo is sensed by the LiDAR; `safety_stop_node` stops/steers the robot AND publishes `/obstacle_status`, which the dashboard displays. The world event propagates through the twin. | `/scan`, `/obstacle_status`, `/cmd_vel` |
+
+### Cross-entity topic contracts
+
+*   `/twin_fault_state` (dashboard → robot, `std_msgs/String` JSON):
+    `{"lidar": "ok|degraded|failed", "motor": "ok|stalled", "battery": "normal|clamped", "active": bool}`
+    *   `motor=stalled` → `safety_stop_node` holds the robot at zero velocity.
+    *   `lidar=failed` → robot is "blind"; forward motion blocked (rotation allowed).
+    *   `lidar=degraded` → forward speed halved, stop distance widened.
+    *   `battery=clamped` → `robot_resource_node` clamps battery to 10% and
+        suspends drain, cascading to `RETURNING_TO_BASE` and a supervisor fault.
+*   `/obstacle_status` (robot → dashboard, `std_msgs/String` JSON):
+    `{"blocked": bool, "distance": float, "sector": "FRONT|FRONT_LEFT|FRONT_RIGHT|MOTOR_FAULT|LIDAR_FAULT|SCAN_STALE|CLEAR"}`
+*   `/system_health` (robot → dashboard, `std_msgs/String` JSON): per-subsystem
+    status plus a fused `faults` block and a top-level `twin_mode`.
+
+### Demo script
+
+1.  **Req 1 — Bidirectional:** `ros2 topic echo /robot_resources` (robot →
+    dashboard) while clicking a weather button and running
+    `ros2 topic echo /weather_forecast` (dashboard → robot). Both streams move.
+2.  **Req 2 — State sync:** Click **LiDAR → FAILED** on the dashboard. Observe
+    `ros2 topic echo /system_health` switch `twin_mode` to `FAULTED`, the
+    dashboard System Health panel turn red, and the robot stop moving forward.
+    Click **Battery → CLAMPED** and watch the robot enter `RETURNING_TO_BASE`.
+3.  **Req 3 — Environment:** Drive the robot toward a wall/obstacle in Gazebo.
+    `ros2 topic echo /obstacle_status` shows `blocked:true` with the sector, the
+    dashboard Obstacle panel turns red, and the robot halts/steers away.
 
 ---
 
@@ -88,7 +150,7 @@ ros2 launch my_turtlebot3_controller nexus.launch.py
 ### 3. Observe the Magic
 1.  **RViz**: Watch the robot map the room using SLAM and navigate to its first waypoint.
 2.  **Terminal**: Read the rich log output from the `CropDecisionNode` as it scans, decides, and actuates.
-3.  **Dashboard**: Open a web browser and navigate to `http://localhost:5000` to view the live NutrientNexus telemetry dashboard.
+3.  **Dashboard**: A Tkinter "Digital Twin Dashboard" window opens automatically. Use it to mirror robot state and inject weather/faults (see the Option B demo script above).
 
 ---
 
