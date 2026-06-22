@@ -23,7 +23,7 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 import yaml
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_directory, PackageNotFoundError
 from my_turtlebot3_controller.qos import STATE_QOS
 
 
@@ -360,7 +360,7 @@ class DashboardNode(Node):
                 raw = yaml.safe_load(f) or {}
             ids = sorted([z for z in raw.keys() if z != 'base_station'])
             return ids or ['zone_0', 'zone_1', 'zone_2', 'zone_3']
-        except Exception:
+        except (OSError, yaml.YAMLError, PackageNotFoundError):
             return ['zone_0', 'zone_1', 'zone_2', 'zone_3']
 
     @staticmethod

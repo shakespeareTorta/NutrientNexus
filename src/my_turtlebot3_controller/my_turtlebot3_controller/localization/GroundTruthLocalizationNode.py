@@ -159,7 +159,7 @@ class GroundTruthLocalizationNode(Node):
         if self._proc is not None:
             try:
                 self._proc.terminate()
-            except Exception:
+            except OSError:
                 pass
         super().destroy_node()
 

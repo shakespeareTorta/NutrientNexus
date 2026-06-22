@@ -84,7 +84,9 @@ class WeatherAdapterNode(Node):
 
         except urllib.error.URLError as e:
             self.get_logger().error(f"Failed to fetch weather data: {e.reason}")
-        except Exception as e:
+        except TimeoutError as e:
+            self.get_logger().error(f"Weather request timed out: {e}")
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
             self.get_logger().error(f"Error processing weather update: {e}")
 
 def main(args=None):

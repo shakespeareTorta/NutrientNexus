@@ -223,7 +223,7 @@ def main(args=None) -> None:
     finally:
         try:
             node.remove_all()
-        except Exception:
+        except (OSError, subprocess.SubprocessError):
             pass
         node.destroy_node()
         if rclpy.ok():

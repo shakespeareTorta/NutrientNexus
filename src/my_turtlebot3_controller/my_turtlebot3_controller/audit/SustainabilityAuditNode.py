@@ -87,7 +87,7 @@ class SustainabilityAuditNode(Node):
             data["time"] = datetime.now().strftime("%H:%M:%S")
             self.interventions.append(data)
             self.get_logger().info(f"[AUDIT] Logged SDG-14 Intervention in {data.get('zone', 'Unknown')}.")
-        except Exception as e:
+        except (json.JSONDecodeError, TypeError, AttributeError) as e:
             self.get_logger().error(f"Failed to parse intervention: {e}")
 
     def generate_report_cb(self, msg: String):
