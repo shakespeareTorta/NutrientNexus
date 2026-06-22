@@ -16,10 +16,13 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='root',
-    maintainer_email='root@todo.todo',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    maintainer='Bulut Tekinsen',
+    maintainer_email='bulut.tekinsen@gmail.com',
+    description='Digital-twin controller for an autonomous TurtleBot3 '
+                'precision-agriculture robot (Nutrient Nexus): patrols field '
+                'zones, monitors soil telemetry, and applies targeted '
+                'irrigation and fertilisation.',
+    license='Apache-2.0',
     entry_points={
         'console_scripts': [
             'navigation_executor_node = my_turtlebot3_controller.navigation.NavigationExecutorNode:main',
